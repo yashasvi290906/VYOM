@@ -1,0 +1,14 @@
+{
+  "name": "vyom-gateway",
+  "version": "1.0.0",
+  "description": "VYOM API Gateway & Frontend Server - Digital Payments and Transaction Processing Platform",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}

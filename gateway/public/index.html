@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VYOM — Digital Payments Platform</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-brand">
+        <h1 class="app-title">VYOM <span style="font-size: 0.85em; opacity: 0.85; font-weight: normal;">| व्योम</span></h1>
+        <p class="app-subtitle">Virtual Yatra of Money — Every transaction. One trusted space.</p>
+      </div>
+      <div class="header-status">
+        <div class="status-indicator">
+          <span id="status-dot" class="status-dot status-offline"></span>
+          <span id="status-text" class="status-text">Checking backend...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Active Wallet Bar -->
+  <section class="active-wallet-bar" aria-label="Active Wallet Context">
+    <div class="container active-wallet-inner">
+      <div class="active-wallet-info">
+        <span class="active-wallet-label">Active Wallet:</span>
+        <span id="active-wallet-display" class="active-wallet-value">None selected</span>
+        <span id="active-wallet-balance" class="active-wallet-balance"></span>
+      </div>
+      <div class="active-wallet-actions">
+        <button type="button" id="btn-copy-active-id" class="btn btn-sm btn-outline" style="display: none;">Copy ID</button>
+        <button type="button" id="btn-refresh-active" class="btn btn-sm btn-outline" style="display: none;">Refresh</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Layout -->
+  <main class="container main-content">
+    <div class="dashboard-grid">
+
+      <!-- Card 1: Create Wallet -->
+      <section class="card" id="card-create-wallet">
+        <div class="card-header">
+          <h2 class="card-title">Create Wallet</h2>
+          <span class="badge badge-info">Zero Balance</span>
+        </div>
+        <div class="card-body">
+          <p class="card-description">Create a new simulated multi-currency wallet. New wallets start with a 0.00 balance.</p>
+          <form id="form-create-wallet">
+            <div class="form-group">
+              <label for="create-owner-name">Owner Name <span class="required">*</span></label>
+              <input type="text" id="create-owner-name" class="form-control" placeholder="e.g. Alice Sharma" required maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="create-currency">Currency <span class="required">*</span></label>
+              <select id="create-currency" class="form-control" required>
+                <option value="INR" selected>INR — Indian Rupee</option>
+                <option value="USD">USD — US Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="GBP">GBP — British Pound</option>
+              </select>
+            </div>
+            <button type="submit" id="btn-create-wallet" class="btn btn-primary btn-block">
+              <span class="btn-text">Create Wallet</span>
+              <span class="btn-spinner" style="display: none;"></span>
+            </button>
+          </form>
+          <div id="create-wallet-result" class="result-box" style="display: none;">
+            <div class="result-row">
+              <span class="result-label">Wallet ID:</span>
+              <span id="res-created-id" class="result-value font-mono"></span>
+              <button type="button" id="btn-copy-created-id" class="btn btn-xs btn-outline">Copy</button>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Owner:</span>
+              <span id="res-created-owner" class="result-value"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Balance:</span>
+              <span id="res-created-balance" class="result-value font-bold"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Created At:</span>
+              <span id="res-created-time" class="result-value"></span>
+            </div>
+            <button type="button" id="btn-set-created-active" class="btn btn-sm btn-success mt-2">Set as Active Wallet</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card 2: Simulated Wallet Funding -->
+      <section class="card" id="card-fund-wallet">
+        <div class="card-header">
+          <h2 class="card-title">Simulated Wallet Funding</h2>
+          <span class="badge badge-warning">Simulated Only</span>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <strong>Demo funds only:</strong> Top up a wallet for simulation testing. No real money or banking transactions are involved.
+          </div>
+          <form id="form-fund-wallet">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="fund-wallet-id">Target Wallet ID <span class="required">*</span></label>
+                <button type="button" id="btn-fund-use-active" class="btn-link">Use Active Wallet</button>
+              </div>
+              <input type="text" id="fund-wallet-id" class="form-control font-mono" placeholder="UUID (e.g. 123e4567-e89b...)" required>
+            </div>
+            <div class="form-group">
+              <label for="fund-amount">Amount <span class="required">*</span></label>
+              <input type="number" id="fund-amount" class="form-control" placeholder="1000.00" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+              <label for="fund-description">Description</label>
+              <input type="text" id="fund-description" class="form-control" value="Demo wallet top-up" maxlength="255">
+            </div>
+            <div class="form-group">
+              <div class="label-row">
+                <label for="fund-idempotency-key">Idempotency Key <span class="required">*</span></label>
+                <button type="button" id="btn-fund-regen-key" class="btn-link">Regenerate Key</button>
+              </div>
+              <input type="text" id="fund-idempotency-key" class="form-control font-mono" required>
+              <small class="form-hint">UUID to ensure idempotency. Keep identical to test deduplication.</small>
+            </div>
+            <button type="submit" id="btn-fund-wallet" class="btn btn-warning btn-block">
+              <span class="btn-text">Add Simulated Funds</span>
+              <span class="btn-spinner" style="display: none;"></span>
+            </button>
+          </form>
+          <div id="fund-wallet-result" class="result-box" style="display: none;">
+            <div class="result-row">
+              <span class="result-label">Funding ID:</span>
+              <span id="res-funded-id" class="result-value font-mono"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Status:</span>
+              <span id="res-funded-status" class="badge badge-success"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">New Balance:</span>
+              <span id="res-funded-balance" class="result-value font-bold text-success"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card 3: Wallet Lookup -->
+      <section class="card" id="card-lookup-wallet">
+        <div class="card-header">
+          <h2 class="card-title">Wallet Lookup</h2>
+          <span class="badge badge-secondary">Query</span>
+        </div>
+        <div class="card-body">
+          <p class="card-description">Inspect real-time wallet balance and metadata directly from the PostgreSQL ledger.</p>
+          <form id="form-lookup-wallet">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="lookup-wallet-id">Wallet ID <span class="required">*</span></label>
+                <button type="button" id="btn-lookup-use-active" class="btn-link">Use Active Wallet</button>
+              </div>
+              <input type="text" id="lookup-wallet-id" class="form-control font-mono" placeholder="UUID" required>
+            </div>
+            <button type="submit" id="btn-lookup-wallet" class="btn btn-secondary btn-block">
+              <span class="btn-text">Fetch Wallet</span>
+              <span class="btn-spinner" style="display: none;"></span>
+            </button>
+          </form>
+          <div id="lookup-wallet-result" class="result-box" style="display: none;">
+            <div class="balance-display-card">
+              <span class="balance-display-label">Current Balance</span>
+              <div id="res-lookup-balance" class="balance-display-amount">0.00</div>
+              <span id="res-lookup-currency" class="balance-display-currency">INR</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Owner Name:</span>
+              <span id="res-lookup-owner" class="result-value"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Created At:</span>
+              <span id="res-lookup-created" class="result-value"></span>
+            </div>
+            <div class="btn-group mt-2">
+              <button type="button" id="btn-set-lookup-active" class="btn btn-sm btn-primary">Set as Active Wallet</button>
+              <button type="button" id="btn-lookup-view-txns" class="btn btn-sm btn-outline">View Transactions</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card 4: Fund Transfer -->
+      <section class="card" id="card-transfer-funds">
+        <div class="card-header">
+          <h2 class="card-title">Fund Transfer</h2>
+          <span class="badge badge-primary">Atomic Ledger</span>
+        </div>
+        <div class="card-body">
+          <p class="card-description">Execute an atomic, double-entry transfer between two wallets with strict row-locking and idempotency.</p>
+          <form id="form-transfer-funds">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="transfer-source-id">Source Wallet ID <span class="required">*</span></label>
+                <button type="button" id="btn-transfer-use-active-src" class="btn-link">Use Active</button>
+              </div>
+              <input type="text" id="transfer-source-id" class="form-control font-mono" placeholder="Debited wallet UUID" required>
+            </div>
+            <div class="form-group">
+              <label for="transfer-dest-id">Destination Wallet ID <span class="required">*</span></label>
+              <input type="text" id="transfer-dest-id" class="form-control font-mono" placeholder="Credited wallet UUID" required>
+            </div>
+            <div class="form-group">
+              <label for="transfer-currency">Currency <span class="required">*</span></label>
+              <select id="transfer-currency" class="form-control" required>
+                <option value="INR" selected>INR — Indian Rupee</option>
+                <option value="USD">USD — US Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="GBP">GBP — British Pound</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="transfer-amount">Amount <span class="required">*</span></label>
+              <input type="number" id="transfer-amount" class="form-control" placeholder="100.00" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+              <label for="transfer-description">Description</label>
+              <input type="text" id="transfer-description" class="form-control" value="Demo transfer" maxlength="255">
+            </div>
+            <div class="form-group">
+              <div class="label-row">
+                <label for="transfer-idempotency-key">Idempotency Key <span class="required">*</span></label>
+                <button type="button" id="btn-transfer-regen-key" class="btn-link">Regenerate Key</button>
+              </div>
+              <input type="text" id="transfer-idempotency-key" class="form-control font-mono" required>
+              <small class="form-hint">UUID prevents duplicate debits. Resend identical key to verify deduplication.</small>
+            </div>
+            <button type="submit" id="btn-transfer" class="btn btn-primary btn-block">
+              <span class="btn-text">Transfer Funds</span>
+              <span class="btn-spinner" style="display: none;"></span>
+            </button>
+          </form>
+          <div id="transfer-result" class="result-box" style="display: none;">
+            <div class="result-row">
+              <span class="result-label">Transfer ID:</span>
+              <span id="res-transfer-id" class="result-value font-mono"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Status:</span>
+              <span id="res-transfer-status" class="badge badge-success"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Amount:</span>
+              <span id="res-transfer-amount" class="result-value font-bold"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Timestamp:</span>
+              <span id="res-transfer-time" class="result-value"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card 5: Transaction History (Full Width) -->
+      <section class="card card-full" id="card-history">
+        <div class="card-header">
+          <h2 class="card-title">Transaction & Ledger History</h2>
+          <span class="badge badge-secondary">Auditable Log</span>
+        </div>
+        <div class="card-body">
+          <p class="card-description">Inspect the append-only ledger entries for a wallet, ordered deterministically by timestamp and ID.</p>
+          <div class="history-controls">
+            <div class="form-group history-wallet-input">
+              <div class="label-row">
+                <label for="history-wallet-id">Wallet ID <span class="required">*</span></label>
+                <button type="button" id="btn-history-use-active" class="btn-link">Use Active</button>
+              </div>
+              <input type="text" id="history-wallet-id" class="form-control font-mono" placeholder="Enter Wallet UUID" required>
+            </div>
+            <div class="form-group history-page-size">
+              <label for="history-size">Page Size</label>
+              <select id="history-size" class="form-control">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+            <div class="history-actions">
+              <button type="button" id="btn-load-history" class="btn btn-secondary">
+                <span class="btn-text">Load History</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- History Table Container -->
+          <div class="table-responsive mt-3">
+            <table class="data-table" id="table-history">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Operation</th>
+                  <th>Entry Type</th>
+                  <th>Amount</th>
+                  <th>Balance After</th>
+                  <th>Operation / Ref ID</th>
+                  <th>Ledger Entry ID</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <tr id="history-empty-row">
+                  <td colspan="7" class="text-center text-muted">Enter a Wallet ID and click "Load History" to view ledger records.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-bar" id="history-pagination" style="display: none;">
+            <div class="pagination-info">
+              <span id="pagination-summary">Showing 0-0 of 0</span>
+            </div>
+            <div class="pagination-buttons">
+              <button type="button" id="btn-page-prev" class="btn btn-sm btn-outline" disabled>Previous</button>
+              <span id="pagination-page-indicator" class="page-indicator">Page 1 of 1</span>
+              <button type="button" id="btn-page-next" class="btn btn-sm btn-outline" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
