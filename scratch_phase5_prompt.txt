@@ -1,0 +1,870 @@
+<USER_REQUEST>
+# VYOM — Phase 5: Complete Product Functionality, Website Engineering & Live End-to-End Validation
+
+## Mission
+
+Transform VYOM into a fully functional, polished, reliable digital-wallet application by auditing, implementing, testing, and validating every user-facing feature and its complete backend integration.
+
+This is a product-completion and reliability phase.
+
+The objective is not simply to make the website look attractive. Every page, button, form, interaction, transaction flow, error state, navigation element, and displayed financial value must work correctly.
+
+You are responsible for understanding the existing architecture, defining the expected behavior of every feature, identifying incomplete or incorrect functionality, implementing necessary fixes, launching the complete application, and validating it through real browser interactions and backend/database verification.
+
+**Do not declare completion because the application starts or because automated unit tests pass. Completion requires successful end-to-end validation of the actual running application.**
+
+---
+
+# PART 1 — NON-NEGOTIABLE ENGINEERING RULES
+
+### 1. Preserve the architecture
+
+The existing architecture is:
+
+Browser (HTML/CSS/JavaScript) → Node.js/Express Gateway → Java/Spring Boot Backend → PostgreSQL.
+
+Preserve this architecture.
+
+- Java/Spring Boot remains the financial business-logic authority.
+- PostgreSQL remains the source of truth for balances, transactions, and ledger records.
+- Express remains the gateway.
+- The browser must never independently calculate or determine authoritative financial balances.
+- Do not move financial logic into JavaScript.
+- Do not introduce microservices.
+- Do not introduce Kafka, RabbitMQ, Redis, or Kubernetes without a separately justified architectural requirement.
+- Do not replace working components simply to use a different technology.
+
+### 2. Financial correctness takes priority over UI convenience
+
+Every financial operation must preserve:
+
+- Double-entry accounting.
+- Atomicity.
+- Idempotency.
+- Currency precision.
+- Wallet ownership.
+- Authentication and authorization.
+- Immutable financial history.
+- Correct transaction status.
+- Consistent balance and ledger state.
+
+Never sacrifice financial correctness to make an interface appear responsive.
+
+### 3. No fabricated functionality
+
+Do not display fake transaction histories, fake balances, fake payment confirmations, fake analytics, or hardcoded success notifications.
+
+All financial information must originate from actual backend responses.
+
+If a feature is not supported by the backend, identify that limitation. Do not simulate a successful backend operation in the frontend.
+
+VYOM is a simulated wallet platform. Do not claim real UPI, bank, or payment-gateway integration.
+
+### 4. No blind changes
+
+Before modifying anything:
+
+1. Inspect the repository.
+2. Identify the existing frontend pages and components.
+3. Inspect the actual gateway routes.
+4. Inspect the backend controllers, services, DTOs, entities, and security rules.
+5. Inspect database migrations and existing transaction semantics.
+6. Map each existing frontend operation to its actual backend endpoint.
+7. Identify missing, broken, inconsistent, and misleading functionality.
+
+Do not assume that an endpoint, feature, or permission exists merely because its name sounds plausible.
+
+---
+
+# PART 2 — DEFINE THE COMPLETE WEBSITE EXPERIENCE
+
+First, produce a complete feature inventory and expected-behavior specification.
+
+Then implement and validate the following functional areas.
+
+## 1. Landing page
+
+Expected behavior:
+
+- Clearly communicate what VYOM is.
+- Explain that it is a digital wallet and transaction-processing platform.
+- Present the product's primary capabilities.
+- Provide functional Login and Register navigation.
+- Provide an understandable explanation of the simulated wallet model.
+- Maintain consistent visual language throughout the application.
+- Avoid exaggerated claims about real banking integrations or production financial infrastructure.
+
+All navigation links must lead to valid destinations.
+
+No decorative button should appear clickable unless it actually performs an action.
+
+## 2. Registration
+
+The registration process must:
+
+1. Accept the required user details supported by the backend.
+2. Validate required fields.
+3. Validate email format.
+4. Validate password requirements.
+5. Provide password visibility controls.
+6. Prevent repeated submissions while a request is processing.
+7. Display field-specific validation errors.
+8. Handle duplicate accounts correctly.
+9. Display meaningful backend errors.
+10. Navigate to the appropriate next step only after successful registration.
+
+Security requirements:
+
+- Never expose password hashes.
+- Never store plaintext passwords.
+- Never silently create a user in the frontend.
+- Do not permit users to register themselves with administrative privileges.
+- Do not leak sensitive backend exception details.
+
+Test duplicate registration, invalid input, network failure, and successful registration.
+
+## 3. Login and authentication
+
+Expected behavior:
+
+- Accept valid credentials.
+- Authenticate through the actual backend.
+- Store the authentication token only according to the existing secure frontend design.
+- Do not move tokens into localStorage or sessionStorage merely for convenience.
+- Restore the authenticated interface only if the existing architecture securely supports it.
+- Provide a proper logout operation.
+- Handle expired and invalid tokens.
+- Handle unauthorized API responses consistently.
+- Redirect unauthenticated users away from protected pages.
+
+Test:
+
+- Valid login.
+- Invalid password.
+- Unknown account.
+- Empty credentials.
+- Expired token.
+- Invalid token.
+- Logout.
+- Direct navigation to a protected page without authentication.
+- Browser refresh after authentication.
+
+The interface must never continue displaying private account information after logout.
+
+## 4. Dashboard
+
+The dashboard must show actual information returned by the backend.
+
+Expected components:
+
+- Total available wallet balance.
+- Currency.
+- Recent transactions.
+- Transaction counts or summaries, if supported by actual APIs.
+- Quick actions for supported operations.
+- Account information.
+- Relevant transaction statuses.
+
+Functional requirements:
+
+- Refreshing the dashboard must retrieve current backend data.
+- Loading indicators must be shown during requests.
+- Empty states must be understandable.
+- API failures must not be represented as zero balances.
+- Stale data must not be presented as freshly retrieved data.
+- Dashboard values must reconcile with wallet and transaction details.
+
+Test dashboard behavior with:
+
+- A newly registered account.
+- An account with no transactions.
+- An account with funding history.
+- An account with transfers.
+- An account with refunds.
+- Backend unavailable.
+- Authentication expired.
+
+## 5. Wallet details
+
+The wallet interface must:
+
+- Display actual wallet information.
+- Display the correct currency.
+- Show the current authoritative balance.
+- Avoid floating-point arithmetic for money.
+- Display monetary amounts using the correct decimal representation.
+- Handle empty and unavailable states.
+- Refresh after completed financial operations.
+
+Never calculate the displayed balance by adding or subtracting amounts in frontend state and treating that result as authoritative.
+
+If optimistic UI is used for non-financial interface elements, it must never create a false financial success state.
+
+## 6. Wallet funding
+
+Expected user journey:
+
+1. User opens the funding page.
+2. User enters a valid amount.
+3. The application validates the amount.
+4. The user reviews the funding operation.
+5. The user explicitly confirms it.
+6. The frontend submits the request through the gateway.
+7. The backend processes the funding operation atomically.
+8. The application retrieves the resulting authoritative transaction and balance.
+9. The user sees a success confirmation only after the backend confirms completion.
+
+Requirements:
+
+- Positive amounts only.
+- Respect supported currency precision.
+- Reject malformed values.
+- Prevent accidental duplicate submissions.
+- Use a stable idempotency key for a logical operation.
+- Preserve that key when retrying the same operation after an ambiguous network failure.
+- Do not generate a new key simply because the first request timed out.
+- Distinguish a failed operation from an operation whose final commit status is unknown.
+- Never show success merely because the HTTP request was initiated.
+
+Validate that the funding operation creates the correct double-entry journal involving the system settlement account and the customer wallet.
+
+## 7. Money transfers
+
+Expected user journey:
+
+1. User selects the transfer feature.
+2. User enters the recipient identifier supported by the backend.
+3. User enters the amount.
+4. User enters an optional description, if supported.
+5. Application validates the request.
+6. Application displays a review/confirmation step.
+7. User confirms.
+8. Gateway forwards the authenticated request.
+9. Backend verifies ownership, authorization, balance, and other applicable business rules.
+10. Backend performs the atomic financial operation.
+11. Application displays the final transaction outcome.
+12. Wallet balance and transaction history refresh from the backend.
+
+Requirements:
+
+- Do not allow self-transfer if prohibited by backend rules.
+- Do not allow negative or zero amounts.
+- Do not permit transfers beyond available balance.
+- Do not expose another user's private wallet information.
+- Display appropriate errors for nonexistent recipients.
+- Handle concurrent transfers safely.
+- Prevent duplicate transfers through idempotency.
+- Handle timeouts without accidentally creating a second transfer.
+- Display correct sender and recipient perspectives.
+- Preserve the original transaction reference.
+
+Test successful transfers, insufficient balance, invalid recipient, self-transfer, duplicate requests, simultaneous requests, and ambiguous timeouts.
+
+## 8. Transaction history
+
+Expected behavior:
+
+- Retrieve transactions from the backend.
+- Display accurate transaction references.
+- Display transaction type.
+- Display amount and currency.
+- Display date and time.
+- Display transaction status.
+- Display the appropriate sender/recipient perspective.
+- Support pagination if the backend provides it.
+- Preserve pagination state correctly.
+- Handle empty results.
+- Handle API failures.
+- Avoid duplicate records across pages.
+
+If filters are supported, implement and validate them against actual backend capabilities.
+
+Never generate transaction history from frontend-only data.
+
+## 9. Transaction details and receipts
+
+When a user opens a transaction:
+
+- Display the correct transaction reference.
+- Display the amount and currency.
+- Display the transaction type.
+- Display the current recorded status.
+- Display the timestamp.
+- Display the appropriate transaction parties.
+- Display the description if available.
+- Display available receipt information.
+
+Ownership must be enforced by the backend.
+
+Users must not be able to access another user's transaction simply by changing an identifier in the URL.
+
+A receipt must accurately represent the backend transaction. Do not manufacture a receipt for an uncommitted operation.
+
+## 10. Refunds and reversals
+
+Inspect the actual backend capabilities before implementing these interfaces.
+
+Where supported:
+
+- Display eligible transactions.
+- Display refund information.
+- Display refund status.
+- Display refund history.
+- Clearly distinguish a refund from a reversal.
+- Display partial and complete refunds accurately.
+- Prevent refund amounts from exceeding the remaining refundable amount.
+- Handle already-refunded and reversed transactions.
+- Display the actual resulting transaction references.
+
+Authorization requirements:
+
+- Administrative reversal operations must remain administrator-only.
+- Normal users must never gain administrative functionality through frontend manipulation.
+- The backend must independently enforce permissions.
+
+Do not add a frontend refund or reversal action if no corresponding secure backend operation exists.
+
+## 11. Disputes
+
+If the backend dispute feature is available:
+
+- Allow users to view their eligible transactions.
+- Allow dispute creation where permitted.
+- Collect the supported dispute reason and description.
+- Display submission status.
+- Display existing dispute details.
+- Prevent duplicate active disputes where prohibited.
+- Do not change wallet balances merely because a dispute was created.
+- Do not imply that a dispute automatically reverses a transaction.
+
+Display only real dispute information returned by the backend.
+
+## 12. Profile and account information
+
+Where supported:
+
+- Display the authenticated user's account information.
+- Display the appropriate wallet information.
+- Allow supported profile updates.
+- Validate inputs.
+- Handle update failures.
+- Prevent unauthorized account modifications.
+
+Never expose internal IDs, passwords, tokens, roles, or sensitive implementation information unnecessarily.
+
+## 13. Administrative functionality
+
+Inspect the existing role-based backend capabilities.
+
+If an admin interface exists or is required by existing functionality:
+
+- Separate administrator navigation from normal-user navigation.
+- Display only authorized administrative operations.
+- Enforce all permissions on the backend.
+- Display reversal functionality only to authorized administrators.
+- Handle forbidden responses.
+- Never rely on hiding a button as the authorization mechanism.
+
+Test normal-user and administrator accounts independently.
+
+---
+
+# PART 3 — INTERACTION AND UI QUALITY
+
+Audit every visible interactive element.
+
+For every button, link, form, dropdown, tab, modal, filter, pagination control, and navigation item, document:
+
+1. Its intended action.
+2. Its current implementation.
+3. Its backend dependency, if any.
+4. Its success behavior.
+5. Its failure behavior.
+6. Its loading behavior.
+7. Its disabled behavior.
+8. Its validation requirements.
+
+No dead buttons.
+
+No placeholder links.
+
+No buttons that display success without completing an operation.
+
+No forms that silently discard user input.
+
+No infinite loading states.
+
+No broken modals.
+
+No navigation to nonexistent pages.
+
+### Visual consistency
+
+Ensure:
+
+- Consistent typography.
+- Consistent spacing.
+- Consistent color system.
+- Consistent button styles.
+- Consistent input styles.
+- Consistent card layouts.
+- Consistent status indicators.
+- Responsive desktop, tablet, and mobile layouts.
+- Appropriate contrast and readable text.
+- Accessible labels and keyboard interactions.
+
+Avoid unnecessary redesign. Preserve strong existing design decisions and improve actual usability.
+
+### Financial display consistency
+
+All monetary values must:
+
+- Use exact decimal-string handling.
+- Avoid JavaScript floating-point calculations.
+- Display currency consistently.
+- Distinguish available balance from any other balance type if applicable.
+- Handle zero and large amounts correctly.
+- Handle loading and unavailable states distinctly.
+
+---
+
+# PART 4 — ERROR HANDLING AND FAILURE RECOVERY
+
+This is a financial application. Failure behavior is as important as success behavior.
+
+Test and implement correct handling for:
+
+- Backend unavailable.
+- Gateway unavailable.
+- Database unavailable.
+- Request timeout.
+- HTTP 400.
+- HTTP 401.
+- HTTP 403.
+- HTTP 404.
+- HTTP 409.
+- HTTP 422, if used.
+- HTTP 429.
+- HTTP 500.
+- HTTP 502.
+- HTTP 503.
+- HTTP 504.
+- Malformed JSON.
+- Unexpected response format.
+- Expired authentication.
+- Duplicate submission.
+- Ambiguous financial operation outcome.
+
+### Critical timeout rule
+
+If a financial operation times out:
+
+- Do not automatically assume it failed.
+- Do not automatically assume it succeeded.
+- Preserve its original idempotency key.
+- Query the appropriate transaction/idempotency status if the backend supports it.
+- Retry only under the existing idempotency contract.
+- Display an honest pending or unknown status when the outcome cannot yet be established.
+
+Never encourage the user to submit a second independent payment simply because the first request timed out.
+
+---
+
+# PART 5 — SECURITY VALIDATION
+
+Perform an application-level security review.
+
+At minimum, test:
+
+- Authentication enforcement.
+- Role enforcement.
+- User ownership checks.
+- Direct URL access to protected resources.
+- Transaction ID manipulation.
+- Wallet ID manipulation.
+- Cross-user data access.
+- JWT expiration handling.
+- Invalid token handling.
+- Password handling.
+- Input validation.
+- XSS risks.
+- Unsafe HTML rendering.
+- CSRF exposure where applicable to the authentication design.
+- CORS configuration.
+- Rate limiting.
+- Sensitive error disclosure.
+- Token leakage through logs or browser storage.
+- Accidental exposure of admin-only functionality.
+
+Use separate normal-user accounts and an administrator account for authorization testing.
+
+Do not weaken existing security controls to make browser tests pass.
+
+---
+
+# PART 6 — LIVE APPLICATION EXECUTION
+
+You MUST launch and test the actual application.
+
+Do not stop after inspecting code or running unit tests.
+
+### Startup procedure
+
+1. Inspect existing startup scripts and environment requirements.
+2. Verify PostgreSQL is available.
+3. Verify the intended benchmark/development database is selected.
+4. Verify required migrations are applied.
+5. Start the Java backend.
+6. Confirm backend health.
+7. Start the Express gateway.
+8. Confirm gateway health and backend connectivity.
+9. Start or serve the actual frontend.
+10. Open the website in a real browser.
+11. Inspect the browser console.
+12. Inspect network requests and responses.
+
+Use the existing application environment and configuration. Do not silently redirect the application to a different database.
+
+If browser automation is available, use Playwright or the existing project browser-testing framework. If not, use the available browser automation tools and document any limitations.
+
+Do not claim that browser tests passed if only API tests were executed.
+
+### Keep the application running during validation
+
+Run the full stack concurrently.
+
+Verify that:
+
+- Frontend loads.
+- Gateway routes correctly.
+- Backend remains healthy.
+- Database remains connected.
+- Authentication works.
+- Actual operations persist.
+- The UI reflects backend state after each operation.
+
+Capture meaningful screenshots or browser evidence for major user journeys and significant bugs.
+
+---
+
+# PART 7 — LIVE END-TO-END TEST SCENARIOS
+
+Build a repeatable browser-level test suite.
+
+At minimum, execute the following journeys.
+
+### Journey A — New user
+
+1. Open landing page.
+2. Navigate to registration.
+3. Register a new normal user.
+4. Attempt duplicate registration.
+5. Log in.
+6. Open dashboard.
+7. Open wallet.
+8. Log out.
+9. Attempt protected-page access.
+
+### Journey B — Funding
+
+1. Log in as User A.
+2. Record the initial authoritative balance.
+3. Fund the wallet with a valid amount.
+4. Verify the backend response.
+5. Verify the transaction record.
+6. Verify both ledger entries.
+7. Verify the resulting balance.
+8. Verify dashboard refresh.
+9. Verify transaction history.
+10. Retry the original idempotency key and confirm no duplicate financial operation.
+
+### Journey C — Successful transfer
+
+1. Register or use User A and User B.
+2. Fund User A.
+3. Record both wallet balances.
+4. Transfer a valid amount from A to B.
+5. Verify transaction status.
+6. Verify sender and recipient balances.
+7. Verify the double-entry journal.
+8. Verify both users see the correct transaction perspective.
+9. Verify the transaction receipt.
+
+### Journey D — Failed transfer
+
+Test:
+
+- Insufficient balance.
+- Invalid recipient.
+- Invalid amount.
+- Zero amount.
+- Negative amount.
+- Duplicate submission.
+- Unauthorized request.
+- Expired token.
+
+Verify that failed operations do not create incorrect financial records or alter balances.
+
+### Journey E — Concurrent operations
+
+Execute simultaneous transfers and funding operations through the real gateway.
+
+Verify:
+
+- No duplicate financial operation.
+- No lost balance updates.
+- No negative balances where prohibited.
+- Correct idempotency behavior.
+- Correct transaction statuses.
+- Successful database reconciliation.
+
+### Journey F — Timeout and recovery
+
+Create a controlled test that causes an actual gateway/client timeout while the backend may still complete the financial operation.
+
+Then retry using the same idempotency key.
+
+Verify the final database state and prove that the same logical operation was not committed twice.
+
+Do not simulate a timeout by merely returning a fake frontend error.
+
+### Journey G — Transaction history and receipt
+
+Verify:
+
+- Pagination.
+- Transaction detail.
+- Correct transaction reference.
+- Correct amount and currency.
+- Correct transaction status.
+- Correct ownership enforcement.
+- Correct receipt content.
+
+### Journey H — Refund, reversal, and disputes
+
+Execute only operations supported by the actual backend.
+
+Verify their authorization, ledger effects, statuses, and UI representation.
+
+### Journey I — Failure recovery
+
+While the application is running:
+
+- Temporarily make the backend unavailable.
+- Test gateway health.
+- Attempt a safe read.
+- Restore the backend.
+- Verify recovery.
+- Test rate limiting.
+- Test expired authentication.
+- Test a failed network request.
+
+Do not interrupt the database during active financial writes unless the experiment is explicitly isolated and designed to test that scenario.
+
+---
+
+# PART 8 — BUG DISCOVERY AND ITERATIVE REPAIR
+
+Use the following mandatory debugging loop:
+
+**Observe → Reproduce → Diagnose → Fix → Regression test → Full revalidation.**
+
+For every discovered defect:
+
+1. Assign a unique bug ID.
+2. Record the affected feature.
+3. Record reproduction steps.
+4. Record expected behavior.
+5. Record actual behavior.
+6. Identify the root cause.
+7. Identify the responsible layer: frontend, gateway, backend, database, or integration.
+8. Implement the smallest safe correction.
+9. Add a regression test.
+10. Rerun the affected end-to-end journey.
+11. Rerun relevant backend and gateway tests.
+12. Verify that financial reconciliation remains correct.
+
+Do not patch symptoms without understanding the root cause.
+
+Do not repeatedly change code until a test happens to pass.
+
+Do not weaken assertions, disable tests, remove security controls, or hide errors to obtain a passing result.
+
+### Reinforcement learning instruction
+
+Do NOT use reinforcement learning to modify application code or financial behavior.
+
+Do not use an autonomous agent that continuously changes the application without review and reproducible tests.
+
+Instead, use controlled iterative debugging and test-driven repair. Automation may assist with identifying and reproducing failures, but all code changes must remain reviewable, deterministic, and covered by regression tests.
+
+---
+
+# PART 9 — AUTOMATED REGRESSION AND QUALITY GATES
+
+Run all existing test suites before and after modifications.
+
+Add tests where coverage is missing.
+
+Required validation layers:
+
+1. Frontend component and interaction tests.
+2. Frontend integration tests.
+3. Gateway unit and integration tests.
+4. Backend unit tests.
+5. Backend integration tests.
+6. API contract tests.
+7. Browser-level end-to-end tests.
+8. Security and authorization tests.
+9. Financial accounting reconciliation.
+10. Responsive layout and browser-console checks.
+
+A passing test count alone is insufficient.
+
+Report the exact number of tests executed, passed, failed, skipped, and the reason for every skip.
+
+Any changed behavior must have corresponding regression coverage.
+
+---
+
+# PART 10 — FINANCIAL DATABASE VERIFICATION
+
+After the live financial journeys, run the existing nine financial reconciliation invariants.
+
+Verify independently:
+
+1. Journal balance by identity and currency.
+2. Wallet-to-ledger reconciliation.
+3. System settlement reconciliation.
+4. Parent versus child refund totals.
+5. Duplicate successful reversals.
+6. Orphaned ledger entries.
+7. Idempotency key uniqueness.
+8. Transaction journal completeness.
+9. Currency association integrity.
+
+Also inspect the actual transactions and ledger entries created during the browser journeys.
+
+Verify that frontend success messages correspond to committed database operations.
+
+A test passing at the HTTP layer is not proof of financial correctness.
+
+Any reconciliation failure is a critical stop condition.
+
+---
+
+# PART 11 — REQUIRED DELIVERABLES
+
+Create the following documentation:
+
+1. `docs/PHASE_5_PRODUCT_FUNCTIONAL_SPECIFICATION.md`
+   - Every page, component, action, expected behavior, and API dependency.
+
+2. `docs/PHASE_5_FRONTEND_BACKEND_INTEGRATION_AUDIT.md`
+   - Existing behavior, missing functionality, and integration gaps.
+
+3. `docs/PHASE_5_LIVE_END_TO_END_TEST_REPORT.md`
+   - Actual browser journeys, test evidence, results, and failures.
+
+4. `docs/PHASE_5_BUG_REGISTER.md`
+   - Every discovered defect, root cause, severity, fix, and regression test.
+
+5. `docs/PHASE_5_SECURITY_AND_AUTHORIZATION_REPORT.md`
+   - Security tests and their results.
+
+6. `docs/PHASE_5_FINANCIAL_INTEGRITY_REPORT.md`
+   - The nine reconciliation results and operation-level verification.
+
+7. `docs/PHASE_5_FINAL_VERIFICATION_REPORT.md`
+   - Overall acceptance verdict and remaining limitations.
+
+Also preserve:
+
+- Browser test scripts.
+- API test scripts.
+- Relevant screenshots.
+- Test execution logs.
+- Reconciliation output.
+- Any reproducible test fixtures.
+
+Do not overwrite existing Phase 0–4 reports or raw benchmark evidence.
+
+---
+
+# PART 12 — ACCEPTANCE CRITERIA
+
+Phase 5 may be declared COMPLETE only when:
+
+- Every existing website page has been audited.
+- Every visible interactive element has a defined and tested behavior.
+- Every supported user journey works in the live application.
+- Frontend and backend agree on transaction state.
+- Registration and authentication work correctly.
+- Funding works correctly.
+- Transfers work correctly.
+- Transaction history and receipts work correctly.
+- Supported refunds, reversals, and disputes work correctly.
+- Authorization is enforced independently by the backend.
+- Error and timeout behavior is safe and understandable.
+- No critical browser-console errors remain.
+- No broken API calls remain in supported journeys.
+- No unexplained failed regression tests remain.
+- All nine financial reconciliation checks pass.
+- No financial correctness regression has been introduced.
+- Responsive behavior has been checked.
+- All bugs are documented and either fixed or explicitly classified as unresolved.
+
+Classify remaining issues:
+
+- Critical: financial correctness, unauthorized access, data corruption, duplicate transactions.
+- High: major user journeys unavailable or incorrect.
+- Medium: significant functional defects or misleading UI.
+- Low: minor usability or visual defects.
+
+No Critical or High defects may remain for a COMPLETE verdict.
+
+---
+
+# PART 13 — FINAL EXECUTION REPORT
+
+At completion, provide:
+
+1. Application architecture inspected.
+2. All pages and features audited.
+3. Features working before changes.
+4. Features repaired or implemented.
+5. Features intentionally unavailable and why.
+6. All bugs discovered and their resolutions.
+7. All files modified and created.
+8. Exact startup commands.
+9. Exact test commands.
+10. Actual live application test results.
+11. Browser automation results.
+12. Backend and gateway test results.
+13. Security test results.
+14. Nine financial reconciliation results.
+15. Remaining limitations.
+16. Screenshots or other execution evidence.
+17. Final verdict: COMPLETE, INCOMPLETE, or BLOCKED.
+
+Do not fabricate test results or claim that a browser journey was tested when it was not.
+
+Do not create Git commits or push changes.
+
+Do not modify unrelated Phase 4 benchmark results.
+
+**STOP after Phase 5. Await explicit authorization before beginning another phase.**
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-11-18T16:29:57+05:30.
+
+The user's current state is as follows:
+Active Document: d:\VYOM\docs\PHASE_4_3_1_REPRODUCIBILITY_AUDIT.md (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 1
+Other open documents:
+- d:\VYOM\README.md (LANGUAGE_UNSPECIFIED)
+- d:\VYOM\gateway\public\js\api.js (LANGUAGE_UNSPECIFIED)
+- d:\VYOM\gateway\src\config\index.js (LANGUAGE_UNSPECIFIED)
+- d:\VYOM\src\main\java\com\vyom\exception\GlobalExceptionHandler.java (LANGUAGE_UNSPECIFIED)
+- d:\VYOM\src\main\java\com\vyom\security\SecurityConfig.java (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>

@@ -3,26 +3,33 @@ package com.vyom.service;
 import com.vyom.dto.request.CreateTransferRequest;
 import com.vyom.dto.response.TransferResponse;
 import com.vyom.entity.LedgerEntry;
+import com.vyom.entity.Transaction;
 import com.vyom.entity.Transfer;
 import com.vyom.entity.Wallet;
 import com.vyom.entity.enums.EntryType;
 import com.vyom.entity.enums.OperationType;
+import com.vyom.entity.enums.TransactionStatus;
+import com.vyom.entity.enums.TransactionType;
 import com.vyom.entity.enums.TransferStatus;
 import com.vyom.exception.CurrencyMismatchException;
 import com.vyom.exception.InsufficientFundsException;
 import com.vyom.exception.InvalidTransferException;
 import com.vyom.exception.WalletNotFoundException;
 import com.vyom.repository.LedgerEntryRepository;
+import com.vyom.repository.TransactionRepository;
 import com.vyom.repository.TransferRepository;
 import com.vyom.repository.WalletRepository;
+import com.vyom.util.ReferenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -30,30 +37,49 @@ public class TransferExecutionService {
 
     private static final Logger log = LoggerFactory.getLogger(TransferExecutionService.class);
 
+    // Test synchronization hooks for deterministic fault-injection testing
+    public static volatile java.util.concurrent.CountDownLatch testEnteredLatch = null;
+    public static volatile java.util.concurrent.CountDownLatch testPauseLatch = null;
+
     private final WalletRepository walletRepository;
     private final TransferRepository transferRepository;
+    private final TransactionRepository transactionRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
     private final IdempotencyService idempotencyService;
 
     public TransferExecutionService(WalletRepository walletRepository,
                                     TransferRepository transferRepository,
+                                    TransactionRepository transactionRepository,
                                     LedgerEntryRepository ledgerEntryRepository,
                                     IdempotencyService idempotencyService) {
         this.walletRepository = walletRepository;
         this.transferRepository = transferRepository;
+        this.transactionRepository = transactionRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.idempotencyService = idempotencyService;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
-    public TransferResponse execute(String idempotencyKey, UUID ownerToken, CreateTransferRequest request) {
+    public TransferResponse execute(UUID userId, String idempotencyKey, UUID ownerToken, CreateTransferRequest request) {
         UUID sourceId = request.sourceWalletId();
         UUID destId = request.destinationWalletId();
         BigDecimal amount = request.amount().setScale(4);
 
+        // Pre-lock validation: Validate request parameters before acquiring exclusive row locks
         if (sourceId.equals(destId)) {
             throw new InvalidTransferException("Source and destination wallets must be different");
         }
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidTransferException("Transfer amount must be strictly positive");
+        }
+        if (request.currency() == null || request.currency().trim().isEmpty()) {
+            throw new InvalidTransferException("Transfer currency is required");
+        }
+
+        // Direction A: Pre-generate transaction reference and timestamp outside the wallet-lock window
+        String transactionReference = ReferenceGenerator.generateTransactionReference();
+        Instant transactionTimestamp = Instant.now();
+        String description = request.description() != null ? request.description().trim() : null;
 
         // Deterministic lock acquisition ordering: smaller UUID first, larger UUID second.
         // Prevents circular-wait deadlocks among wallet rows accessed through this transfer path.
@@ -68,6 +94,22 @@ public class TransferExecutionService {
 
         Wallet sourceWallet = firstWallet.getId().equals(sourceId) ? firstWallet : secondWallet;
         Wallet destWallet = firstWallet.getId().equals(destId) ? firstWallet : secondWallet;
+
+        // System settlement accounts cannot be used as transfer source or destination
+        if (sourceWallet.isSystemAccount()) {
+            throw new InvalidTransferException("System settlement accounts cannot be used as a transfer source");
+        }
+        if (destWallet.isSystemAccount()) {
+            throw new InvalidTransferException("System settlement accounts cannot be used as a transfer destination");
+        }
+
+        // Ownership enforcement on source wallet
+        if (userId != null) {
+            if (sourceWallet.getUserId() == null || !sourceWallet.getUserId().equals(userId)) {
+                log.warn("Access denied: User {} does not own source wallet {}", userId, sourceId);
+                throw new AccessDeniedException("You do not own the source wallet");
+            }
+        }
 
         // Currency validations
         if (!sourceWallet.getCurrency().equalsIgnoreCase(destWallet.getCurrency())) {
@@ -97,7 +139,36 @@ public class TransferExecutionService {
         walletRepository.save(sourceWallet);
         walletRepository.save(destWallet);
 
-        // Record Transfer
+        // 1. Create canonical Transaction anchor with pre-generated reference and timestamp
+        Transaction transaction = new Transaction(
+                transactionReference,
+                TransactionType.TRANSFER,
+                TransactionStatus.SUCCESS,
+                sourceWallet.getUserId(),
+                destWallet.getUserId(),
+                sourceId,
+                destId,
+                amount,
+                sourceWallet.getCurrency(),
+                description
+        );
+        transaction.setCompletedAt(transactionTimestamp);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        // Test synchronization barrier for ambiguous timeout simulation
+        if (testEnteredLatch != null) {
+            testEnteredLatch.countDown();
+        }
+        if (testPauseLatch != null) {
+            try {
+                testPauseLatch.await(30, java.util.concurrent.TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Test pause latch interrupted", e);
+            }
+        }
+
+        // 2. Record Transfer
         Transfer transfer = new Transfer(
                 sourceId,
                 destId,
@@ -106,9 +177,10 @@ public class TransferExecutionService {
                 request.description(),
                 TransferStatus.COMPLETED
         );
-        Transfer savedTransfer = transferRepository.saveAndFlush(transfer);
+        transfer.setTransactionId(savedTransaction.getId());
+        Transfer savedTransfer = transferRepository.save(transfer);
 
-        // Record immutable Double-Entry Ledger Entries
+        // 3. Record immutable Double-Entry Ledger Entries
         LedgerEntry debitEntry = LedgerEntry.forTransfer(
                 savedTransfer.getId(),
                 sourceId,
@@ -116,6 +188,8 @@ public class TransferExecutionService {
                 amount,
                 newSourceBalance
         );
+        debitEntry.setTransactionId(savedTransaction.getId());
+
         LedgerEntry creditEntry = LedgerEntry.forTransfer(
                 savedTransfer.getId(),
                 destId,
@@ -123,18 +197,25 @@ public class TransferExecutionService {
                 amount,
                 newDestBalance
         );
+        creditEntry.setTransactionId(savedTransaction.getId());
+
         ledgerEntryRepository.save(debitEntry);
         ledgerEntryRepository.save(creditEntry);
 
         TransferResponse response = TransferResponse.from(savedTransfer);
 
-        // Record idempotency completion with ownership token verification
-        idempotencyService.complete(idempotencyKey, ownerToken, savedTransfer.getId(), OperationType.TRANSFER, 200, response);
+        // 4. Record idempotency completion with ownership token verification scoped to user
+        idempotencyService.complete(userId, idempotencyKey, ownerToken, savedTransfer.getId(), OperationType.TRANSFER, 200, response);
 
-        log.info("Transfer {} completed successfully: {} {} from {} to {}",
-                savedTransfer.getId(), amount, sourceWallet.getCurrency(), sourceId, destId);
+        log.info("Transfer {} (transaction: {}) completed successfully: {} {} from {} to {}",
+                savedTransfer.getId(), savedTransaction.getReferenceNumber(), amount, sourceWallet.getCurrency(), sourceId, destId);
 
         return response;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public TransferResponse execute(String idempotencyKey, UUID ownerToken, CreateTransferRequest request) {
+        return execute(null, idempotencyKey, ownerToken, request);
     }
 }
 

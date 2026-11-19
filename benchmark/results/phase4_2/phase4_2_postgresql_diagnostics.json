@@ -1,0 +1,112 @@
+{
+  "database": "PostgreSQL 18.4 (msvc-19.44.35227), 64-bit",
+  "connection_string": "jdbc:postgresql://localhost:5432/payledger_benchmark?reWriteBatchedInserts=true",
+  "database_size_tuples": {
+    "users": 32,
+    "wallets": 34,
+    "transfers": 22577,
+    "fundings": 8707,
+    "transactions": 31284,
+    "ledger_entries": 62568,
+    "idempotency_records": 31284
+  },
+  "buffer_cache_hit_ratio": {
+    "heap_blks_hit": 59372,
+    "heap_blks_read": 16,
+    "hit_ratio_percent": 99.97
+  },
+  "query_diagnostics": [
+    {
+      "query_name": "Pessimistic Wallet Row Lock",
+      "sql": "SELECT * FROM wallets WHERE id = $1 FOR UPDATE",
+      "planning_time_ms": 0.279,
+      "execution_time_ms": 2.237,
+      "index_used": "wallets_pkey",
+      "scan_type": "Index Scan",
+      "buffers": {
+        "shared_hit": 4,
+        "shared_read": 0
+      },
+      "locks_acquired": "1 tuple locked in ExclusiveLock mode",
+      "notes": "Fast index scan with 100% buffer hit. Latency escalation under concurrency is caused by lock-wait queues on hot wallet rows, not query execution."
+    },
+    {
+      "query_name": "Idempotency Reservation Lookup",
+      "sql": "SELECT * FROM idempotency_records WHERE user_id = $1 AND idempotency_key = $2",
+      "planning_time_ms": 0.169,
+      "execution_time_ms": 0.783,
+      "index_used": "idx_idempotency_user_key",
+      "scan_type": "Index Scan",
+      "buffers": {
+        "shared_hit": 4,
+        "shared_read": 0
+      },
+      "locks_acquired": "None",
+      "notes": "Highly efficient unique index lookup on composite (user_id, idempotency_key)."
+    },
+    {
+      "query_name": "Transaction History Pagination",
+      "sql": "SELECT * FROM transactions WHERE initiator_id = $1 ORDER BY created_at DESC LIMIT 20 OFFSET 0",
+      "planning_time_ms": 0.264,
+      "execution_time_ms": 0.724,
+      "index_used": "idx_transactions_initiator_created",
+      "scan_type": "Index Scan",
+      "buffers": {
+        "shared_hit": 5,
+        "shared_read": 0
+      },
+      "locks_acquired": "None",
+      "notes": "Optimal index match on (initiator_id, created_at DESC) avoids sorting overhead."
+    },
+    {
+      "query_name": "Ledger Entries Pagination",
+      "sql": "SELECT * FROM ledger_entries WHERE wallet_id = $1 ORDER BY created_at DESC LIMIT 20 OFFSET 0",
+      "planning_time_ms": 0.231,
+      "execution_time_ms": 0.760,
+      "index_used": "idx_ledger_wallet_created",
+      "scan_type": "Index Scan",
+      "buffers": {
+        "shared_hit": 5,
+        "shared_read": 0
+      },
+      "locks_acquired": "None",
+      "notes": "Direct index scan on (wallet_id, created_at DESC) with zero sequential table scan."
+    },
+    {
+      "query_name": "Transaction Receipt Retrieval",
+      "sql": "SELECT * FROM transactions WHERE id = $1",
+      "planning_time_ms": 0.174,
+      "execution_time_ms": 1.381,
+      "index_used": "transactions_pkey",
+      "scan_type": "Index Scan",
+      "buffers": {
+        "shared_hit": 4,
+        "shared_read": 0
+      },
+      "locks_acquired": "None",
+      "notes": "Single row lookup on primary key."
+    },
+    {
+      "query_name": "Ledger Journal Balance Verification",
+      "sql": "SELECT COALESCE(SUM(amount), 0) FROM ledger_entries",
+      "planning_time_ms": 0.230,
+      "execution_time_ms": 222.175,
+      "index_used": "None (Sequential Scan for aggregate)",
+      "scan_type": "Seq Scan",
+      "buffers": {
+        "shared_hit": 1220,
+        "shared_read": 0
+      },
+      "locks_acquired": "None",
+      "notes": "Full table aggregation across all 62,568 rows verifying double-entry sum equals 0."
+    }
+  ],
+  "configuration_settings": {
+    "max_connections": "100",
+    "shared_buffers": "128MB",
+    "work_mem": "4MB",
+    "synchronous_commit": "on",
+    "wal_buffers": "4MB",
+    "checkpoint_completion_target": "0.9"
+  }
+}

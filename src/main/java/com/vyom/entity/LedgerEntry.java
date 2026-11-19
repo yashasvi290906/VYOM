@@ -31,6 +31,9 @@ public class LedgerEntry {
     @Column(name = "funding_id", updatable = false)
     private UUID fundingId;
 
+    @Column(name = "transaction_id", updatable = false)
+    private UUID transactionId;
+
     @Column(name = "wallet_id", nullable = false, updatable = false)
     private UUID walletId;
 
@@ -50,9 +53,20 @@ public class LedgerEntry {
     public LedgerEntry() {
     }
 
+    public static LedgerEntry forTransaction(UUID transactionId, UUID walletId, EntryType entryType, BigDecimal amount, BigDecimal balanceAfter) {
+        LedgerEntry entry = new LedgerEntry();
+        entry.transactionId = transactionId;
+        entry.walletId = walletId;
+        entry.entryType = entryType;
+        entry.amount = amount != null ? amount.setScale(4) : BigDecimal.ZERO.setScale(4);
+        entry.balanceAfter = balanceAfter != null ? balanceAfter.setScale(4) : BigDecimal.ZERO.setScale(4);
+        return entry;
+    }
+
     public static LedgerEntry forTransfer(UUID transferId, UUID walletId, EntryType entryType, BigDecimal amount, BigDecimal balanceAfter) {
         LedgerEntry entry = new LedgerEntry();
         entry.transferId = transferId;
+        entry.transactionId = transferId;
         entry.walletId = walletId;
         entry.entryType = entryType;
         entry.amount = amount != null ? amount.setScale(4) : BigDecimal.ZERO.setScale(4);
@@ -61,10 +75,15 @@ public class LedgerEntry {
     }
 
     public static LedgerEntry forFunding(UUID fundingId, UUID walletId, BigDecimal amount, BigDecimal balanceAfter) {
+        return forFunding(fundingId, walletId, EntryType.CREDIT, amount, balanceAfter);
+    }
+
+    public static LedgerEntry forFunding(UUID fundingId, UUID walletId, EntryType entryType, BigDecimal amount, BigDecimal balanceAfter) {
         LedgerEntry entry = new LedgerEntry();
         entry.fundingId = fundingId;
+        entry.transactionId = fundingId;
         entry.walletId = walletId;
-        entry.entryType = EntryType.CREDIT;
+        entry.entryType = entryType != null ? entryType : EntryType.CREDIT;
         entry.amount = amount != null ? amount.setScale(4) : BigDecimal.ZERO.setScale(4);
         entry.balanceAfter = balanceAfter != null ? balanceAfter.setScale(4) : BigDecimal.ZERO.setScale(4);
         return entry;
@@ -113,6 +132,14 @@ public class LedgerEntry {
 
     public void setFundingId(UUID fundingId) {
         this.fundingId = fundingId;
+    }
+
+    public UUID getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(UUID transactionId) {
+        this.transactionId = transactionId;
     }
 
     public UUID getWalletId() {

@@ -24,17 +24,22 @@ The system is organized into a clean multi-tier architecture:
                                │ Port: 8080
 ┌──────────────────────────────▼──────────────────────────────┐
 │              Java 21 / Spring Boot 3.3.5 Backend             │
+│       - Spring Security & Stateless JWT Authentication      │
 │       - REST Controllers & Request Validation               │
+│       - Wallet Ownership & IDOR Authorization Rules         │
 │       - Transaction Management (@Transactional ACID)        │
 │       - Pessimistic Row Locking (SELECT ... FOR UPDATE)     │
-│       - Persistent Idempotency Service (SHA-256 + Timeout)  │
+│       - User-Scoped Idempotency Service (SHA-256 + Fencing) │
 │       - Double-Entry Ledger Core Engine                     │
+│       - System Settlement Account Liquidity Buffer          │
 └──────────────────────────────┬──────────────────────────────┘
                                │ JDBC (HikariCP)
                                │ Port: 5432
 ┌──────────────────────────────▼──────────────────────────────┐
 │                    PostgreSQL 18 Database                   │
-│       - Flyway Schema Migrations (V1, V2)                   │
+│       - Flyway Schema Migrations (V1, V2, V3, V4)           │
+│       - Users & Authentication Store                        │
+│       - System Settlement Wallets (INR, USD, EUR, GBP)      │
 │       - Append-Only Protection Trigger (No UPDATE/DELETE)   │
 │       - CHECK Constraints & Partial Unique Indexes          │
 │       - Foreign Keys with Referential Integrity             │
@@ -62,21 +67,27 @@ The system is organized into a clean multi-tier architecture:
   - Serves static assets from `gateway/public/`.
 
 ### C. Backend Application Layer (Java 21 & Spring Boot 3.3.5 on Port 8080)
-- **Role:** Financial domain engine, business invariants enforcement, transaction coordinator.
+- **Role:** Financial domain engine, business invariants enforcement, authentication/authorization, and transaction coordinator.
 - **Components:**
-  - **Controllers:** Validate inputs using Bean Validation (`@Valid`, `@Positive`, `@Digits`, `@Pattern`).
-  - **TransferService & TransferExecutionService:** Orchestrates the transfer lifecycle, lock acquisition, debit/credit execution, and ledger entry creation.
-  - **FundingService & FundingExecutionService:** Orchestrates simulated wallet top-up, row-locking, and single-entry credit recording.
-  - **IdempotencyService:** SHA-256 request fingerprinting, atomic `PROCESSING` -> `COMPLETED` state transitions, and timeout recovery for orphaned requests.
-  - **GlobalExceptionHandler:** Maps domain exceptions to standard RFC-compliant error envelopes.
+  - **Security & Auth:** Spring Security filter chain with `JwtAuthenticationFilter`, `JwtTokenService` (HMAC-SHA256), `UserPrincipal`, and `BCryptPasswordEncoder` (strength 12).
+  - **Controllers:** Validate inputs using Bean Validation (`@Valid`, `@Positive`, `@Digits`, `@Pattern`), resolve caller identity from SecurityContext.
+  - **TransferService & TransferExecutionService:** Orchestrates the transfer lifecycle, verifies source wallet ownership, prevents transfers involving system accounts, acquires pessimistic locks in deterministic order, executes debit/credit, and records double-entry ledger entries.
+  - **FundingService & FundingExecutionService:** Orchestrates simulated wallet top-up with double-entry accounting: acquires locks, debits system settlement account, credits customer wallet, and records two matching ledger entries.
+  - **IdempotencyService:** User-scoped idempotency `(user_id, idempotency_key)`, SHA-256 request fingerprinting, atomic `PROCESSING` -> `COMPLETED` state transitions with lease fencing (`owner_token`, `version`), and crash recovery.
+  - **GlobalExceptionHandler:** Maps domain and security exceptions (`BadCredentialsException`, `AccessDeniedException`, `DuplicateIdentityException`) to RFC 7807 error envelopes.
 
 ### D. Persistence Layer (PostgreSQL 18 on Port 5432)
 - **Role:** Durable system of record.
 - **Integrity Enforcement:**
-  - `chk_wallets_balance_non_negative`: Database-level guarantee that wallet balances cannot drop below zero.
+  - `users` table: Enforces unique email constraint and stores salted BCrypt password hashes.
+  - `wallets`: Includes `user_id` FK, `account_type` (`CUSTOMER`, `SYSTEM_SETTLEMENT`).
+  - `chk_wallets_customer_has_user`: Check constraint guaranteeing that every customer wallet is owned by a valid user.
+  - `chk_wallets_balance`: Database-level guarantee that customer wallet balances cannot drop below zero, while system settlement accounts track cumulative system liquidity.
   - `trg_protect_ledger_entries`: PostgreSQL trigger prohibiting any `UPDATE` or `DELETE` on the `ledger_entries` table, ensuring immutability.
   - `chk_ledger_operation_reference`: Guarantees each ledger entry points to exactly one operation (`transfer_id` XOR `funding_id`).
-  - `chk_ledger_funding_must_be_credit`: Guarantees funding ledger entries are strictly `CREDIT`.
+  - `uq_ledger_transfer_entry_type`: Guarantees at most 1 DEBIT and 1 CREDIT per transfer.
+  - `uq_ledger_funding_entry_type`: Guarantees at most 1 DEBIT (system account) and 1 CREDIT (customer wallet) per funding.
+  - `uq_idempotency_user_key`: Unique constraint scoping idempotency keys per user `(user_id, idempotency_key)`.
 
 ---
 
@@ -151,3 +162,9 @@ sequenceDiagram
    Prevents deadlocks in bidirectional concurrent transfers ($A \to B$ and $B \to A$ simultaneously) by enforcing that both transactions always acquire locks in the exact same lexical order ($min(A, B)$ then $max(A, B)$).
 4. **Why Trigger-Enforced Append-Only Ledger?**
    Application-level constraints can be bypassed by rogue queries or misconfigured code. A PostgreSQL database trigger unconditionally guarantees the ledger table is strictly immutable.
+5. **Why Stateless JWT Bearer Authentication with In-Memory Frontend Storage?**
+   JWTs allow stateless horizontal scalability without distributed session clustering. Keeping the token in memory in the single-page application protects against automated script-based local storage scraping (XSS exfiltration).
+6. **Why Protected System Settlement Accounts for Funding?**
+   Funding money from nothing without an offsetting accounting entry breaks the fundamental financial accounting invariant $\sum(\text{Debits}) = \sum(\text{Credits})$. Introducing internal system settlement accounts (`SYSTEM_SETTLEMENT_<CURRENCY>`) creates an explicit double-entry liquidity injection that reconciles globally across the ledger.
+7. **Why User-Scoped Idempotency Keys?**
+   Globally scoped idempotency keys create cross-tenant collision and denial-of-service risks: one user could guess or reuse another user's idempotency key and hijack or block their transactions. Scoping keys composite by `(user_id, idempotency_key)` guarantees tenant isolation.

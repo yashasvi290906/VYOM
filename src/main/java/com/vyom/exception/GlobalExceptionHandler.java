@@ -8,6 +8,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -80,6 +82,60 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, "DATA_INTEGRITY_VIOLATION", "Database constraint violation occurred", request);
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+        log.warn("Authentication failed on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        log.warn("Access denied on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, "ACCESS_DENIED", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateIdentityException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateIdentity(DuplicateIdentityException ex, HttpServletRequest request) {
+        log.warn("Duplicate customer identity on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "DUPLICATE_IDENTITY", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(TransactionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionNotFound(TransactionNotFoundException ex, HttpServletRequest request) {
+        log.warn("Transaction not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OverRefundException.class)
+    public ResponseEntity<ErrorResponse> handleOverRefund(OverRefundException ex, HttpServletRequest request) {
+        log.warn("Over-refund conflict: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "OVER_REFUND_EXCEEDED", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DisputeConflictException.class)
+    public ResponseEntity<ErrorResponse> handleDisputeConflict(DisputeConflictException ex, HttpServletRequest request) {
+        log.warn("Dispute conflict: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "DISPUTE_CONFLICT", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
+        log.warn("Illegal state conflict on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "ILLEGAL_STATE", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+        log.warn("Invalid argument on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex, HttpServletRequest request) {
+        log.warn("Resource not found on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleCatchAll(Exception ex, HttpServletRequest request) {
         log.error("Unhandled internal server error on {}:", request.getRequestURI(), ex);
@@ -87,9 +143,18 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String errorCode, String message, HttpServletRequest request) {
-        String correlationId = Optional.ofNullable(request.getHeader("X-Correlation-ID"))
-                .filter(s -> !s.isBlank())
-                .orElseGet(() -> "corr-" + UUID.randomUUID().toString().substring(0, 8));
+        String correlationId = org.slf4j.MDC.get(com.vyom.security.CorrelationIdFilter.CORRELATION_ID_MDC_KEY);
+        if (correlationId == null || correlationId.isBlank()) {
+            Object attr = request.getAttribute(com.vyom.security.CorrelationIdFilter.CORRELATION_ID_MDC_KEY);
+            if (attr instanceof String s && !s.isBlank()) {
+                correlationId = s;
+            }
+        }
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = Optional.ofNullable(request.getHeader("X-Correlation-ID"))
+                    .filter(s -> !s.isBlank())
+                    .orElseGet(() -> "corr-" + UUID.randomUUID().toString().substring(0, 8));
+        }
 
         ErrorResponse response = ErrorResponse.of(
                 status.value(),

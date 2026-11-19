@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('path');
+const config = require('./config');
 const requestIdMiddleware = require('./middleware/requestId');
 const requestLoggerMiddleware = require('./middleware/requestLogger');
+const { defaultLimiter } = require('./middleware/rateLimiter');
 const errorHandlerMiddleware = require('./middleware/errorHandler');
 const apiRoutes = require('./routes/api');
 
@@ -10,11 +12,19 @@ const app = express();
 // Disable x-powered-by header
 app.disable('x-powered-by');
 
+// Explicit reverse-proxy trust policy: never blindly trust X-Forwarded-For
+if (config.trustProxy) {
+  app.set('trust proxy', config.trustProxy);
+}
+
 // Correlation and request ID middleware
 app.use(requestIdMiddleware);
 
 // Request logger middleware
 app.use(requestLoggerMiddleware);
+
+// Sliding-window rate limiting middleware
+app.use(defaultLimiter);
 
 // Parse JSON bodies with a conservative size limit
 app.use(express.json({ limit: '100kb' }));

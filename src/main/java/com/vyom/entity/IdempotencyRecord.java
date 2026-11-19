@@ -25,7 +25,10 @@ public class IdempotencyRecord {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "idempotency_key", nullable = false, unique = true, length = 128)
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @Column(name = "idempotency_key", nullable = false, length = 128)
     private String idempotencyKey;
 
     @Enumerated(EnumType.STRING)
@@ -40,6 +43,9 @@ public class IdempotencyRecord {
 
     @Column(name = "funding_id")
     private UUID fundingId;
+
+    @Column(name = "transaction_id")
+    private UUID transactionId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -67,22 +73,27 @@ public class IdempotencyRecord {
     }
 
     public IdempotencyRecord(String idempotencyKey, String requestFingerprint, IdempotencyStatus status) {
-        this.idempotencyKey = idempotencyKey;
-        this.requestFingerprint = requestFingerprint;
-        this.status = status;
-        this.operationType = OperationType.TRANSFER;
+        this(UUID.fromString("00000000-0000-0000-0000-000000000099"), idempotencyKey, OperationType.TRANSFER, requestFingerprint, status, UUID.randomUUID());
     }
 
     public IdempotencyRecord(String idempotencyKey, OperationType operationType, String requestFingerprint, IdempotencyStatus status) {
-        this.idempotencyKey = idempotencyKey;
-        this.operationType = operationType;
-        this.requestFingerprint = requestFingerprint;
-        this.status = status;
-        this.ownerToken = UUID.randomUUID();
-        this.version = 1L;
+        this(UUID.fromString("00000000-0000-0000-0000-000000000099"), idempotencyKey, operationType, requestFingerprint, status, UUID.randomUUID());
     }
 
     public IdempotencyRecord(String idempotencyKey, OperationType operationType, String requestFingerprint, IdempotencyStatus status, UUID ownerToken) {
+        this(UUID.fromString("00000000-0000-0000-0000-000000000099"), idempotencyKey, operationType, requestFingerprint, status, ownerToken);
+    }
+
+    public IdempotencyRecord(UUID userId, String idempotencyKey, String requestFingerprint, IdempotencyStatus status) {
+        this(userId, idempotencyKey, OperationType.TRANSFER, requestFingerprint, status, UUID.randomUUID());
+    }
+
+    public IdempotencyRecord(UUID userId, String idempotencyKey, OperationType operationType, String requestFingerprint, IdempotencyStatus status) {
+        this(userId, idempotencyKey, operationType, requestFingerprint, status, UUID.randomUUID());
+    }
+
+    public IdempotencyRecord(UUID userId, String idempotencyKey, OperationType operationType, String requestFingerprint, IdempotencyStatus status, UUID ownerToken) {
+        this.userId = userId;
         this.idempotencyKey = idempotencyKey;
         this.operationType = operationType;
         this.requestFingerprint = requestFingerprint;
@@ -124,6 +135,14 @@ public class IdempotencyRecord {
         this.id = id;
     }
 
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
     public String getIdempotencyKey() {
         return idempotencyKey;
     }
@@ -162,6 +181,14 @@ public class IdempotencyRecord {
 
     public void setFundingId(UUID fundingId) {
         this.fundingId = fundingId;
+    }
+
+    public UUID getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(UUID transactionId) {
+        this.transactionId = transactionId;
     }
 
     public IdempotencyStatus getStatus() {
@@ -232,4 +259,3 @@ public class IdempotencyRecord {
         return Objects.hashCode(id);
     }
 }
-

@@ -43,6 +43,9 @@ public class Transfer {
     @Column(name = "status", nullable = false, length = 20)
     private TransferStatus status;
 
+    @Column(name = "transaction_id")
+    private UUID transactionId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -122,6 +125,14 @@ public class Transfer {
 
     public void setStatus(TransferStatus status) {
         this.status = status;
+    }
+
+    public UUID getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(UUID transactionId) {
+        this.transactionId = transactionId;
     }
 
     public Instant getCreatedAt() {

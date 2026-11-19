@@ -30,16 +30,21 @@ It is architected specifically to demonstrate **concurrency safety**, **persiste
                                │ HTTP / JSON (Port: 8080)
 ┌──────────────────────────────▼──────────────────────────────┐
 │              Java 21 / Spring Boot 3.3.5 Backend             │
+│       - Spring Security & Stateless JWT Authentication      │
 │       - REST Controllers & Bean Validation                  │
+│       - Wallet Ownership & IDOR Protection Rules            │
 │       - Transaction Management (@Transactional ACID)        │
 │       - Pessimistic Row Locking (SELECT ... FOR UPDATE)     │
-│       - Persistent Idempotency Service (SHA-256 + Fencing)  │
+│       - User-Scoped Idempotency Service (SHA-256 + Fencing) │
 │       - Double-Entry Ledger Core Engine                     │
+│       - System Settlement Liquidity Management              │
 └──────────────────────────────┬──────────────────────────────┘
                                │ JDBC (Port: 5432)
 ┌──────────────────────────────▼──────────────────────────────┐
 │                    PostgreSQL 18 Database                   │
-│       - Flyway Migrations (V1, V2, V3)                      │
+│       - Flyway Migrations (V1, V2, V3, V4)                  │
+│       - Users & Authentication Tables                       │
+│       - System Settlement Wallets (INR, USD, EUR, GBP)      │
 │       - Append-Only Protection Trigger (No UPDATE/DELETE)   │
 │       - Database CHECK Constraints & Unique Indexes         │
 └─────────────────────────────────────────────────────────────┘
@@ -49,14 +54,16 @@ It is architected specifically to demonstrate **concurrency safety**, **persiste
 
 ## 2. Key Architectural Invariants
 
-1. **Non-Negative Balances:** Enforced by both service logic and a hard database constraint `CHECK (balance >= 0.0000)` on the `wallets` table.
-2. **Atomic Double-Entry Transfers:** Balance debits, credits, transfer records, and debit/credit ledger entries commit or roll back within a single atomic database transaction.
-3. **Database-Enforced Append-Only Ledger:** PostgreSQL trigger `trg_protect_ledger_entries` raises an exception on any attempt to `UPDATE` or `DELETE` existing rows in `ledger_entries`.
-4. **Simulated Wallet Funding:** Wallets initialize with a `0.00` balance. Dedicated endpoint `POST /api/v1/wallets/{id}/fundings` safely tops up demo funds, creating an auditable `fundings` record and exactly one `CREDIT` ledger entry.
-5. **Persistent Idempotency with Ownership Fencing:** Requests carrying an `Idempotency-Key` are tracked in PostgreSQL with unique owner tokens and lease versioning. Retrying an identical request returns the cached response without duplicate execution. Reusing a key with an altered payload is rejected with `409 Conflict`.
-6. **Crash-Resilient Idempotency Recovery:** Abandoned `PROCESSING` records older than 120 seconds are automatically reclaimed with atomic ownership token updates; stale workers whose lease expired are prevented from committing.
-7. **Deadlock Elimination:** Dual wallet locks are acquired in **deterministic lexicographical order** (`min(UUID_A, UUID_B)` then `max(UUID_A, UUID_B)`), mathematically preventing bidirectional deadlocks.
-8. **Lost Update Prevention:** Account rows are locked via `SELECT ... FOR UPDATE` before computing balance transitions.
+1. **Non-Negative Balances:** Enforced by both service logic and a hard database constraint `CHECK ((account_type = 'CUSTOMER' AND balance >= 0) OR (account_type = 'SYSTEM_SETTLEMENT'))` on the `wallets` table.
+2. **Double-Entry Funding Accounting:** Wallets initialize with a `0.00` balance. Dedicated endpoint `POST /api/v1/wallets/{id}/fundings` safely injects demo funds by debiting an internal system settlement account (`SYSTEM_SETTLEMENT_<CURRENCY>`) and crediting the customer's wallet. This preserves the global invariant $\sum(\text{DEBIT}) = \sum(\text{CREDIT})$.
+3. **Atomic Double-Entry Transfers:** Balance debits, credits, transfer records, and debit/credit ledger entries commit or roll back within a single atomic database transaction.
+4. **Customer Authentication & IDOR Defense:** Customer identities are registered with BCrypt password hashing. Stateless JWT bearer tokens authenticate API requests. Wallet retrieval, balance lookup, funding, transfers, and transaction history strictly enforce server-side wallet ownership.
+5. **Database-Enforced Append-Only Ledger:** PostgreSQL trigger `trg_protect_ledger_entries` raises an exception on any attempt to `UPDATE` or `DELETE` existing rows in `ledger_entries`.
+6. **User-Scoped Persistent Idempotency with Fencing:** Mutation requests carrying an `Idempotency-Key` are isolated per customer `(user_id, idempotency_key)` in PostgreSQL with unique owner tokens and lease versioning. Retrying an identical request returns the cached response without duplicate execution. Reusing a key with an altered payload is rejected with `409 Conflict`.
+7. **Crash-Resilient Idempotency Recovery:** Abandoned `PROCESSING` records older than 120 seconds are automatically reclaimed with atomic ownership token updates; stale workers whose lease expired are prevented from committing.
+8. **Deadlock Elimination:** Dual wallet locks are acquired in **deterministic lexicographical order** (`min(UUID_A, UUID_B)` then `max(UUID_A, UUID_B)`), mathematically preventing bidirectional deadlocks.
+9. **Lost Update Prevention:** Account rows are locked via `SELECT ... FOR UPDATE` before computing balance transitions.
+10. **Monetary Decimal Precision:** Floating-point `parseFloat()` conversions are eliminated across frontend and gateway; monetary amounts are transmitted as exact decimal strings, processed with `BigDecimal`, and stored as `NUMERIC(19, 4)`.
 
 ---
 
@@ -120,11 +127,15 @@ All endpoints can be accessed directly at `http://localhost:8080` or through the
 | Endpoint | Method | Required Headers | Description |
 | :--- | :--- | :--- | :--- |
 | `/health` | `GET` | None | Gateway & upstream backend health check |
-| `/api/v1/wallets` | `POST` | None | Create new wallet with initial balance 0.00 |
-| `/api/v1/wallets/{id}` | `GET` | None | Retrieve wallet details and current balance |
-| `/api/v1/wallets/{id}/fundings` | `POST` | `Idempotency-Key` | Add simulated demo funds (adds single CREDIT entry) |
-| `/api/v1/transfers` | `POST` | `Idempotency-Key` | Atomic transfer between wallets (double-entry debit/credit) |
-| `/api/v1/wallets/{id}/transactions` | `GET` | None | Paginated ledger audit trail (`?page=0&size=10`) |
+| `/api/v1/auth/register` | `POST` | None | Register new customer identity |
+| `/api/v1/auth/login` | `POST` | None | Authenticate customer and obtain JWT bearer token |
+| `/api/v1/auth/me` | `GET` | `Authorization` | Retrieve authenticated identity metadata |
+| `/api/v1/wallets` | `GET` | `Authorization` | List authenticated customer's owned wallets |
+| `/api/v1/wallets` | `POST` | Optional `Authorization` | Create new wallet with initial balance 0.00 |
+| `/api/v1/wallets/{id}` | `GET` | Optional `Authorization` | Retrieve wallet details and current balance |
+| `/api/v1/wallets/{id}/fundings` | `POST` | `Idempotency-Key`, Optional `Authorization` | Add simulated demo funds (double-entry debit/credit) |
+| `/api/v1/transfers` | `POST` | `Idempotency-Key`, Optional `Authorization` | Atomic transfer between wallets (double-entry debit/credit) |
+| `/api/v1/wallets/{id}/transactions` | `GET` | Optional `Authorization` | Paginated ledger audit trail (`?page=0&size=10`) |
 
 See [`docs/api-contract.md`](file:///D:/VYOM/docs/api-contract.md) for full request/response JSON schemas.
 
@@ -132,11 +143,16 @@ See [`docs/api-contract.md`](file:///D:/VYOM/docs/api-contract.md) for full requ
 
 ## 6. Testing & Verification
 
-### Run Backend Unit & Integration Tests (66 Tests)
+### Run Backend Unit & Integration Tests (89 Tests — 100% Passing)
 ```powershell
 .\mvnw.cmd test
 ```
-Covers:
+Covers 21 test classes with full database verification:
+- `AuthenticationIntegrationTest`: Registration, login, invalid credentials, duplicate identity, and token verification.
+- `AuthorizationOwnershipIntegrationTest`: IDOR defenses, cross-user wallet access rejections (403), system account protections.
+- `DoubleEntryFundingIntegrationTest`: Atomicity of funding, system settlement account debit, customer wallet credit, and double-entry ledger invariant.
+- `UserScopedIdempotencyIntegrationTest`: Namespace isolation of idempotency keys across different users.
+- `MonetaryPrecisionIntegrationTest`: String-based decimal transmission, `NUMERIC(19, 4)` precision without IEEE 754 loss.
 - `FundingIntegrationTest`: Funding execution, idempotency caching, zero/negative validations.
 - `LedgerIntegrityIntegrationTest`: Verifies balanced entries, constraints, and trigger-enforced immutability.
 - `IdempotencyRecoveryIntegrationTest`: Verifies timeout recovery for stale processing records.
@@ -144,14 +160,16 @@ Covers:
 - `FinancialConsistencyIntegrationTest`: Multi-threaded concurrency scenarios and mathematical reconciliation (`balance == sum(credits) - sum(debits)`).
 - `ConcurrencyIntegrationTest`: High-concurrency bidirectional transfers and concurrent funding without deadlocks or lost updates.
 
-### Run Gateway Automated Tests (12 Tests)
+### Run Gateway Automated Tests (14 Tests — 100% Passing)
 ```powershell
 npm test --prefix gateway
 ```
 Covers:
 - Request ID generation & preservation (`X-Request-Id`).
+- `Authorization: Bearer <token>` header pass-through.
 - `Idempotency-Key` header pass-through.
 - Error code preservation (400, 404, 409).
+- Authentication endpoint routing (`/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/me`).
 - Upstream connection refused handling (`503 BACKEND_UNAVAILABLE`).
 - Upstream timeout handling (`504 GATEWAY_TIMEOUT`).
 - Static asset serving (`index.html` with VYOM branding).

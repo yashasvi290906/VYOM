@@ -1,0 +1,3323 @@
+{
+  "generatedAt": "2026-11-18T10:28:38.680Z",
+  "tiers": {
+    "10": {
+      "trials": [
+        {
+          "trialId": "baseline-10vu-trial1",
+          "vus": 10,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.03,
+          "totalRequests": 2364,
+          "httpThroughput": 118.05,
+          "confirmedFinancialTps": 70.16,
+          "financialSuccessOps": 1405,
+          "financialFailOps": 0,
+          "readSuccessOps": 612,
+          "replaySuccessOps": 347,
+          "statusCodes": {
+            "200": 2364
+          },
+          "opsCount": {
+            "balance": 612,
+            "fund": 468,
+            "transfer": 937,
+            "replay": 347
+          },
+          "percentiles": {
+            "min": 6.44,
+            "p50": 41.86,
+            "p90": 141.29,
+            "p95": 346.74,
+            "p99": 791.92,
+            "p999": 1335.36,
+            "max": 1825.05,
+            "avg": 84.45
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 612,
+              "min": 6.44,
+              "p50": 33.7,
+              "p90": 56.19,
+              "p95": 69.66,
+              "p99": 174.19,
+              "p999": 693.26,
+              "max": 693.26,
+              "avg": 41.3
+            },
+            "fund": {
+              "count": 468,
+              "min": 22.93,
+              "p50": 50.59,
+              "p90": 329.89,
+              "p95": 659.5,
+              "p99": 1321.63,
+              "p999": 1825.05,
+              "max": 1825.05,
+              "avg": 131.4
+            },
+            "transfer": {
+              "count": 937,
+              "min": 17.55,
+              "p50": 46.34,
+              "p90": 218.47,
+              "p95": 505.11,
+              "p99": 738.86,
+              "p999": 1297.07,
+              "max": 1297.07,
+              "avg": 98.54
+            },
+            "replay": {
+              "count": 347,
+              "min": 7.85,
+              "p50": 31.11,
+              "p90": 87.83,
+              "p95": 174.77,
+              "p99": 659.45,
+              "p999": 1272.6,
+              "max": 1272.6,
+              "avg": 59.17
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:22:58.191Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:23:18.852Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:22:58.157Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 58,
+                "write_time_ms": 3735476,
+                "sync_time_ms": 27342,
+                "buffers_written": 92770
+              },
+              "wal": {
+                "wal_records": 9782722,
+                "wal_fpi": 166894,
+                "wal_bytes": 1523010600,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 4036,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 291430
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:23:18.844Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 58,
+                "write_time_ms": 3735476,
+                "sync_time_ms": 27342,
+                "buffers_written": 92937
+              },
+              "wal": {
+                "wal_records": 9844285,
+                "wal_fpi": 166895,
+                "wal_bytes": 1529618850,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 9076,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 521973
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 167,
+              "wal_records": 61563,
+              "wal_fpi": 1,
+              "wal_bytes": 6608250,
+              "wal_buffers_full": 0,
+              "xact_commit": 5040,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 230543
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-10vu-trial2",
+          "vus": 10,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.27,
+          "totalRequests": 4376,
+          "httpThroughput": 215.91,
+          "confirmedFinancialTps": 131.89,
+          "financialSuccessOps": 2673,
+          "financialFailOps": 0,
+          "readSuccessOps": 1042,
+          "replaySuccessOps": 661,
+          "statusCodes": {
+            "200": 4376
+          },
+          "opsCount": {
+            "balance": 1042,
+            "fund": 877,
+            "transfer": 1796,
+            "replay": 661
+          },
+          "percentiles": {
+            "min": 3.48,
+            "p50": 29.46,
+            "p90": 68.75,
+            "p95": 99.57,
+            "p99": 537.26,
+            "p999": 1186.52,
+            "max": 1197.77,
+            "avg": 46.16
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1042,
+              "min": 3.48,
+              "p50": 19.59,
+              "p90": 34.41,
+              "p95": 40.82,
+              "p99": 203.36,
+              "p999": 692.98,
+              "max": 694.2,
+              "avg": 24.83
+            },
+            "fund": {
+              "count": 877,
+              "min": 16.05,
+              "p50": 41.6,
+              "p90": 100.51,
+              "p95": 150.24,
+              "p99": 609.87,
+              "p999": 1197.77,
+              "max": 1197.77,
+              "avg": 64.88
+            },
+            "transfer": {
+              "count": 1796,
+              "min": 11.56,
+              "p50": 32.8,
+              "p90": 73.8,
+              "p95": 104.12,
+              "p99": 546.78,
+              "p999": 1185.62,
+              "max": 1188.44,
+              "avg": 52.9
+            },
+            "replay": {
+              "count": 661,
+              "min": 6.95,
+              "p50": 21.19,
+              "p90": 46.39,
+              "p95": 67.5,
+              "p99": 411.84,
+              "p999": 1189.67,
+              "max": 1189.67,
+              "avg": 36.64
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:24:50.458Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:25:11.100Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:24:50.455Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10392953,
+                "wal_fpi": 166905,
+                "wal_bytes": 1588870701,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 53454,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 3199155
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:25:11.080Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10517627,
+                "wal_fpi": 166907,
+                "wal_bytes": 1602193450,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 63141,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 3748360
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 0,
+              "wal_records": 124674,
+              "wal_fpi": 2,
+              "wal_bytes": 13322749,
+              "wal_buffers_full": 0,
+              "xact_commit": 9687,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 549205
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-10vu-trial3",
+          "vus": 10,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.04,
+          "totalRequests": 4897,
+          "httpThroughput": 244.39,
+          "confirmedFinancialTps": 146.02,
+          "financialSuccessOps": 2926,
+          "financialFailOps": 0,
+          "readSuccessOps": 1216,
+          "replaySuccessOps": 755,
+          "statusCodes": {
+            "200": 4897
+          },
+          "opsCount": {
+            "balance": 1216,
+            "fund": 882,
+            "transfer": 2044,
+            "replay": 755
+          },
+          "percentiles": {
+            "min": 2.66,
+            "p50": 28.04,
+            "p90": 70.48,
+            "p95": 98.36,
+            "p99": 305.5,
+            "p999": 673.4,
+            "max": 689.03,
+            "avg": 40.74
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1216,
+              "min": 2.66,
+              "p50": 15.99,
+              "p90": 29.68,
+              "p95": 35.54,
+              "p99": 177.29,
+              "p999": 667.57,
+              "max": 672.59,
+              "avg": 21.34
+            },
+            "fund": {
+              "count": 882,
+              "min": 13.25,
+              "p50": 40.39,
+              "p90": 103.79,
+              "p95": 162.44,
+              "p99": 304.58,
+              "p999": 667.36,
+              "max": 667.36,
+              "avg": 57
+            },
+            "transfer": {
+              "count": 2044,
+              "min": 11.41,
+              "p50": 32.57,
+              "p90": 80.05,
+              "p95": 110.84,
+              "p99": 355.13,
+              "p999": 675.68,
+              "max": 689.03,
+              "avg": 48.69
+            },
+            "replay": {
+              "count": 755,
+              "min": 5.2,
+              "p50": 20.05,
+              "p90": 47.7,
+              "p95": 68.11,
+              "p99": 213.64,
+              "p999": 673.45,
+              "max": 673.45,
+              "avg": 31.48
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:25:36.423Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:25:56.952Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:25:36.416Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10637892,
+                "wal_fpi": 166907,
+                "wal_bytes": 1615319977,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 72978,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 4197225
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:25:56.946Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10773725,
+                "wal_fpi": 166907,
+                "wal_bytes": 1630076486,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 83951,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 4699419
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 0,
+              "wal_records": 135833,
+              "wal_fpi": 0,
+              "wal_bytes": 14756509,
+              "wal_buffers_full": 0,
+              "xact_commit": 10973,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 502194
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-10vu-trial4",
+          "vus": 10,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.4,
+          "totalRequests": 4030,
+          "httpThroughput": 197.51,
+          "confirmedFinancialTps": 117.87,
+          "financialSuccessOps": 2405,
+          "financialFailOps": 0,
+          "readSuccessOps": 975,
+          "replaySuccessOps": 650,
+          "statusCodes": {
+            "200": 4030
+          },
+          "opsCount": {
+            "balance": 975,
+            "fund": 844,
+            "transfer": 1561,
+            "replay": 650
+          },
+          "percentiles": {
+            "min": 2.89,
+            "p50": 28.98,
+            "p90": 93.87,
+            "p95": 133.39,
+            "p99": 484.62,
+            "p999": 880.99,
+            "max": 897.21,
+            "avg": 50.48
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 975,
+              "min": 2.89,
+              "p50": 13.98,
+              "p90": 30.45,
+              "p95": 34.61,
+              "p99": 348.56,
+              "p999": 880.99,
+              "max": 880.99,
+              "avg": 23.32
+            },
+            "fund": {
+              "count": 844,
+              "min": 13.11,
+              "p50": 45.86,
+              "p90": 128.19,
+              "p95": 175.7,
+              "p99": 590.28,
+              "p999": 897.21,
+              "max": 897.21,
+              "avg": 73.58
+            },
+            "transfer": {
+              "count": 1561,
+              "min": 10.19,
+              "p50": 34.38,
+              "p90": 105.31,
+              "p95": 150.02,
+              "p99": 590.42,
+              "p999": 884.9,
+              "max": 887.52,
+              "avg": 62.1
+            },
+            "replay": {
+              "count": 650,
+              "min": 5.28,
+              "p50": 19.03,
+              "p90": 57.69,
+              "p95": 83.04,
+              "p99": 365.87,
+              "p999": 653.76,
+              "max": 653.76,
+              "avg": 33.36
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:26:21.571Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:26:42.427Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:26:21.567Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10902256,
+                "wal_fpi": 166907,
+                "wal_bytes": 1643830779,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 93923,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 5195369
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:26:42.420Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 11011856,
+                "wal_fpi": 166907,
+                "wal_bytes": 1655545352,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 102882,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 5607434
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 0,
+              "wal_records": 109600,
+              "wal_fpi": 0,
+              "wal_bytes": 11714573,
+              "wal_buffers_full": 0,
+              "xact_commit": 8959,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 412065
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-10vu-trial5",
+          "vus": 10,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.28,
+          "totalRequests": 3200,
+          "httpThroughput": 157.82,
+          "confirmedFinancialTps": 95.73,
+          "financialSuccessOps": 1941,
+          "financialFailOps": 0,
+          "readSuccessOps": 770,
+          "replaySuccessOps": 489,
+          "statusCodes": {
+            "200": 3200
+          },
+          "opsCount": {
+            "balance": 770,
+            "fund": 651,
+            "transfer": 1290,
+            "replay": 489
+          },
+          "percentiles": {
+            "min": 3.52,
+            "p50": 31.3,
+            "p90": 130.19,
+            "p95": 217.4,
+            "p99": 487.7,
+            "p999": 890.14,
+            "max": 1035.86,
+            "avg": 62.77
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 770,
+              "min": 3.52,
+              "p50": 11.39,
+              "p90": 23.69,
+              "p95": 27.84,
+              "p99": 49.6,
+              "p999": 348.46,
+              "max": 348.46,
+              "avg": 13.95
+            },
+            "fund": {
+              "count": 651,
+              "min": 12.63,
+              "p50": 69.88,
+              "p90": 244.08,
+              "p95": 366.82,
+              "p99": 644.99,
+              "p999": 1035.86,
+              "max": 1035.86,
+              "avg": 109.94
+            },
+            "transfer": {
+              "count": 1290,
+              "min": 12.82,
+              "p50": 43.54,
+              "p90": 134.75,
+              "p95": 219.8,
+              "p99": 602.62,
+              "p999": 885.55,
+              "max": 890.14,
+              "avg": 74.62
+            },
+            "replay": {
+              "count": 489,
+              "min": 6.4,
+              "p50": 19.61,
+              "p90": 90.17,
+              "p95": 191.01,
+              "p99": 359.84,
+              "p999": 883.51,
+              "max": 883.51,
+              "avg": 45.62
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:27:53.472Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:28:14.244Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:27:53.461Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 95412
+              },
+              "wal": {
+                "wal_records": 11307365,
+                "wal_fpi": 171561,
+                "wal_bytes": 1716874451,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 126471,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 6784773
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:28:14.239Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 96106
+              },
+              "wal": {
+                "wal_records": 11395150,
+                "wal_fpi": 171567,
+                "wal_bytes": 1726540085,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 133540,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 7138298
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 694,
+              "wal_records": 87785,
+              "wal_fpi": 6,
+              "wal_bytes": 9665634,
+              "wal_buffers_full": 0,
+              "xact_commit": 7069,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 353525
+            }
+          },
+          "waitEventSamples": []
+        }
+      ],
+      "summary": {
+        "confirmedFinancialTps": {
+          "min": 70.16,
+          "max": 146.02,
+          "median": 117.87,
+          "mean": 112.33,
+          "stdDev": 26.84,
+          "cvPercent": 23.89
+        },
+        "httpThroughput": {
+          "min": 118.05,
+          "max": 244.39,
+          "median": 197.51,
+          "mean": 186.74,
+          "stdDev": 44.37,
+          "cvPercent": 23.76
+        },
+        "p50Latency": {
+          "min": 28.04,
+          "max": 41.86,
+          "median": 29.46,
+          "mean": 31.93,
+          "stdDev": 5.08,
+          "cvPercent": 15.91
+        },
+        "p95Latency": {
+          "min": 98.36,
+          "max": 346.74,
+          "median": 133.39,
+          "mean": 179.09,
+          "stdDev": 94.34,
+          "cvPercent": 52.68
+        },
+        "p99Latency": {
+          "min": 305.5,
+          "max": 791.92,
+          "median": 487.7,
+          "mean": 521.4,
+          "stdDev": 156.55,
+          "cvPercent": 30.02
+        },
+        "avgLatency": {
+          "min": 40.74,
+          "max": 84.45,
+          "median": 50.48,
+          "mean": 56.92,
+          "stdDev": 15.56,
+          "cvPercent": 27.34
+        },
+        "transferP50": {
+          "min": 32.57,
+          "max": 46.34,
+          "median": 34.38,
+          "mean": 37.93,
+          "stdDev": 5.83,
+          "cvPercent": 15.37
+        },
+        "transferP95": {
+          "min": 104.12,
+          "max": 505.11,
+          "median": 150.02,
+          "mean": 217.98,
+          "stdDev": 149.34,
+          "cvPercent": 68.51
+        },
+        "fundP50": {
+          "min": 40.39,
+          "max": 69.88,
+          "median": 45.86,
+          "mean": 49.66,
+          "stdDev": 10.72,
+          "cvPercent": 21.59
+        },
+        "fundP95": {
+          "min": 150.24,
+          "max": 659.5,
+          "median": 175.7,
+          "mean": 302.94,
+          "stdDev": 195.17,
+          "cvPercent": 64.43
+        }
+      }
+    },
+    "15": {
+      "trials": [
+        {
+          "trialId": "baseline-15vu-trial1",
+          "vus": 15,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.03,
+          "totalRequests": 3865,
+          "httpThroughput": 192.94,
+          "confirmedFinancialTps": 115.16,
+          "financialSuccessOps": 2307,
+          "financialFailOps": 0,
+          "readSuccessOps": 986,
+          "replaySuccessOps": 572,
+          "statusCodes": {
+            "200": 3865
+          },
+          "opsCount": {
+            "balance": 986,
+            "fund": 732,
+            "transfer": 1575,
+            "replay": 572
+          },
+          "percentiles": {
+            "min": 4.8,
+            "p50": 53.23,
+            "p90": 89.24,
+            "p95": 187.16,
+            "p99": 828.3,
+            "p999": 1262.61,
+            "max": 1649.39,
+            "avg": 77.52
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 986,
+              "min": 4.88,
+              "p50": 52.91,
+              "p90": 82.87,
+              "p95": 107.08,
+              "p99": 685.33,
+              "p999": 1009.97,
+              "max": 1009.97,
+              "avg": 69.89
+            },
+            "fund": {
+              "count": 732,
+              "min": 21.13,
+              "p50": 59.24,
+              "p90": 107.71,
+              "p95": 227.98,
+              "p99": 836.41,
+              "p999": 1649.39,
+              "max": 1649.39,
+              "avg": 89.27
+            },
+            "transfer": {
+              "count": 1575,
+              "min": 16,
+              "p50": 54.88,
+              "p90": 95.03,
+              "p95": 199.03,
+              "p99": 837.2,
+              "p999": 1256.64,
+              "max": 1405.74,
+              "avg": 81.93
+            },
+            "replay": {
+              "count": 572,
+              "min": 4.8,
+              "p50": 42.34,
+              "p90": 69.42,
+              "p95": 116.01,
+              "p99": 661,
+              "p999": 1092.77,
+              "max": 1092.77,
+              "avg": 63.49
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:23:20.705Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:23:41.196Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:23:20.698Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 58,
+                "write_time_ms": 3735476,
+                "sync_time_ms": 27342,
+                "buffers_written": 92957
+              },
+              "wal": {
+                "wal_records": 9844285,
+                "wal_fpi": 166895,
+                "wal_bytes": 1529618850,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 9082,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 522665
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:23:41.191Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 58,
+                "write_time_ms": 3735476,
+                "sync_time_ms": 27342,
+                "buffers_written": 93112
+              },
+              "wal": {
+                "wal_records": 9951070,
+                "wal_fpi": 166895,
+                "wal_bytes": 1541115360,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 17814,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 949603
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 155,
+              "wal_records": 106785,
+              "wal_fpi": 0,
+              "wal_bytes": 11496510,
+              "wal_buffers_full": 0,
+              "xact_commit": 8732,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 426938
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-15vu-trial2",
+          "vus": 15,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.04,
+          "totalRequests": 5095,
+          "httpThroughput": 254.29,
+          "confirmedFinancialTps": 151.73,
+          "financialSuccessOps": 3040,
+          "financialFailOps": 0,
+          "readSuccessOps": 1254,
+          "replaySuccessOps": 801,
+          "statusCodes": {
+            "200": 5095
+          },
+          "opsCount": {
+            "balance": 1254,
+            "fund": 1014,
+            "transfer": 2026,
+            "replay": 801
+          },
+          "percentiles": {
+            "min": 3.56,
+            "p50": 40.43,
+            "p90": 78.99,
+            "p95": 123.67,
+            "p99": 727.07,
+            "p999": 842.71,
+            "max": 923.4,
+            "avg": 58.79
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1254,
+              "min": 3.56,
+              "p50": 31.88,
+              "p90": 55.89,
+              "p95": 70.02,
+              "p99": 367.64,
+              "p999": 825.23,
+              "max": 835.43,
+              "avg": 42.07
+            },
+            "fund": {
+              "count": 1014,
+              "min": 15.41,
+              "p50": 52.08,
+              "p90": 110.11,
+              "p95": 189.43,
+              "p99": 700.18,
+              "p999": 894,
+              "max": 923.4,
+              "avg": 77.53
+            },
+            "transfer": {
+              "count": 2026,
+              "min": 13.53,
+              "p50": 43.12,
+              "p90": 82.53,
+              "p95": 132.21,
+              "p99": 743.89,
+              "p999": 853.21,
+              "max": 859.34,
+              "avg": 65.64
+            },
+            "replay": {
+              "count": 801,
+              "min": 8.06,
+              "p50": 31.07,
+              "p90": 57.72,
+              "p95": 74.3,
+              "p99": 397.01,
+              "p999": 834.22,
+              "max": 834.22,
+              "avg": 43.89
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:24:27.894Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:24:48.518Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:24:27.890Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10253544,
+                "wal_fpi": 166905,
+                "wal_bytes": 1573974170,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 42041,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 2437051
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:24:48.514Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10392915,
+                "wal_fpi": 166905,
+                "wal_bytes": 1588867200,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 53445,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 3198228
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 0,
+              "wal_records": 139371,
+              "wal_fpi": 0,
+              "wal_bytes": 14893030,
+              "wal_buffers_full": 0,
+              "xact_commit": 11404,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 761177
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-15vu-trial3",
+          "vus": 15,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.21,
+          "totalRequests": 4543,
+          "httpThroughput": 224.8,
+          "confirmedFinancialTps": 133.26,
+          "financialSuccessOps": 2693,
+          "financialFailOps": 0,
+          "readSuccessOps": 1168,
+          "replaySuccessOps": 682,
+          "statusCodes": {
+            "200": 4543
+          },
+          "opsCount": {
+            "balance": 1168,
+            "fund": 945,
+            "transfer": 1748,
+            "replay": 682
+          },
+          "percentiles": {
+            "min": 3.75,
+            "p50": 42.8,
+            "p90": 108.98,
+            "p95": 183.5,
+            "p99": 668,
+            "p999": 1010.38,
+            "max": 1031.31,
+            "avg": 66.57
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1168,
+              "min": 3.75,
+              "p50": 24.02,
+              "p90": 49.77,
+              "p95": 58.74,
+              "p99": 395.93,
+              "p999": 813.11,
+              "max": 813.31,
+              "avg": 35.44
+            },
+            "fund": {
+              "count": 945,
+              "min": 13.99,
+              "p50": 66.15,
+              "p90": 190.34,
+              "p95": 309.96,
+              "p99": 807.4,
+              "p999": 1029.09,
+              "max": 1029.09,
+              "avg": 103.73
+            },
+            "transfer": {
+              "count": 1748,
+              "min": 13.49,
+              "p50": 48.89,
+              "p90": 113.25,
+              "p95": 181.39,
+              "p99": 676.71,
+              "p999": 1021.44,
+              "max": 1031.31,
+              "avg": 74.2
+            },
+            "replay": {
+              "count": 682,
+              "min": 6.57,
+              "p50": 33.33,
+              "p90": 76.46,
+              "p95": 102.7,
+              "p99": 422.8,
+              "p999": 678.57,
+              "max": 678.57,
+              "avg": 48.85
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:25:13.114Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:25:34.117Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:25:13.109Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10517627,
+                "wal_fpi": 166907,
+                "wal_bytes": 1602193450,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 63147,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 3749052
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:25:34.106Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10637892,
+                "wal_fpi": 166907,
+                "wal_bytes": 1615319977,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 72972,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 4196533
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 0,
+              "wal_records": 120265,
+              "wal_fpi": 0,
+              "wal_bytes": 13126527,
+              "wal_buffers_full": 0,
+              "xact_commit": 9825,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 447481
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-15vu-trial4",
+          "vus": 15,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.09,
+          "totalRequests": 3876,
+          "httpThroughput": 192.89,
+          "confirmedFinancialTps": 114.46,
+          "financialSuccessOps": 2300,
+          "financialFailOps": 0,
+          "readSuccessOps": 1022,
+          "replaySuccessOps": 554,
+          "statusCodes": {
+            "200": 3876
+          },
+          "opsCount": {
+            "balance": 1022,
+            "fund": 821,
+            "transfer": 1479,
+            "replay": 554
+          },
+          "percentiles": {
+            "min": 3.31,
+            "p50": 40.47,
+            "p90": 164.42,
+            "p95": 276.68,
+            "p99": 651.23,
+            "p999": 1681.06,
+            "max": 1890.08,
+            "avg": 77.51
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1022,
+              "min": 3.31,
+              "p50": 13.97,
+              "p90": 36,
+              "p95": 47.73,
+              "p99": 185.53,
+              "p999": 795.65,
+              "max": 802.84,
+              "avg": 21.16
+            },
+            "fund": {
+              "count": 821,
+              "min": 15.38,
+              "p50": 95.11,
+              "p90": 317.99,
+              "p95": 441.2,
+              "p99": 831.64,
+              "p999": 1890.08,
+              "max": 1890.08,
+              "avg": 150.23
+            },
+            "transfer": {
+              "count": 1479,
+              "min": 11.48,
+              "p50": 55.73,
+              "p90": 164.92,
+              "p95": 243.9,
+              "p99": 659.4,
+              "p999": 1625.35,
+              "max": 1676.87,
+              "avg": 88.06
+            },
+            "replay": {
+              "count": 554,
+              "min": 5.58,
+              "p50": 24.72,
+              "p90": 89.19,
+              "p95": 115.33,
+              "p99": 370.37,
+              "p999": 541.71,
+              "max": 541.71,
+              "avg": 45.51
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:27:07.498Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:27:28.112Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:27:07.492Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93887
+              },
+              "wal": {
+                "wal_records": 11119897,
+                "wal_fpi": 171479,
+                "wal_bytes": 1696234821,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 111103,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 6044779
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:27:28.108Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 94569
+              },
+              "wal": {
+                "wal_records": 11223740,
+                "wal_fpi": 171555,
+                "wal_bytes": 1707882716,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 119611,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 6450813
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 682,
+              "wal_records": 103843,
+              "wal_fpi": 76,
+              "wal_bytes": 11647895,
+              "wal_buffers_full": 0,
+              "xact_commit": 8508,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 406034
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-15vu-trial5",
+          "vus": 15,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.12,
+          "totalRequests": 3460,
+          "httpThroughput": 172.01,
+          "confirmedFinancialTps": 101.91,
+          "financialSuccessOps": 2050,
+          "financialFailOps": 0,
+          "readSuccessOps": 881,
+          "replaySuccessOps": 529,
+          "statusCodes": {
+            "200": 3460
+          },
+          "opsCount": {
+            "balance": 881,
+            "fund": 648,
+            "transfer": 1402,
+            "replay": 529
+          },
+          "percentiles": {
+            "min": 2.25,
+            "p50": 41.14,
+            "p90": 172.57,
+            "p95": 293.85,
+            "p99": 780.98,
+            "p999": 1731.47,
+            "max": 2454.5,
+            "avg": 86.9
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 881,
+              "min": 2.25,
+              "p50": 11.9,
+              "p90": 29.24,
+              "p95": 35.31,
+              "p99": 49.38,
+              "p999": 542.58,
+              "max": 542.58,
+              "avg": 15.95
+            },
+            "fund": {
+              "count": 648,
+              "min": 14.38,
+              "p50": 113.62,
+              "p90": 353.62,
+              "p95": 561.1,
+              "p99": 1334.08,
+              "p999": 2454.5,
+              "max": 2454.5,
+              "avg": 178.34
+            },
+            "transfer": {
+              "count": 1402,
+              "min": 13.5,
+              "p50": 61.57,
+              "p90": 165.04,
+              "p95": 282.83,
+              "p99": 814.46,
+              "p999": 1731.47,
+              "max": 1733.49,
+              "avg": 100.32
+            },
+            "replay": {
+              "count": 529,
+              "min": 6.61,
+              "p50": 29.01,
+              "p90": 107.1,
+              "p95": 131.61,
+              "p99": 604.65,
+              "p999": 1206.45,
+              "max": 1206.45,
+              "avg": 57.51
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:28:16.392Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:28:37.157Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:28:16.382Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 96181
+              },
+              "wal": {
+                "wal_records": 11395150,
+                "wal_fpi": 171567,
+                "wal_bytes": 1726540085,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 133546,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 7138990
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:28:37.145Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 96870
+              },
+              "wal": {
+                "wal_records": 11490046,
+                "wal_fpi": 171578,
+                "wal_bytes": 1737046011,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 141307,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 7509796
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 689,
+              "wal_records": 94896,
+              "wal_fpi": 11,
+              "wal_bytes": 10505926,
+              "wal_buffers_full": 0,
+              "xact_commit": 7761,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 370806
+            }
+          },
+          "waitEventSamples": []
+        }
+      ],
+      "summary": {
+        "confirmedFinancialTps": {
+          "min": 101.91,
+          "max": 151.73,
+          "median": 115.16,
+          "mean": 123.3,
+          "stdDev": 17.37,
+          "cvPercent": 14.09
+        },
+        "httpThroughput": {
+          "min": 172.01,
+          "max": 254.29,
+          "median": 192.94,
+          "mean": 207.39,
+          "stdDev": 28.89,
+          "cvPercent": 13.93
+        },
+        "p50Latency": {
+          "min": 40.43,
+          "max": 53.23,
+          "median": 41.14,
+          "mean": 43.61,
+          "stdDev": 4.88,
+          "cvPercent": 11.19
+        },
+        "p95Latency": {
+          "min": 123.67,
+          "max": 293.85,
+          "median": 187.16,
+          "mean": 212.97,
+          "stdDev": 63.42,
+          "cvPercent": 29.78
+        },
+        "p99Latency": {
+          "min": 651.23,
+          "max": 828.3,
+          "median": 727.07,
+          "mean": 731.12,
+          "stdDev": 66.8,
+          "cvPercent": 9.14
+        },
+        "avgLatency": {
+          "min": 58.79,
+          "max": 86.9,
+          "median": 77.51,
+          "mean": 73.46,
+          "stdDev": 9.76,
+          "cvPercent": 13.29
+        },
+        "transferP50": {
+          "min": 43.12,
+          "max": 61.57,
+          "median": 54.88,
+          "mean": 52.84,
+          "stdDev": 6.31,
+          "cvPercent": 11.94
+        },
+        "transferP95": {
+          "min": 132.21,
+          "max": 282.83,
+          "median": 199.03,
+          "mean": 207.87,
+          "stdDev": 51.81,
+          "cvPercent": 24.92
+        },
+        "fundP50": {
+          "min": 52.08,
+          "max": 113.62,
+          "median": 66.15,
+          "mean": 77.24,
+          "stdDev": 23.34,
+          "cvPercent": 30.22
+        },
+        "fundP95": {
+          "min": 189.43,
+          "max": 561.1,
+          "median": 309.96,
+          "mean": 345.93,
+          "stdDev": 137.89,
+          "cvPercent": 39.86
+        }
+      }
+    },
+    "20": {
+      "trials": [
+        {
+          "trialId": "baseline-20vu-trial1",
+          "vus": 20,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.04,
+          "totalRequests": 5036,
+          "httpThroughput": 251.24,
+          "confirmedFinancialTps": 152.61,
+          "financialSuccessOps": 3059,
+          "financialFailOps": 0,
+          "readSuccessOps": 1215,
+          "replaySuccessOps": 762,
+          "statusCodes": {
+            "200": 5036
+          },
+          "opsCount": {
+            "balance": 1215,
+            "fund": 1062,
+            "transfer": 1997,
+            "replay": 762
+          },
+          "percentiles": {
+            "min": 6.79,
+            "p50": 63.61,
+            "p90": 108.33,
+            "p95": 172.75,
+            "p99": 419.87,
+            "p999": 702.4,
+            "max": 740.54,
+            "avg": 79.38
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1215,
+              "min": 6.79,
+              "p50": 63.77,
+              "p90": 97.24,
+              "p95": 124.65,
+              "p99": 407.89,
+              "p999": 674.85,
+              "max": 682.19,
+              "avg": 74.02
+            },
+            "fund": {
+              "count": 1062,
+              "min": 20.6,
+              "p50": 71.32,
+              "p90": 144.09,
+              "p95": 218.6,
+              "p99": 431.97,
+              "p999": 686.41,
+              "max": 707.5,
+              "avg": 91.84
+            },
+            "transfer": {
+              "count": 1997,
+              "min": 17.69,
+              "p50": 64.01,
+              "p90": 109.91,
+              "p95": 180.32,
+              "p99": 422.01,
+              "p999": 732.84,
+              "max": 740.54,
+              "avg": 81.57
+            },
+            "replay": {
+              "count": 762,
+              "min": 10.39,
+              "p50": 51.86,
+              "p90": 84.53,
+              "p95": 122.69,
+              "p99": 405.11,
+              "p999": 693.84,
+              "max": 693.84,
+              "avg": 64.83
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:23:43.162Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:24:03.669Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:23:43.157Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 58,
+                "write_time_ms": 3735476,
+                "sync_time_ms": 27342,
+                "buffers_written": 93131
+              },
+              "wal": {
+                "wal_records": 9951071,
+                "wal_fpi": 166895,
+                "wal_bytes": 1541115410,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 17820,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 950295
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:24:03.664Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10091470,
+                "wal_fpi": 166905,
+                "wal_bytes": 1556279614,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 28948,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 1594492
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 1,
+              "checkpoint_write_time_ms": 119710,
+              "checkpoint_sync_time_ms": 893,
+              "checkpoint_buffers_written": 7,
+              "wal_records": 140399,
+              "wal_fpi": 10,
+              "wal_bytes": 15164204,
+              "wal_buffers_full": 0,
+              "xact_commit": 11128,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 644197
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-20vu-trial2",
+          "vus": 20,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.02,
+          "totalRequests": 5826,
+          "httpThroughput": 291.01,
+          "confirmedFinancialTps": 176.28,
+          "financialSuccessOps": 3529,
+          "financialFailOps": 0,
+          "readSuccessOps": 1433,
+          "replaySuccessOps": 864,
+          "statusCodes": {
+            "200": 5826
+          },
+          "opsCount": {
+            "balance": 1433,
+            "fund": 1167,
+            "transfer": 2362,
+            "replay": 864
+          },
+          "percentiles": {
+            "min": 3.47,
+            "p50": 54.67,
+            "p90": 92.53,
+            "p95": 134.61,
+            "p99": 441.67,
+            "p999": 860.36,
+            "max": 881.76,
+            "avg": 68.54
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1433,
+              "min": 3.47,
+              "p50": 50.59,
+              "p90": 72.88,
+              "p95": 84.32,
+              "p99": 232.58,
+              "p999": 703.95,
+              "max": 704.68,
+              "avg": 53.86
+            },
+            "fund": {
+              "count": 1167,
+              "min": 21.52,
+              "p50": 65.76,
+              "p90": 136.68,
+              "p95": 208.67,
+              "p99": 707.88,
+              "p999": 866.93,
+              "max": 874.73,
+              "avg": 91.39
+            },
+            "transfer": {
+              "count": 2362,
+              "min": 15.91,
+              "p50": 55.81,
+              "p90": 93.71,
+              "p95": 124.85,
+              "p99": 441.67,
+              "p999": 859.51,
+              "max": 881.76,
+              "avg": 71.14
+            },
+            "replay": {
+              "count": 864,
+              "min": 4.98,
+              "p50": 44.96,
+              "p90": 69.17,
+              "p95": 84.12,
+              "p99": 369.27,
+              "p999": 849.67,
+              "max": 849.67,
+              "avg": 54.93
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:24:05.520Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:24:26.068Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:24:05.517Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10091470,
+                "wal_fpi": 166905,
+                "wal_bytes": 1556279614,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 28954,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 1595184
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:24:26.063Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10253544,
+                "wal_fpi": 166905,
+                "wal_bytes": 1573974170,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 42035,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 2436359
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 0,
+              "wal_records": 162074,
+              "wal_fpi": 0,
+              "wal_bytes": 17694556,
+              "wal_buffers_full": 0,
+              "xact_commit": 13081,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 841175
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-20vu-trial3",
+          "vus": 20,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.12,
+          "totalRequests": 4443,
+          "httpThroughput": 220.86,
+          "confirmedFinancialTps": 134.57,
+          "financialSuccessOps": 2707,
+          "financialFailOps": 0,
+          "readSuccessOps": 1100,
+          "replaySuccessOps": 636,
+          "statusCodes": {
+            "200": 4443
+          },
+          "opsCount": {
+            "balance": 1100,
+            "fund": 882,
+            "transfer": 1825,
+            "replay": 636
+          },
+          "percentiles": {
+            "min": 3.18,
+            "p50": 46.96,
+            "p90": 197.06,
+            "p95": 348.13,
+            "p99": 768.52,
+            "p999": 998.57,
+            "max": 1405.93,
+            "avg": 90.04
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 1100,
+              "min": 3.18,
+              "p50": 16.23,
+              "p90": 44.19,
+              "p95": 54.3,
+              "p99": 227.75,
+              "p999": 687.67,
+              "max": 750.78,
+              "avg": 25.24
+            },
+            "fund": {
+              "count": 882,
+              "min": 17.7,
+              "p50": 101.97,
+              "p90": 419.12,
+              "p95": 596.03,
+              "p99": 866.86,
+              "p999": 1405.93,
+              "max": 1405.93,
+              "avg": 174.53
+            },
+            "transfer": {
+              "count": 1825,
+              "min": 12.08,
+              "p50": 59.79,
+              "p90": 205.65,
+              "p95": 365.97,
+              "p99": 783.11,
+              "p999": 998.57,
+              "max": 1035.59,
+              "avg": 103.41
+            },
+            "replay": {
+              "count": 636,
+              "min": 6.05,
+              "p50": 32.39,
+              "p90": 74.7,
+              "p95": 106.63,
+              "p99": 260.47,
+              "p999": 785.02,
+              "max": 785.02,
+              "avg": 46.54
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:25:59.159Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:26:19.744Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:25:59.146Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10777321,
+                "wal_fpi": 166907,
+                "wal_bytes": 1630378287,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 83977,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 4712250
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:26:19.737Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 10902256,
+                "wal_fpi": 166907,
+                "wal_bytes": 1643830779,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 93917,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 5194677
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 0,
+              "wal_records": 124935,
+              "wal_fpi": 0,
+              "wal_bytes": 13452492,
+              "wal_buffers_full": 0,
+              "xact_commit": 9940,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 482427
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-20vu-trial4",
+          "vus": 20,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.23,
+          "totalRequests": 3592,
+          "httpThroughput": 177.57,
+          "confirmedFinancialTps": 108.41,
+          "financialSuccessOps": 2193,
+          "financialFailOps": 0,
+          "readSuccessOps": 850,
+          "replaySuccessOps": 549,
+          "statusCodes": {
+            "200": 3592
+          },
+          "opsCount": {
+            "balance": 850,
+            "fund": 767,
+            "transfer": 1426,
+            "replay": 549
+          },
+          "percentiles": {
+            "min": 3.78,
+            "p50": 46.43,
+            "p90": 290.36,
+            "p95": 510.48,
+            "p99": 966.48,
+            "p999": 1490.63,
+            "max": 1566.63,
+            "avg": 112.48
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 850,
+              "min": 3.78,
+              "p50": 13.91,
+              "p90": 38.31,
+              "p95": 50.52,
+              "p99": 544.08,
+              "p999": 657.18,
+              "max": 657.18,
+              "avg": 27.97
+            },
+            "fund": {
+              "count": 767,
+              "min": 18.73,
+              "p50": 137.17,
+              "p90": 592.82,
+              "p95": 804.56,
+              "p99": 1359.97,
+              "p999": 1566.63,
+              "max": 1566.63,
+              "avg": 250.36
+            },
+            "transfer": {
+              "count": 1426,
+              "min": 11.75,
+              "p50": 64.46,
+              "p90": 247.32,
+              "p95": 399.7,
+              "p99": 873.09,
+              "p999": 1210.59,
+              "max": 1212.74,
+              "avg": 113.24
+            },
+            "replay": {
+              "count": 549,
+              "min": 5.97,
+              "p50": 27.14,
+              "p90": 99.7,
+              "p95": 124.89,
+              "p99": 257.27,
+              "p999": 947.6,
+              "max": 947.6,
+              "avg": 48.74
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:26:44.267Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:27:05.309Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:26:44.263Z",
+              "checkpointer": {
+                "num_timed": 153,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93138
+              },
+              "wal": {
+                "wal_records": 11011856,
+                "wal_fpi": 166907,
+                "wal_bytes": 1655545352,
+                "wal_buffers_full": 243
+              },
+              "database": {
+                "xact_commit": 102888,
+                "xact_rollback": 4,
+                "blks_read": 149,
+                "blks_hit": 5608126
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:27:05.305Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 93865
+              },
+              "wal": {
+                "wal_records": 11119897,
+                "wal_fpi": 171479,
+                "wal_bytes": 1696234821,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 111097,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 6044087
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 1,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 727,
+              "wal_records": 108041,
+              "wal_fpi": 4572,
+              "wal_bytes": 40689469,
+              "wal_buffers_full": 42,
+              "xact_commit": 8209,
+              "xact_rollback": 0,
+              "blks_read": 2,
+              "blks_hit": 435961
+            }
+          },
+          "waitEventSamples": []
+        },
+        {
+          "trialId": "baseline-20vu-trial5",
+          "vus": 20,
+          "hotWallet": false,
+          "telemetryMode": "minimal",
+          "durationSec": 20.27,
+          "totalRequests": 2963,
+          "httpThroughput": 146.2,
+          "confirmedFinancialTps": 87.68,
+          "financialSuccessOps": 1777,
+          "financialFailOps": 0,
+          "readSuccessOps": 737,
+          "replaySuccessOps": 449,
+          "statusCodes": {
+            "200": 2963
+          },
+          "opsCount": {
+            "balance": 737,
+            "fund": 594,
+            "transfer": 1183,
+            "replay": 449
+          },
+          "percentiles": {
+            "min": 3.33,
+            "p50": 48.97,
+            "p90": 358.08,
+            "p95": 654.84,
+            "p99": 1488.8,
+            "p999": 2072.86,
+            "max": 2165.48,
+            "avg": 136.42
+          },
+          "perOpPercentiles": {
+            "balance": {
+              "count": 737,
+              "min": 3.33,
+              "p50": 13.58,
+              "p90": 33.27,
+              "p95": 38.62,
+              "p99": 53.35,
+              "p999": 717.48,
+              "max": 717.48,
+              "avg": 19.24
+            },
+            "fund": {
+              "count": 594,
+              "min": 17.11,
+              "p50": 145.2,
+              "p90": 780.79,
+              "p95": 1019.88,
+              "p99": 1881.91,
+              "p999": 2165.48,
+              "max": 2165.48,
+              "avg": 301.19
+            },
+            "transfer": {
+              "count": 1183,
+              "min": 13.24,
+              "p50": 77.86,
+              "p90": 355.2,
+              "p95": 657.99,
+              "p99": 1493.02,
+              "p999": 2027.1,
+              "max": 2113.91,
+              "avg": 154.23
+            },
+            "replay": {
+              "count": 449,
+              "min": 5.78,
+              "p50": 34.69,
+              "p90": 121.25,
+              "p95": 188.4,
+              "p99": 699.05,
+              "p999": 810.71,
+              "max": 810.71,
+              "avg": 63.82
+            }
+          },
+          "ambiguousTimeouts": {
+            "total": 0,
+            "committedCount": 0,
+            "abortedCount": 0
+          },
+          "actuator": {
+            "before": {
+              "timestamp": "2026-11-18T10:27:30.225Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:27:51.300Z",
+              "hikari": {
+                "active": 0,
+                "pending": 0,
+                "total": 0,
+                "max": 0
+              },
+              "cpu": {
+                "system": 0,
+                "process": 0
+              },
+              "memoryMb": {
+                "jvmHeapUsed": 0,
+                "jvmHeapMax": 0
+              },
+              "gc": {
+                "pauseCount": 0,
+                "pauseTotalSec": 0,
+                "pauseMaxSec": 0
+              },
+              "threads": {
+                "live": 0,
+                "peak": 0
+              }
+            },
+            "samples": []
+          },
+          "storage": {
+            "before": {
+              "timestamp": "2026-11-18T10:27:30.219Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 94637
+              },
+              "wal": {
+                "wal_records": 11223740,
+                "wal_fpi": 171555,
+                "wal_bytes": 1707882716,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 119617,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 6451505
+              }
+            },
+            "after": {
+              "timestamp": "2026-11-18T10:27:51.288Z",
+              "checkpointer": {
+                "num_timed": 154,
+                "num_requested": 3,
+                "num_done": 59,
+                "write_time_ms": 3855186,
+                "sync_time_ms": 28235,
+                "buffers_written": 95336
+              },
+              "wal": {
+                "wal_records": 11307365,
+                "wal_fpi": 171561,
+                "wal_bytes": 1716874451,
+                "wal_buffers_full": 285
+              },
+              "database": {
+                "xact_commit": 126465,
+                "xact_rollback": 4,
+                "blks_read": 151,
+                "blks_hit": 6784081
+              }
+            },
+            "delta": {
+              "checkpoints_timed": 0,
+              "checkpoints_requested": 0,
+              "checkpoints_done": 0,
+              "checkpoint_write_time_ms": 0,
+              "checkpoint_sync_time_ms": 0,
+              "checkpoint_buffers_written": 699,
+              "wal_records": 83625,
+              "wal_fpi": 6,
+              "wal_bytes": 8991735,
+              "wal_buffers_full": 0,
+              "xact_commit": 6848,
+              "xact_rollback": 0,
+              "blks_read": 0,
+              "blks_hit": 332576
+            }
+          },
+          "waitEventSamples": []
+        }
+      ],
+      "summary": {
+        "confirmedFinancialTps": {
+          "min": 87.68,
+          "max": 176.28,
+          "median": 134.57,
+          "mean": 131.91,
+          "stdDev": 31.35,
+          "cvPercent": 23.77
+        },
+        "httpThroughput": {
+          "min": 146.2,
+          "max": 291.01,
+          "median": 220.86,
+          "mean": 217.38,
+          "stdDev": 51.44,
+          "cvPercent": 23.66
+        },
+        "p50Latency": {
+          "min": 46.43,
+          "max": 63.61,
+          "median": 48.97,
+          "mean": 52.13,
+          "stdDev": 6.44,
+          "cvPercent": 12.35
+        },
+        "p95Latency": {
+          "min": 134.61,
+          "max": 654.84,
+          "median": 348.13,
+          "mean": 364.16,
+          "stdDev": 197.73,
+          "cvPercent": 54.3
+        },
+        "p99Latency": {
+          "min": 419.87,
+          "max": 1488.8,
+          "median": 768.52,
+          "mean": 817.07,
+          "stdDev": 393.6,
+          "cvPercent": 48.17
+        },
+        "avgLatency": {
+          "min": 68.54,
+          "max": 136.42,
+          "median": 90.04,
+          "mean": 97.37,
+          "stdDev": 24.34,
+          "cvPercent": 25
+        },
+        "transferP50": {
+          "min": 55.81,
+          "max": 77.86,
+          "median": 64.01,
+          "mean": 64.39,
+          "stdDev": 7.43,
+          "cvPercent": 11.54
+        },
+        "transferP95": {
+          "min": 124.85,
+          "max": 657.99,
+          "median": 365.97,
+          "mean": 345.77,
+          "stdDev": 188.14,
+          "cvPercent": 54.41
+        },
+        "fundP50": {
+          "min": 65.76,
+          "max": 145.2,
+          "median": 101.97,
+          "mean": 104.28,
+          "stdDev": 32.65,
+          "cvPercent": 31.31
+        },
+        "fundP95": {
+          "min": 208.67,
+          "max": 1019.88,
+          "median": 596.03,
+          "mean": 569.55,
+          "stdDev": 320.04,
+          "cvPercent": 56.19
+        }
+      }
+    }
+  }
+}

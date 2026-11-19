@@ -1,0 +1,574 @@
+{
+  "timestamp": "2026-11-18T05:56:06.610Z",
+  "gatewayUrl": "http://localhost:3000",
+  "backendUrl": "http://localhost:8080",
+  "profileA": {
+    "metrics": {
+      "vus": 1,
+      "durationSec": 10.006982599999999,
+      "totalRequests": 1120,
+      "financialSuccessOps": 624,
+      "financialFailOps": 0,
+      "readSuccessOps": 387,
+      "replaySuccessOps": 109,
+      "httpThroughput": 111.92,
+      "financialTps": 62.36,
+      "serverErrorRate": 0,
+      "businessRejectionRate": 0,
+      "statusCodes": {
+        "200": 1120
+      },
+      "opsCount": {
+        "auth": 0,
+        "balance": 221,
+        "fund": 222,
+        "transfer": 402,
+        "history": 112,
+        "receipt": 54,
+        "replay": 109
+      },
+      "percentiles": {
+        "min": 2.29,
+        "p50": 7.68,
+        "p90": 12.21,
+        "p95": 13.52,
+        "p99": 25.86,
+        "p999": 167.75,
+        "max": 256.19,
+        "avg": 8.73
+      },
+      "perOpPercentiles": {
+        "balance": {
+          "count": 221,
+          "min": 2.29,
+          "p50": 4.29,
+          "p90": 5.83,
+          "p95": 6.44,
+          "p99": 7.58,
+          "p999": 11.17,
+          "max": 11.17,
+          "avg": 4.43
+        },
+        "fund": {
+          "count": 222,
+          "min": 6.14,
+          "p50": 9.46,
+          "p90": 12.46,
+          "p95": 13.14,
+          "p99": 21.54,
+          "p999": 60.84,
+          "max": 60.84,
+          "avg": 10.13
+        },
+        "transfer": {
+          "count": 402,
+          "min": 6.03,
+          "p50": 10.14,
+          "p90": 13.66,
+          "p95": 15.95,
+          "p99": 38.06,
+          "p999": 256.19,
+          "max": 256.19,
+          "avg": 11.89
+        },
+        "history": {
+          "count": 112,
+          "min": 3.46,
+          "p50": 5.8,
+          "p90": 7.74,
+          "p95": 8.01,
+          "p99": 10.32,
+          "p999": 22.64,
+          "max": 22.64,
+          "avg": 6.03
+        },
+        "receipt": {
+          "count": 54,
+          "min": 3.47,
+          "p50": 5.46,
+          "p90": 7.28,
+          "p95": 7.34,
+          "p99": 8.86,
+          "p999": 8.86,
+          "max": 8.86,
+          "avg": 5.56
+        },
+        "replay": {
+          "count": 109,
+          "min": 3.4,
+          "p50": 5.35,
+          "p90": 7.86,
+          "p95": 8.66,
+          "p99": 35.92,
+          "p999": 156.55,
+          "max": 156.55,
+          "avg": 7.31
+        }
+      },
+      "errorsSample": []
+    },
+    "reconciliationPassed": true
+  },
+  "profileB": {
+    "stages": [
+      {
+        "vus": 1,
+        "durationSec": 20.003418299999996,
+        "totalRequests": 1832,
+        "httpThroughput": 91.58,
+        "financialTps": 61.59,
+        "financialSuccessOps": 1232,
+        "financialFailOps": 0,
+        "percentiles": {
+          "min": 2.61,
+          "p50": 9.69,
+          "p90": 13.18,
+          "p95": 14.32,
+          "p99": 26.77,
+          "p999": 796.01,
+          "max": 813.98,
+          "avg": 10.72
+        },
+        "serverErrorRate": 0,
+        "businessRejectionRate": 0,
+        "statusCodes": {
+          "200": 1832
+        },
+        "actuator": {
+          "hikariActive": 0,
+          "hikariPending": 0,
+          "hikariTotal": 5,
+          "processCpu": 1.87,
+          "systemCpu": 24.16,
+          "jvmHeapUsedMb": 145.75
+        }
+      },
+      {
+        "vus": 5,
+        "durationSec": 20.220881199999997,
+        "totalRequests": 3952,
+        "httpThroughput": 195.44,
+        "financialTps": 125.46,
+        "financialSuccessOps": 2537,
+        "financialFailOps": 0,
+        "percentiles": {
+          "min": 2.48,
+          "p50": 15.79,
+          "p90": 44.01,
+          "p95": 56.02,
+          "p99": 157.94,
+          "p999": 755.55,
+          "max": 993.53,
+          "avg": 25.3
+        },
+        "serverErrorRate": 0,
+        "businessRejectionRate": 0,
+        "statusCodes": {
+          "200": 3952
+        },
+        "actuator": {
+          "hikariActive": 0,
+          "hikariPending": 0,
+          "hikariTotal": 10,
+          "processCpu": 5.85,
+          "systemCpu": 36.07,
+          "jvmHeapUsedMb": 124.06
+        }
+      },
+      {
+        "vus": 10,
+        "durationSec": 20.271269300000007,
+        "totalRequests": 1047,
+        "httpThroughput": 51.65,
+        "financialTps": 33.69,
+        "financialSuccessOps": 683,
+        "financialFailOps": 1,
+        "percentiles": {
+          "min": 2.34,
+          "p50": 35.9,
+          "p90": 474.12,
+          "p95": 839.42,
+          "p99": 3500.29,
+          "p999": 4669.01,
+          "max": 7247.74,
+          "avg": 193.03
+        },
+        "serverErrorRate": 0.1,
+        "businessRejectionRate": 0,
+        "statusCodes": {
+          "200": 1046,
+          "504": 1
+        },
+        "actuator": {
+          "hikariActive": 0,
+          "hikariPending": 0,
+          "hikariTotal": 11,
+          "processCpu": 1.31,
+          "systemCpu": 12.78,
+          "jvmHeapUsedMb": 58.14
+        }
+      },
+      {
+        "vus": 20,
+        "durationSec": 20.216545699999987,
+        "totalRequests": 3971,
+        "httpThroughput": 196.42,
+        "financialTps": 127.67,
+        "financialSuccessOps": 2581,
+        "financialFailOps": 0,
+        "percentiles": {
+          "min": 1.7,
+          "p50": 53.15,
+          "p90": 253.5,
+          "p95": 356.49,
+          "p99": 686.72,
+          "p999": 1393.47,
+          "max": 1564.01,
+          "avg": 101.06
+        },
+        "serverErrorRate": 0,
+        "businessRejectionRate": 0,
+        "statusCodes": {
+          "200": 3971
+        },
+        "actuator": {
+          "hikariActive": 0,
+          "hikariPending": 0,
+          "hikariTotal": 20,
+          "processCpu": 5,
+          "systemCpu": 36.28,
+          "jvmHeapUsedMb": 69.46
+        }
+      },
+      {
+        "vus": 30,
+        "durationSec": 20.230770700000008,
+        "totalRequests": 4933,
+        "httpThroughput": 243.84,
+        "financialTps": 155.21,
+        "financialSuccessOps": 3140,
+        "financialFailOps": 0,
+        "percentiles": {
+          "min": 4.23,
+          "p50": 79.06,
+          "p90": 272.48,
+          "p95": 399.71,
+          "p99": 663.96,
+          "p999": 1133.95,
+          "max": 1498.57,
+          "avg": 122.17
+        },
+        "serverErrorRate": 0,
+        "businessRejectionRate": 0,
+        "statusCodes": {
+          "200": 4933
+        },
+        "actuator": {
+          "hikariActive": 0,
+          "hikariPending": 0,
+          "hikariTotal": 20,
+          "processCpu": 7.01,
+          "systemCpu": 46.02,
+          "jvmHeapUsedMb": 120.23
+        }
+      }
+    ],
+    "reconciliationPassed": true
+  },
+  "profileC": {
+    "metrics": {
+      "vus": 10,
+      "durationSec": 60.0172938,
+      "totalRequests": 14255,
+      "financialSuccessOps": 8542,
+      "financialFailOps": 0,
+      "readSuccessOps": 4269,
+      "replaySuccessOps": 1444,
+      "httpThroughput": 237.51,
+      "financialTps": 142.33,
+      "serverErrorRate": 0,
+      "businessRejectionRate": 0,
+      "statusCodes": {
+        "200": 14255
+      },
+      "opsCount": {
+        "auth": 0,
+        "balance": 2864,
+        "fund": 2867,
+        "transfer": 5675,
+        "history": 698,
+        "receipt": 707,
+        "replay": 1444
+      },
+      "percentiles": {
+        "min": 2.7,
+        "p50": 27.57,
+        "p90": 87.54,
+        "p95": 115.84,
+        "p99": 198.78,
+        "p999": 462.86,
+        "max": 1583.64,
+        "avg": 41.94
+      },
+      "perOpPercentiles": {
+        "balance": {
+          "count": 2864,
+          "min": 2.7,
+          "p50": 8.06,
+          "p90": 15.48,
+          "p95": 19.13,
+          "p99": 28.25,
+          "p999": 45.46,
+          "max": 50.85,
+          "avg": 9.37
+        },
+        "fund": {
+          "count": 2867,
+          "min": 11.25,
+          "p50": 52.79,
+          "p90": 118.17,
+          "p95": 146.49,
+          "p99": 242.64,
+          "p999": 1230.36,
+          "max": 1440.16,
+          "avg": 65.8
+        },
+        "transfer": {
+          "count": 5675,
+          "min": 11.35,
+          "p50": 46.09,
+          "p90": 100.01,
+          "p95": 128.43,
+          "p99": 218.75,
+          "p999": 1059.43,
+          "max": 1583.64,
+          "avg": 57.55
+        },
+        "history": {
+          "count": 698,
+          "min": 4.64,
+          "p50": 12.19,
+          "p90": 20.06,
+          "p95": 23.36,
+          "p99": 33.59,
+          "p999": 124.67,
+          "max": 124.67,
+          "avg": 13.67
+        },
+        "receipt": {
+          "count": 707,
+          "min": 3.4,
+          "p50": 10.18,
+          "p90": 17.38,
+          "p95": 20.68,
+          "p99": 29.51,
+          "p999": 42.92,
+          "max": 42.92,
+          "avg": 11.24
+        },
+        "replay": {
+          "count": 1444,
+          "min": 3.66,
+          "p50": 16.29,
+          "p90": 56.1,
+          "p95": 65.89,
+          "p99": 113.35,
+          "p999": 221.1,
+          "max": 369.25,
+          "avg": 26.52
+        }
+      },
+      "errorsSample": []
+    },
+    "actuatorSamples": [
+      {
+        "timestamp": "2026-11-18T05:55:09.753Z",
+        "hikari": {
+          "active": 5,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 28.47,
+          "process": 3.36
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 100.02,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:14.772Z",
+        "hikari": {
+          "active": 8,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 42.94,
+          "process": 6.94
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 97.93,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:19.736Z",
+        "hikari": {
+          "active": 4,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 33.62,
+          "process": 5.26
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 94.93,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:24.732Z",
+        "hikari": {
+          "active": 4,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 34.21,
+          "process": 5.24
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 86.77,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:29.757Z",
+        "hikari": {
+          "active": 10,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 51.13,
+          "process": 8.98
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 75.84,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:34.745Z",
+        "hikari": {
+          "active": 10,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 36.14,
+          "process": 6.26
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 194.82,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:39.799Z",
+        "hikari": {
+          "active": 9,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 40.15,
+          "process": 6.47
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 159.94,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:44.806Z",
+        "hikari": {
+          "active": 8,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 39.21,
+          "process": 5.88
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 118.9,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:49.773Z",
+        "hikari": {
+          "active": 9,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 32.63,
+          "process": 3.97
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 76.8,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:54.770Z",
+        "hikari": {
+          "active": 9,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 33.54,
+          "process": 4.22
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 144.97,
+          "jvmHeapMax": 768
+        }
+      },
+      {
+        "timestamp": "2026-11-18T05:55:59.804Z",
+        "hikari": {
+          "active": 7,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 25.46,
+          "process": 3.77
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 166.88,
+          "jvmHeapMax": 768
+        }
+      }
+    ],
+    "reconciliationPassed": true
+  }
+}

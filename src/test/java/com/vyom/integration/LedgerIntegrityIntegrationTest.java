@@ -97,15 +97,15 @@ public class LedgerIntegrityIntegrationTest extends BaseIntegrationTest {
         UUID fundingId = response.getBody().fundingId();
 
         List<LedgerEntry> entries = ledgerEntryRepository.findByFundingId(fundingId);
-        assertThat(entries).hasSize(1);
+        assertThat(entries).hasSize(2);
 
-        LedgerEntry entry = entries.get(0);
-        assertThat(entry.getEntryType()).isEqualTo(EntryType.CREDIT);
-        assertThat(entry.getWalletId()).isEqualTo(wallet.getId());
-        assertThat(entry.getAmount()).isEqualByComparingTo(new BigDecimal("750.0000"));
-        assertThat(entry.getBalanceAfter()).isEqualByComparingTo(new BigDecimal("750.0000"));
-        assertThat(entry.getFundingId()).isEqualTo(fundingId);
-        assertThat(entry.getTransferId()).isNull();
+        LedgerEntry debitEntry = entries.stream().filter(e -> e.getEntryType() == EntryType.DEBIT).findFirst().orElseThrow();
+        LedgerEntry creditEntry = entries.stream().filter(e -> e.getEntryType() == EntryType.CREDIT).findFirst().orElseThrow();
+        assertThat(creditEntry.getWalletId()).isEqualTo(wallet.getId());
+        assertThat(creditEntry.getAmount()).isEqualByComparingTo(new BigDecimal("750.0000"));
+        assertThat(creditEntry.getBalanceAfter()).isEqualByComparingTo(new BigDecimal("750.0000"));
+        assertThat(creditEntry.getFundingId()).isEqualTo(fundingId);
+        assertThat(creditEntry.getTransferId()).isNull();
     }
 
     @Test

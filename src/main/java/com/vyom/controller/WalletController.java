@@ -7,6 +7,7 @@ import com.vyom.dto.response.LedgerEntryResponse;
 import com.vyom.dto.response.PagedResponse;
 import com.vyom.dto.response.WalletResponse;
 import com.vyom.exception.InvalidTransferException;
+import com.vyom.security.SecurityUtils;
 import com.vyom.service.FundingService;
 import com.vyom.service.WalletService;
 import jakarta.validation.Valid;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -39,13 +41,26 @@ public class WalletController {
 
     @PostMapping
     public ResponseEntity<WalletResponse> createWallet(@Valid @RequestBody CreateWalletRequest request) {
-        WalletResponse response = walletService.createWallet(request);
+        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        WalletResponse response = userId != null 
+                ? walletService.createWallet(userId, request) 
+                : walletService.createWallet(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<WalletResponse>> listWallets() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        List<WalletResponse> wallets = walletService.listWallets(userId);
+        return ResponseEntity.ok(wallets);
     }
 
     @GetMapping("/{walletId}")
     public ResponseEntity<WalletResponse> getWallet(@PathVariable UUID walletId) {
-        WalletResponse response = walletService.getWallet(walletId);
+        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        WalletResponse response = userId != null 
+                ? walletService.getWallet(walletId, userId) 
+                : walletService.getWallet(walletId);
         return ResponseEntity.ok(response);
     }
 
@@ -57,7 +72,10 @@ public class WalletController {
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");
         }
-        FundingResponse response = fundingService.fundWallet(idempotencyKey, walletId, request);
+        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        FundingResponse response = userId != null 
+                ? fundingService.fundWallet(userId, idempotencyKey, walletId, request) 
+                : fundingService.fundWallet(idempotencyKey, walletId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -70,7 +88,10 @@ public class WalletController {
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
 
-        PagedResponse<LedgerEntryResponse> response = walletService.getTransactionHistory(walletId, pageable);
+        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
+        PagedResponse<LedgerEntryResponse> response = userId != null 
+                ? walletService.getTransactionHistory(walletId, userId, pageable) 
+                : walletService.getTransactionHistory(walletId, pageable);
         return ResponseEntity.ok(response);
     }
 }

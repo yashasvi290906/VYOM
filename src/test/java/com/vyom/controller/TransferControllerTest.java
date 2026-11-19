@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vyom.dto.request.CreateTransferRequest;
 import com.vyom.dto.response.TransferResponse;
 import com.vyom.entity.enums.TransferStatus;
+import com.vyom.repository.UserRepository;
+import com.vyom.security.JwtTokenService;
 import com.vyom.service.TransferService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -25,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TransferController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class TransferControllerTest {
 
     @Autowired
@@ -35,6 +39,12 @@ public class TransferControllerTest {
 
     @MockBean
     private TransferService transferService;
+
+    @MockBean
+    private JwtTokenService jwtTokenService;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("POST /api/v1/transfers should return 200 OK on successful transfer")

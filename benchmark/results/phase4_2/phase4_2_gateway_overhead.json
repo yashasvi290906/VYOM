@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-11-18T07:51:32.686Z",
+  "sampleSize": 500,
+  "healthEndpoint": {
+    "directBackend": {
+      "min": 2.41,
+      "p50": 4.23,
+      "p90": 5.25,
+      "p95": 5.7,
+      "p99": 7.23,
+      "max": 107.24,
+      "mean": 4.54
+    },
+    "viaGateway": {
+      "min": 2.98,
+      "p50": 4.54,
+      "p90": 5.7,
+      "p95": 6.1,
+      "p99": 7.59,
+      "max": 35.14,
+      "mean": 4.74
+    },
+    "gatewayOverheadDelta": {
+      "p50": 0.31,
+      "p95": 0.4,
+      "p99": 0.36,
+      "mean": 0.2
+    }
+  },
+  "authenticatedReadEndpoint": {
+    "directBackend": {
+      "min": 2.81,
+      "p50": 4.62,
+      "p90": 5.67,
+      "p95": 6,
+      "p99": 6.83,
+      "max": 36.53,
+      "mean": 4.74
+    },
+    "viaGateway": {
+      "min": 3.43,
+      "p50": 4.77,
+      "p90": 6.1,
+      "p95": 6.43,
+      "p99": 11.7,
+      "max": 31.35,
+      "mean": 5.04
+    },
+    "gatewayOverheadDelta": {
+      "p50": 0.15,
+      "p95": 0.43,
+      "p99": 4.87,
+      "mean": 0.3
+    }
+  }
+}

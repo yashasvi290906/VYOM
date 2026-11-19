@@ -1,7 +1,10 @@
 package com.vyom.entity;
 
+import com.vyom.entity.enums.AccountType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -22,6 +25,13 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "user_id")
+    private UUID userId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_type", nullable = false, length = 20)
+    private AccountType accountType = AccountType.CUSTOMER;
+
     @Column(name = "owner_name", nullable = false, length = 100)
     private String ownerName;
 
@@ -37,19 +47,29 @@ public class Wallet {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    public static final UUID DEFAULT_LEGACY_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000099");
+
     public Wallet() {
     }
 
     public Wallet(String ownerName, String currency) {
-        this.ownerName = ownerName;
-        this.currency = currency;
-        this.balance = BigDecimal.ZERO.setScale(4);
+        this(DEFAULT_LEGACY_USER_ID, ownerName, currency, BigDecimal.ZERO.setScale(4), AccountType.CUSTOMER);
     }
 
     public Wallet(String ownerName, String currency, BigDecimal balance) {
+        this(DEFAULT_LEGACY_USER_ID, ownerName, currency, balance, AccountType.CUSTOMER);
+    }
+
+    public Wallet(UUID userId, String ownerName, String currency, BigDecimal balance) {
+        this(userId, ownerName, currency, balance, AccountType.CUSTOMER);
+    }
+
+    public Wallet(UUID userId, String ownerName, String currency, BigDecimal balance, AccountType accountType) {
+        this.userId = userId;
         this.ownerName = ownerName;
         this.currency = currency;
         this.balance = balance != null ? balance.setScale(4) : BigDecimal.ZERO.setScale(4);
+        this.accountType = accountType != null ? accountType : AccountType.CUSTOMER;
     }
 
     @PrePersist
@@ -64,6 +84,12 @@ public class Wallet {
         if (this.balance == null) {
             this.balance = BigDecimal.ZERO.setScale(4);
         }
+        if (this.accountType == null) {
+            this.accountType = AccountType.CUSTOMER;
+        }
+        if (this.accountType == AccountType.CUSTOMER && this.userId == null) {
+            this.userId = DEFAULT_LEGACY_USER_ID;
+        }
     }
 
     @PreUpdate
@@ -77,6 +103,26 @@ public class Wallet {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
+    public AccountType getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(AccountType accountType) {
+        this.accountType = accountType;
+    }
+
+    public boolean isSystemAccount() {
+        return this.accountType == AccountType.SYSTEM_SETTLEMENT;
     }
 
     public String getOwnerName() {
@@ -131,4 +177,3 @@ public class Wallet {
         return Objects.hashCode(id);
     }
 }
-

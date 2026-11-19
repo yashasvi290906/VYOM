@@ -29,6 +29,12 @@ class BackendClient {
       headers['Idempotency-Key'] = idempotencyKey;
     }
 
+    // Forward Authorization header if present
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
     const fetchOptions = {
       method: options.method || req.method || 'GET',
       headers,

@@ -1,0 +1,1923 @@
+{
+  "generatedAt": "2026-11-18T09:27:10.500Z",
+  "concurrencyVus": 10,
+  "mix": {
+    "transfer": 0.4,
+    "fund": 0.2,
+    "balance": 0.25,
+    "replay": 0.15
+  },
+  "distributedRun": {
+    "httpThroughput": 130.96,
+    "confirmedFinancialTps": 78.57,
+    "percentiles": {
+      "min": 3.28,
+      "p50": 33.06,
+      "p90": 136.18,
+      "p95": 181.1,
+      "p99": 963.78,
+      "p999": 2539.61,
+      "max": 2652.05,
+      "avg": 76.17
+    },
+    "perOpPercentiles": {
+      "balance": {
+        "count": 674,
+        "min": 3.28,
+        "p50": 10.54,
+        "p90": 23.75,
+        "p95": 28.2,
+        "p99": 35.24,
+        "p999": 48.15,
+        "max": 48.15,
+        "avg": 12.9
+      },
+      "fund": {
+        "count": 539,
+        "min": 17.15,
+        "p50": 75.81,
+        "p90": 219.79,
+        "p95": 324.86,
+        "p99": 1583.64,
+        "p999": 2652.05,
+        "max": 2652.05,
+        "avg": 131.46
+      },
+      "transfer": {
+        "count": 1036,
+        "min": 11.76,
+        "p50": 53.64,
+        "p90": 143.69,
+        "p95": 184.5,
+        "p99": 1106.84,
+        "p999": 2488.49,
+        "max": 2539.61,
+        "avg": 99.08
+      },
+      "replay": {
+        "count": 376,
+        "min": 4.8,
+        "p50": 21.62,
+        "p90": 89.2,
+        "p95": 117.62,
+        "p99": 303.45,
+        "p999": 2323,
+        "max": 2323,
+        "avg": 47.17
+      }
+    },
+    "actuator": {
+      "before": {
+        "timestamp": "2026-11-18T09:26:26.561Z",
+        "hikari": {
+          "active": 14,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 7.04,
+          "process": 0.18
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 94.19,
+          "jvmHeapMax": 1024
+        },
+        "gc": {
+          "pauseCount": 45,
+          "pauseTotalSec": 0.639,
+          "pauseMaxSec": 0.009
+        },
+        "threads": {
+          "live": 48,
+          "peak": 48
+        }
+      },
+      "after": {
+        "timestamp": "2026-11-18T09:26:46.660Z",
+        "hikari": {
+          "active": 9,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 41.26,
+          "process": 4.65
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 86.3,
+          "jvmHeapMax": 1024
+        },
+        "gc": {
+          "pauseCount": 47,
+          "pauseTotalSec": 0.651,
+          "pauseMaxSec": 0.009
+        },
+        "threads": {
+          "live": 47,
+          "peak": 48
+        }
+      }
+    }
+  },
+  "hotWalletRun": {
+    "httpThroughput": 18.12,
+    "confirmedFinancialTps": 10.93,
+    "percentiles": {
+      "min": 2.82,
+      "p50": 44.17,
+      "p90": 2348.4,
+      "p95": 2637.35,
+      "p99": 3190.64,
+      "p999": 3202.79,
+      "max": 3202.79,
+      "avg": 551.74
+    },
+    "perOpPercentiles": {
+      "balance": {
+        "count": 92,
+        "min": 2.82,
+        "p50": 5.78,
+        "p90": 13.99,
+        "p95": 15.88,
+        "p99": 22.42,
+        "p999": 22.42,
+        "max": 22.42,
+        "avg": 7.52
+      },
+      "fund": {
+        "count": 78,
+        "min": 12.58,
+        "p50": 81.86,
+        "p90": 2637.35,
+        "p95": 3178.73,
+        "p99": 3202.48,
+        "p999": 3202.48,
+        "max": 3202.48,
+        "avg": 1027.21
+      },
+      "transfer": {
+        "count": 141,
+        "min": 13.71,
+        "p50": 83.58,
+        "p90": 2363.79,
+        "p95": 2643.44,
+        "p99": 3179.41,
+        "p999": 3202.79,
+        "max": 3202.79,
+        "avg": 697.8
+      },
+      "replay": {
+        "count": 52,
+        "min": 4.02,
+        "p50": 8.37,
+        "p90": 2105.2,
+        "p95": 2410.8,
+        "p99": 3188.6,
+        "p999": 3188.6,
+        "max": 3188.6,
+        "avg": 405.34
+      }
+    },
+    "actuator": {
+      "before": {
+        "timestamp": "2026-11-18T09:26:48.706Z",
+        "hikari": {
+          "active": 0,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 5.85,
+          "process": 0.1
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 87.3,
+          "jvmHeapMax": 1024
+        },
+        "gc": {
+          "pauseCount": 47,
+          "pauseTotalSec": 0.651,
+          "pauseMaxSec": 0.009
+        },
+        "threads": {
+          "live": 47,
+          "peak": 48
+        }
+      },
+      "after": {
+        "timestamp": "2026-11-18T09:27:10.499Z",
+        "hikari": {
+          "active": 0,
+          "pending": 0,
+          "total": 20,
+          "max": 20
+        },
+        "cpu": {
+          "system": 10.92,
+          "process": 0.37
+        },
+        "memoryMb": {
+          "jvmHeapUsed": 180.3,
+          "jvmHeapMax": 1024
+        },
+        "gc": {
+          "pauseCount": 47,
+          "pauseTotalSec": 0.651,
+          "pauseMaxSec": 0.007
+        },
+        "threads": {
+          "live": 47,
+          "peak": 48
+        }
+      }
+    }
+  },
+  "deltas": {
+    "httpThroughputDeltaPercent": -86.2,
+    "financialTpsDeltaPercent": -86.1,
+    "transferP50Ratio": 1.56,
+    "transferP95DeltaMs": 2458.94
+  },
+  "postgresLockWaitTelemetry": {
+    "sampleCount": 9,
+    "samples": [
+      {
+        "timestamp": "2026-11-18T14:56:52.076057+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.42101
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.404047
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.371724
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.255794
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.452843
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.278684
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.297159
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.233799
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.417535
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.350586
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.271277
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.24739
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.264345
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.379075
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.411054
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.297272
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.397691
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.241024
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.377425
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.28538
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:56:55.328832+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.673785
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.157074
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.085593
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.086432
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.170953
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.044296
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.07567
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.056626
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.068927
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.050809
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.062203
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.500165
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.037535
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.63185
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.162723
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.550047
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.650466
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.493799
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.148583
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.538155
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:56:57.693835+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.038788
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.327053
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.225191
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.229432
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.535956
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.263656
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.269846
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.234057
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.241501
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 5.415812
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.253134
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.269614
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.330685
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.329957
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.247118
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 7.91505
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.015469
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.330646
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.329677
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.258359
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:56:59.813722+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 10.158675
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.013528
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.345078
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.349319
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.048246
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.002999
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.037484
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.353944
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.361388
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 7.535699
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.048039
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.007815
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.031858
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.019065
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.367005
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 10.034937
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 10.135356
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.091207
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.025877
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.042694
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:57:02.14496+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.251024
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.284498
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.240455
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.293518
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.379484
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.231872
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.210949
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.256651
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.692626
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 9.866937
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.215002
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.256956
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.227542
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.350303
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.698243
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 12.366175
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 12.466594
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.219993
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.245849
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.295195
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:57:04.356196+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.46226
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.063875
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.451691
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.08182
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.185789
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.125751
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.138576
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.11848
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.903862
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.073294
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.068856
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.132783
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.144404
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.077536
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.909479
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 14.577411
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 14.67783
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.431229
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.457085
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.112327
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:57:06.069194+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.175258
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 3.776873
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.164689
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.623179
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.618818
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.627648
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.680749
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.679056
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.691756
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.614731
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.645072
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.684713
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.686708
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.645072
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.638371
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 16.290409
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.644628
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.144227
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.170083
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 1.632553
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:57:08.724456+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.53591
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.432135
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.819951
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.278441
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.27408
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.525
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.628395
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.548261
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.574481
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.560098
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.530485
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.567492
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.580204
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.542684
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.617248
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 18.945671
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.29989
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.799489
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.825345
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 2.554089
+          }
+        ],
+        "blocked_sessions": []
+      },
+      {
+        "timestamp": "2026-11-18T14:57:10.48979+05:30",
+        "lock_waits": [
+          {
+            "pid": 20988,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.301244
+          },
+          {
+            "pid": 26464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 8.197469
+          },
+          {
+            "pid": 11316,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 10.585285
+          },
+          {
+            "pid": 17756,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.043775
+          },
+          {
+            "pid": 22456,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.039414
+          },
+          {
+            "pid": 6480,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.290334
+          },
+          {
+            "pid": 15856,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.393729
+          },
+          {
+            "pid": 17464,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.313595
+          },
+          {
+            "pid": 19328,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.339815
+          },
+          {
+            "pid": 21928,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.325432
+          },
+          {
+            "pid": 15460,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.295819
+          },
+          {
+            "pid": 8496,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.332826
+          },
+          {
+            "pid": 15092,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.345538
+          },
+          {
+            "pid": 15272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.308018
+          },
+          {
+            "pid": 18320,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.382582
+          },
+          {
+            "pid": 18408,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 20.711005
+          },
+          {
+            "pid": 1828,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 6.065224
+          },
+          {
+            "pid": 7272,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 10.564823
+          },
+          {
+            "pid": 7416,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 10.590679
+          },
+          {
+            "pid": 25348,
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "state": "idle",
+            "query_snip": "COMMIT",
+            "xact_duration_sec": null,
+            "state_duration_sec": 4.319423
+          }
+        ],
+        "blocked_sessions": []
+      }
+    ]
+  }
+}

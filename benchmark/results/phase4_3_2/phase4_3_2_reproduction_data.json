@@ -1,0 +1,1203 @@
+{
+  "generatedAt": "2026-11-18T10:03:26.936Z",
+  "benchmarkMix": {
+    "transfer": 0.4,
+    "fund": 0.2,
+    "balance": 0.25,
+    "replay": 0.15
+  },
+  "stages": [
+    {
+      "vus": 10,
+      "durationSec": 23.06,
+      "totalRequests": 2774,
+      "httpThroughput": 120.3,
+      "clientFinancialTps": 73.9,
+      "confirmedFinancialTps": 74.28,
+      "financialSuccessOps": 1704,
+      "financialFailOps": 10,
+      "readSuccessOps": 674,
+      "replaySuccessOps": 386,
+      "statusCodes": {
+        "200": 2764,
+        "504": 10
+      },
+      "opsCount": {
+        "balance": 674,
+        "fund": 593,
+        "transfer": 1121,
+        "replay": 386
+      },
+      "percentiles": {
+        "min": 4.52,
+        "p50": 45.41,
+        "p90": 113.72,
+        "p95": 200.92,
+        "p99": 404.45,
+        "p999": 5845,
+        "max": 5864.65,
+        "avg": 82.88
+      },
+      "perOpPercentiles": {
+        "balance": {
+          "count": 674,
+          "min": 4.52,
+          "p50": 32.9,
+          "p90": 54.59,
+          "p95": 63.75,
+          "p99": 94.59,
+          "p999": 311.98,
+          "max": 311.98,
+          "avg": 33.9
+        },
+        "fund": {
+          "count": 593,
+          "min": 26.1,
+          "p50": 56.88,
+          "p90": 193.7,
+          "p95": 289.14,
+          "p99": 627.09,
+          "p999": 5846.05,
+          "max": 5846.05,
+          "avg": 126.2
+        },
+        "transfer": {
+          "count": 1121,
+          "min": 17.8,
+          "p50": 51.28,
+          "p90": 154.75,
+          "p95": 235.3,
+          "p99": 425.35,
+          "p999": 5845,
+          "max": 5864.65,
+          "avg": 104.76
+        },
+        "replay": {
+          "count": 386,
+          "min": 6.35,
+          "p50": 32.55,
+          "p90": 60.28,
+          "p95": 79.49,
+          "p99": 200,
+          "p999": 286.68,
+          "max": 286.68,
+          "avg": 38.31
+        }
+      },
+      "actuator": {
+        "before": {
+          "timestamp": "2026-11-18T10:02:04.302Z",
+          "hikari": {
+            "active": 0,
+            "pending": 0,
+            "total": 16,
+            "max": 20
+          },
+          "cpu": {
+            "system": 8.12,
+            "process": 2.34
+          },
+          "memoryMb": {
+            "jvmHeapUsed": 274.33,
+            "jvmHeapMax": 1024
+          },
+          "gc": {
+            "pauseCount": 2,
+            "pauseTotalSec": 0.093,
+            "pauseMaxSec": 0.062
+          },
+          "threads": {
+            "live": 37,
+            "peak": 38
+          }
+        },
+        "after": {
+          "timestamp": "2026-11-18T10:02:27.721Z",
+          "hikari": {
+            "active": 10,
+            "pending": 0,
+            "total": 18,
+            "max": 20
+          },
+          "cpu": {
+            "system": 6.42,
+            "process": 0.9
+          },
+          "memoryMb": {
+            "jvmHeapUsed": 56.12,
+            "jvmHeapMax": 1024
+          },
+          "gc": {
+            "pauseCount": 5,
+            "pauseTotalSec": 0.43,
+            "pauseMaxSec": 0.286
+          },
+          "threads": {
+            "live": 41,
+            "peak": 43
+          }
+        },
+        "samples": [
+          {
+            "timestamp": "2026-11-18T10:02:06.617Z",
+            "hikari": {
+              "active": 6,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 81.66,
+              "process": 41.99
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 64.83,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 3,
+              "pauseTotalSec": 0.117,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 38
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:08.607Z",
+            "hikari": {
+              "active": 6,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 79.83,
+              "process": 30.43
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 94.83,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 3,
+              "pauseTotalSec": 0.117,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 38
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:10.632Z",
+            "hikari": {
+              "active": 1,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 85.21,
+              "process": 45.85
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 165.83,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 3,
+              "pauseTotalSec": 0.117,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 38
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:12.614Z",
+            "hikari": {
+              "active": 4,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 71.1,
+              "process": 29.75
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 238.83,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 3,
+              "pauseTotalSec": 0.117,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 38
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:14.634Z",
+            "hikari": {
+              "active": 0,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 71.48,
+              "process": 31.03
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 331.83,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 3,
+              "pauseTotalSec": 0.117,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 38
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:16.691Z",
+            "hikari": {
+              "active": 8,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 68.06,
+              "process": 25.6
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 127.99,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 4,
+              "pauseTotalSec": 0.144,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 38
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:18.648Z",
+            "hikari": {
+              "active": 3,
+              "pending": 0,
+              "total": 17,
+              "max": 20
+            },
+            "cpu": {
+              "system": 83.37,
+              "process": 31.62
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 206.99,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 4,
+              "pauseTotalSec": 0.144,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 39
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:20.752Z",
+            "hikari": {
+              "active": 0,
+              "pending": 0,
+              "total": 17,
+              "max": 20
+            },
+            "cpu": {
+              "system": 76.66,
+              "process": 22.36
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 279.99,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 4,
+              "pauseTotalSec": 0.144,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 39,
+              "peak": 39
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:22.756Z",
+            "hikari": {
+              "active": 10,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 49.96,
+              "process": 13.72
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 335.99,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 4,
+              "pauseTotalSec": 0.144,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 39
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:24.730Z",
+            "hikari": {
+              "active": 10,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 3.79,
+              "process": 0.39
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 338.99,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 4,
+              "pauseTotalSec": 0.144,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 38,
+              "peak": 39
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:26.934Z",
+            "hikari": {
+              "active": 10,
+              "pending": 0,
+              "total": 18,
+              "max": 20
+            },
+            "cpu": {
+              "system": 4.84,
+              "process": 0.51
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 51.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 4,
+              "pauseTotalSec": 0.144,
+              "pauseMaxSec": 0.062
+            },
+            "threads": {
+              "live": 37,
+              "peak": 39
+            }
+          }
+        ]
+      },
+      "dbState": {
+        "unassignedLocksBefore": 0,
+        "txCountAfter": 129018
+      }
+    },
+    {
+      "vus": 15,
+      "durationSec": 20.07,
+      "totalRequests": 2946,
+      "httpThroughput": 146.79,
+      "clientFinancialTps": 87.79,
+      "confirmedFinancialTps": 87.79,
+      "financialSuccessOps": 1762,
+      "financialFailOps": 0,
+      "readSuccessOps": 748,
+      "replaySuccessOps": 436,
+      "statusCodes": {
+        "200": 2946
+      },
+      "opsCount": {
+        "balance": 748,
+        "fund": 620,
+        "transfer": 1142,
+        "replay": 436
+      },
+      "percentiles": {
+        "min": 3.36,
+        "p50": 59.96,
+        "p90": 231.41,
+        "p95": 347.4,
+        "p99": 656.07,
+        "p999": 1838.14,
+        "max": 2054.22,
+        "avg": 101.82
+      },
+      "perOpPercentiles": {
+        "balance": {
+          "count": 748,
+          "min": 3.36,
+          "p50": 32.02,
+          "p90": 77.1,
+          "p95": 92.85,
+          "p99": 113.37,
+          "p999": 253.79,
+          "max": 253.79,
+          "avg": 38.37
+        },
+        "fund": {
+          "count": 620,
+          "min": 19.63,
+          "p50": 89.4,
+          "p90": 413.43,
+          "p95": 565.21,
+          "p99": 1590.23,
+          "p999": 2054.22,
+          "max": 2054.22,
+          "avg": 176.39
+        },
+        "transfer": {
+          "count": 1142,
+          "min": 13.87,
+          "p50": 73.89,
+          "p90": 279.42,
+          "p95": 374.04,
+          "p99": 727.73,
+          "p999": 1751.09,
+          "max": 1845.18,
+          "avg": 123.47
+        },
+        "replay": {
+          "count": 436,
+          "min": 5.17,
+          "p50": 39.53,
+          "p90": 79.29,
+          "p95": 111.6,
+          "p99": 306.4,
+          "p999": 406.37,
+          "max": 406.37,
+          "avg": 47.94
+        }
+      },
+      "actuator": {
+        "before": {
+          "timestamp": "2026-11-18T10:02:31.240Z",
+          "hikari": {
+            "active": 10,
+            "pending": 0,
+            "total": 18,
+            "max": 20
+          },
+          "cpu": {
+            "system": 27.87,
+            "process": 0.59
+          },
+          "memoryMb": {
+            "jvmHeapUsed": 59.12,
+            "jvmHeapMax": 1024
+          },
+          "gc": {
+            "pauseCount": 5,
+            "pauseTotalSec": 0.43,
+            "pauseMaxSec": 0.286
+          },
+          "threads": {
+            "live": 43,
+            "peak": 43
+          }
+        },
+        "after": {
+          "timestamp": "2026-11-18T10:02:51.643Z",
+          "hikari": {
+            "active": 2,
+            "pending": 0,
+            "total": 20,
+            "max": 20
+          },
+          "cpu": {
+            "system": 55.22,
+            "process": 15.82
+          },
+          "memoryMb": {
+            "jvmHeapUsed": 152.12,
+            "jvmHeapMax": 1024
+          },
+          "gc": {
+            "pauseCount": 7,
+            "pauseTotalSec": 0.563,
+            "pauseMaxSec": 0.286
+          },
+          "threads": {
+            "live": 44,
+            "peak": 44
+          }
+        },
+        "samples": [
+          {
+            "timestamp": "2026-11-18T10:02:33.552Z",
+            "hikari": {
+              "active": 14,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 65.13,
+              "process": 14.08
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 112.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 5,
+              "pauseTotalSec": 0.43,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 44,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:35.540Z",
+            "hikari": {
+              "active": 14,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 42.21,
+              "process": 8.61
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 142.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 5,
+              "pauseTotalSec": 0.43,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 44,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:37.617Z",
+            "hikari": {
+              "active": 14,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 68.54,
+              "process": 19.22
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 194.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 5,
+              "pauseTotalSec": 0.43,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 44,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:39.632Z",
+            "hikari": {
+              "active": 7,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 81.67,
+              "process": 24.5
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 270.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 5,
+              "pauseTotalSec": 0.43,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 43,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:41.654Z",
+            "hikari": {
+              "active": 11,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 68.93,
+              "process": 28.15
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 334.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 5,
+              "pauseTotalSec": 0.43,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 43,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:43.583Z",
+            "hikari": {
+              "active": 6,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 70.16,
+              "process": 17.01
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 135.34,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 6,
+              "pauseTotalSec": 0.454,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 43,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:45.557Z",
+            "hikari": {
+              "active": 14,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 46.53,
+              "process": 13.47
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 190.34,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 6,
+              "pauseTotalSec": 0.454,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 44,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:47.632Z",
+            "hikari": {
+              "active": 14,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 39.2,
+              "process": 14.63
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 268.34,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 6,
+              "pauseTotalSec": 0.454,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 44,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:49.617Z",
+            "hikari": {
+              "active": 14,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 56.21,
+              "process": 17.22
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 59.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 7,
+              "pauseTotalSec": 0.563,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 44,
+              "peak": 44
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:02:51.629Z",
+            "hikari": {
+              "active": 15,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 55.22,
+              "process": 15.82
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 150.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 7,
+              "pauseTotalSec": 0.563,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 44,
+              "peak": 44
+            }
+          }
+        ]
+      },
+      "dbState": {
+        "unassignedLocksBefore": 0,
+        "txCountAfter": 130780
+      }
+    },
+    {
+      "vus": 20,
+      "durationSec": 20.03,
+      "totalRequests": 5768,
+      "httpThroughput": 287.94,
+      "clientFinancialTps": 173.72,
+      "confirmedFinancialTps": 173.74,
+      "financialSuccessOps": 3480,
+      "financialFailOps": 0,
+      "readSuccessOps": 1426,
+      "replaySuccessOps": 862,
+      "statusCodes": {
+        "200": 5768
+      },
+      "opsCount": {
+        "balance": 1426,
+        "fund": 1180,
+        "transfer": 2300,
+        "replay": 862
+      },
+      "percentiles": {
+        "min": 3,
+        "p50": 62.18,
+        "p90": 91.79,
+        "p95": 113.71,
+        "p99": 284.32,
+        "p999": 626.07,
+        "max": 718.29,
+        "avg": 69.16
+      },
+      "perOpPercentiles": {
+        "balance": {
+          "count": 1426,
+          "min": 3,
+          "p50": 63.22,
+          "p90": 87.4,
+          "p95": 95.82,
+          "p99": 119.32,
+          "p999": 146.72,
+          "max": 158.07,
+          "avg": 61.91
+        },
+        "fund": {
+          "count": 1180,
+          "min": 28.95,
+          "p50": 66.41,
+          "p90": 104.76,
+          "p95": 153.29,
+          "p99": 437.92,
+          "p999": 654.69,
+          "max": 671.56,
+          "avg": 82.2
+        },
+        "transfer": {
+          "count": 2300,
+          "min": 17.76,
+          "p50": 62.68,
+          "p90": 99.1,
+          "p95": 136.54,
+          "p99": 297.87,
+          "p999": 534.45,
+          "max": 718.29,
+          "avg": 73.21
+        },
+        "replay": {
+          "count": 862,
+          "min": 3.78,
+          "p50": 52.21,
+          "p90": 71.68,
+          "p95": 82.51,
+          "p99": 105.3,
+          "p999": 146.64,
+          "max": 146.64,
+          "avg": 52.52
+        }
+      },
+      "actuator": {
+        "before": {
+          "timestamp": "2026-11-18T10:03:04.468Z",
+          "hikari": {
+            "active": 0,
+            "pending": 0,
+            "total": 20,
+            "max": 20
+          },
+          "cpu": {
+            "system": 4.52,
+            "process": 0.06
+          },
+          "memoryMb": {
+            "jvmHeapUsed": 153.12,
+            "jvmHeapMax": 1024
+          },
+          "gc": {
+            "pauseCount": 7,
+            "pauseTotalSec": 0.563,
+            "pauseMaxSec": 0.286
+          },
+          "threads": {
+            "live": 43,
+            "peak": 44
+          }
+        },
+        "after": {
+          "timestamp": "2026-11-18T10:03:24.719Z",
+          "hikari": {
+            "active": 12,
+            "pending": 0,
+            "total": 20,
+            "max": 20
+          },
+          "cpu": {
+            "system": 59.8,
+            "process": 11.81
+          },
+          "memoryMb": {
+            "jvmHeapUsed": 289.62,
+            "jvmHeapMax": 1024
+          },
+          "gc": {
+            "pauseCount": 11,
+            "pauseTotalSec": 0.629,
+            "pauseMaxSec": 0.286
+          },
+          "threads": {
+            "live": 46,
+            "peak": 47
+          }
+        },
+        "samples": [
+          {
+            "timestamp": "2026-11-18T10:03:06.720Z",
+            "hikari": {
+              "active": 20,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 44.52,
+              "process": 11.07
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 266.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 7,
+              "pauseTotalSec": 0.563,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 47,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:08.696Z",
+            "hikari": {
+              "active": 20,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 34.43,
+              "process": 9.59
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 112.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 8,
+              "pauseTotalSec": 0.575,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 47,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:10.711Z",
+            "hikari": {
+              "active": 2,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 34.38,
+              "process": 9.51
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 223.12,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 8,
+              "pauseTotalSec": 0.575,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 47,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:12.744Z",
+            "hikari": {
+              "active": 0,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 52.13,
+              "process": 18.31
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 98.01,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 9,
+              "pauseTotalSec": 0.587,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 46,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:14.742Z",
+            "hikari": {
+              "active": 1,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 50.41,
+              "process": 11.41
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 232.01,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 9,
+              "pauseTotalSec": 0.587,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 46,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:16.765Z",
+            "hikari": {
+              "active": 1,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 50.94,
+              "process": 14.66
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 60.41,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 10,
+              "pauseTotalSec": 0.606,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 46,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:18.771Z",
+            "hikari": {
+              "active": 1,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 46.1,
+              "process": 9.96
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 188.41,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 10,
+              "pauseTotalSec": 0.606,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 46,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:20.748Z",
+            "hikari": {
+              "active": 1,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 51.63,
+              "process": 11.33
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 321.41,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 10,
+              "pauseTotalSec": 0.606,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 46,
+              "peak": 47
+            }
+          },
+          {
+            "timestamp": "2026-11-18T10:03:22.771Z",
+            "hikari": {
+              "active": 12,
+              "pending": 0,
+              "total": 20,
+              "max": 20
+            },
+            "cpu": {
+              "system": 58.54,
+              "process": 14.02
+            },
+            "memoryMb": {
+              "jvmHeapUsed": 157.62,
+              "jvmHeapMax": 1024
+            },
+            "gc": {
+              "pauseCount": 11,
+              "pauseTotalSec": 0.629,
+              "pauseMaxSec": 0.286
+            },
+            "threads": {
+              "live": 46,
+              "peak": 47
+            }
+          }
+        ]
+      },
+      "dbState": {
+        "unassignedLocksBefore": 0,
+        "txCountAfter": 134260
+      }
+    }
+  ]
+}

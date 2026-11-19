@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-11-18T10:03:29.794Z",
+  "allPassed": true,
+  "checks": [
+    {
+      "check": "1. Journal Balance by Identity & Currency",
+      "passed": true,
+      "details": "Zero imbalance"
+    },
+    {
+      "check": "2. Wallet-to-Ledger Reconciliation (LEFT JOIN)",
+      "passed": true,
+      "details": "Zero discrepancy"
+    },
+    {
+      "check": "3. System Settlement Reconciliation",
+      "passed": true,
+      "details": "Reconciled"
+    },
+    {
+      "check": "4. Parent vs Child Refund Totals",
+      "passed": true,
+      "details": "Zero discrepancy"
+    },
+    {
+      "check": "5. Duplicate Successful Reversals",
+      "passed": true,
+      "details": "Zero duplicates"
+    },
+    {
+      "check": "6. Orphaned Ledger Entries",
+      "passed": true,
+      "details": "Orphans: 0"
+    },
+    {
+      "check": "7. Idempotency Key Uniqueness",
+      "passed": true,
+      "details": "Unique"
+    },
+    {
+      "check": "8. Transaction Journal Completeness (2 entries per txn)",
+      "passed": true,
+      "details": "All complete"
+    },
+    {
+      "check": "9. Currency Association Integrity",
+      "passed": true,
+      "details": "All match"
+    }
+  ]
+}

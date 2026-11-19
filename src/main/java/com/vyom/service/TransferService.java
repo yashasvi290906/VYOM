@@ -25,6 +25,32 @@ public class TransferService {
         this.transferExecutionService = transferExecutionService;
     }
 
+    public TransferResponse transfer(UUID userId, String idempotencyKey, CreateTransferRequest request) {
+        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
+            throw new InvalidTransferException("Idempotency-Key header is required");
+        }
+
+        String sanitizedKey = idempotencyKey.trim();
+        String fingerprint = idempotencyService.computeTransferFingerprint(userId, request);
+
+        // Reserve key with ownership token or replay cached result scoped to user
+        IdempotencyReservationResult<TransferResponse> reservation = idempotencyService.reserveKey(
+                userId, sanitizedKey, OperationType.TRANSFER, fingerprint, TransferResponse.class);
+        if (reservation.isCompleted()) {
+            log.info("Returning cached response for transfer idempotency key '{}' (user: {})", sanitizedKey, userId);
+            return reservation.cachedResponse();
+        }
+
+        UUID ownerToken = reservation.ownerToken();
+        try {
+            return transferExecutionService.execute(userId, sanitizedKey, ownerToken, request);
+        } catch (Exception e) {
+            log.error("Transfer execution failed for idempotency key '{}' (user: {}): {}", sanitizedKey, userId, e.getMessage());
+            idempotencyService.markFailed(userId, sanitizedKey, ownerToken);
+            throw e;
+        }
+    }
+
     public TransferResponse transfer(String idempotencyKey, CreateTransferRequest request) {
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");
@@ -33,7 +59,6 @@ public class TransferService {
         String sanitizedKey = idempotencyKey.trim();
         String fingerprint = idempotencyService.computeTransferFingerprint(request);
 
-        // Reserve key with ownership token or replay cached result
         IdempotencyReservationResult<TransferResponse> reservation = idempotencyService.reserveKey(
                 sanitizedKey, OperationType.TRANSFER, fingerprint, TransferResponse.class);
         if (reservation.isCompleted()) {

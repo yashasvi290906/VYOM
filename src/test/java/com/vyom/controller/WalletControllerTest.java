@@ -6,11 +6,14 @@ import com.vyom.dto.request.FundWalletRequest;
 import com.vyom.dto.response.FundingResponse;
 import com.vyom.dto.response.WalletResponse;
 import com.vyom.entity.enums.FundingStatus;
+import com.vyom.repository.UserRepository;
+import com.vyom.security.JwtTokenService;
 import com.vyom.service.FundingService;
 import com.vyom.service.WalletService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -29,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WalletController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class WalletControllerTest {
 
     @Autowired
@@ -42,6 +46,12 @@ public class WalletControllerTest {
 
     @MockBean
     private FundingService fundingService;
+
+    @MockBean
+    private JwtTokenService jwtTokenService;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("POST /api/v1/wallets should return 201 Created on valid input")

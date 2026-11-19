@@ -25,6 +25,31 @@ public class FundingService {
         this.fundingExecutionService = fundingExecutionService;
     }
 
+    public FundingResponse fundWallet(UUID userId, String idempotencyKey, UUID walletId, FundWalletRequest request) {
+        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
+            throw new InvalidTransferException("Idempotency-Key header is required");
+        }
+
+        String sanitizedKey = idempotencyKey.trim();
+        String fingerprint = idempotencyService.computeFundingFingerprint(userId, walletId, request);
+
+        IdempotencyReservationResult<FundingResponse> reservation = idempotencyService.reserveKey(
+                userId, sanitizedKey, OperationType.FUNDING, fingerprint, FundingResponse.class);
+        if (reservation.isCompleted()) {
+            log.info("Returning cached response for funding idempotency key '{}' (user: {})", sanitizedKey, userId);
+            return reservation.cachedResponse();
+        }
+
+        UUID ownerToken = reservation.ownerToken();
+        try {
+            return fundingExecutionService.execute(userId, sanitizedKey, ownerToken, walletId, request);
+        } catch (Exception e) {
+            log.error("Funding execution failed for idempotency key '{}' (user: {}): {}", sanitizedKey, userId, e.getMessage());
+            idempotencyService.markFailed(userId, sanitizedKey, ownerToken);
+            throw e;
+        }
+    }
+
     public FundingResponse fundWallet(String idempotencyKey, UUID walletId, FundWalletRequest request) {
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");

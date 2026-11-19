@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${TEST_DB_NAME:payledger_test}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${TEST_DB_NAME:payledger_test}?reWriteBatchedInserts=true
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
@@ -21,11 +21,42 @@ spring:
         format_sql: false
         jdbc:
           time_zone: UTC
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+        generate_statistics: true
 
   flyway:
     enabled: true
     locations: classpath:db/migration
     clean-disabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
+vyom:
+  jwt:
+    secret: vyom-test-hmac-sha256-signing-secret-key-32-bytes-minimum
+    expiration-minutes: 60
+  admin:
+    bootstrap:
+      enabled: false
+      email: ""
+      password: ""
+  idempotency:
+    timeout-seconds: 120
+    janitor:
+      enabled: true
+      interval-ms: 60000
+      initial-delay-ms: 10000
 
 logging:
   level:

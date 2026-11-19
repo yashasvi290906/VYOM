@@ -1,0 +1,7 @@
+# Production Profile Configuration
+# Requires explicit, secure environment variables for sensitive parameters.
+
+vyom:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}

@@ -1,0 +1,173 @@
+{
+  "startTime": "2026-11-18T11:52:54.025Z",
+  "journeys": {
+    "Journey A": [
+      {
+        "name": "Landing page loads with correct title",
+        "passed": true,
+        "details": "VYOM — Digital Payments & Transaction Platform"
+      },
+      {
+        "name": "Register modal opens on button click",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "Registration transitions to authenticated Dashboard",
+        "passed": true,
+        "details": "Greeting: Aarav Sharma"
+      },
+      {
+        "name": "Registered user persisted in PostgreSQL",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "Initial wallet created for User A",
+        "passed": true,
+        "details": "Wallet ID: 946b3827-c1fa-40fa-93e8-5ab863714403"
+      },
+      {
+        "name": "Logout clears session and returns to landing",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "Duplicate registration rejected with clear error",
+        "passed": true,
+        "details": "An account with this email address already exists"
+      },
+      {
+        "name": "Valid login authenticates and loads Dashboard",
+        "passed": true,
+        "details": ""
+      }
+    ],
+    "Journey B": [
+      {
+        "name": "Funding review confirmation modal opens with formatted amount",
+        "passed": true,
+        "details": "2500.0000"
+      },
+      {
+        "name": "Funding executes atomically and renders new balance",
+        "passed": true,
+        "details": "INR 2500.0000"
+      },
+      {
+        "name": "Double-entry ledger journal verified in PostgreSQL",
+        "passed": true,
+        "details": "CREDIT|2500.0000|CUSTOMER\r | DEBIT|2500.0000|SYSTEM_SETTLEMENT"
+      },
+      {
+        "name": "Idempotency replay returns cached response without double credit",
+        "passed": true,
+        "details": "Balance in DB: 2500.0000"
+      }
+    ],
+    "Journey C": [
+      {
+        "name": "User B (Bhavna) registered with INR wallet",
+        "passed": true,
+        "details": "Bhavna Wallet: 8ffdcfad-14e3-4d07-9e1b-ae09c5df1f50"
+      },
+      {
+        "name": "Transfer review confirmation modal displays counterparties and amount",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "Transfer executed successfully with reference",
+        "passed": true,
+        "details": "Transfer ID: 1c3c296f-a54a-49ec-8ae7-f43481d35bcd"
+      },
+      {
+        "name": "Authoritative database balances updated accurately",
+        "passed": true,
+        "details": "Aarav: 1750.0000, Bhavna: 750.0000"
+      },
+      {
+        "name": "Official transaction receipt rendered with masked parties",
+        "passed": true,
+        "details": "Receipt Amount: INR 750.0000, Sender: Aarav Sharma"
+      }
+    ],
+    "Journey D": [
+      {
+        "name": "Transfer beyond balance rejected with INSUFFICIENT_FUNDS",
+        "passed": true,
+        "details": "Request FailedTransfer rejected: Source wallet has insufficient funds.Correlation ID: req-10ebfa2a | Code: INSUFFICIENT_FUNDS×"
+      },
+      {
+        "name": "Transfer to nonexistent wallet rejected with WALLET_NOT_FOUND",
+        "passed": true,
+        "details": "Request FailedTransfer rejected: Source wallet has insufficient funds.Correlation ID: req-10ebfa2a | Code: INSUFFICIENT_FUNDS×"
+      },
+      {
+        "name": "Failed transfers cause zero balance mutations or corrupted records",
+        "passed": true,
+        "details": "Balance remains: 1750.0000"
+      }
+    ],
+    "Journey E": [
+      {
+        "name": "5 simultaneous transfers processed with zero deadlocks or lost updates",
+        "passed": true,
+        "details": "Aarav: 1700.0000, Bhavna: 800.0000"
+      }
+    ],
+    "Journey F": [
+      {
+        "name": "Timeout alert banner displayed preserving original Idempotency Key",
+        "passed": true,
+        "details": ""
+      }
+    ],
+    "Journey G": [
+      {
+        "name": "Transaction details modal displays complete metadata breakdown",
+        "passed": true,
+        "details": "Ref: TXN-20261118-VS93UDWD"
+      }
+    ],
+    "Journey H": [
+      {
+        "name": "Customer dispute created without mutating financial balances",
+        "passed": true,
+        "details": "Dispute count: 1"
+      },
+      {
+        "name": "Recipient of transfer is authorized to issue refund",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "Customer partial refund executed with exact double-entry balance adjustment",
+        "passed": true,
+        "details": "Bhavna: 550.0000, Aarav: 1950.0000"
+      },
+      {
+        "name": "Administrator login unlocks dedicated Admin Portal tab",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "Administrator successfully resolved customer dispute to RESOLVED_UPHELD",
+        "passed": true,
+        "details": "Status: RESOLVED_UPHELD"
+      }
+    ],
+    "Journey I": [
+      {
+        "name": "Gateway and Backend report healthy UP status",
+        "passed": true,
+        "details": "{\"status\":\"UP\",\"gateway\":\"UP\",\"backend\":\"UP\",\"timestamp\":\"2026-11-18T11:53:44.047Z\"}"
+      }
+    ]
+  },
+  "summary": {
+    "total": 29,
+    "passed": 29,
+    "failed": 0
+  }
+}

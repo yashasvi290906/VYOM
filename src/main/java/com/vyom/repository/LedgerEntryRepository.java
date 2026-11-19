@@ -18,6 +18,8 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> 
 
     List<LedgerEntry> findByFundingId(UUID fundingId);
 
+    List<LedgerEntry> findByTransactionId(UUID transactionId);
+
     List<LedgerEntry> findByWalletId(UUID walletId);
 }
 

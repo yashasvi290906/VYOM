@@ -7,13 +7,13 @@ spring:
     name: vyom-backend
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payledger}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payledger}?reWriteBatchedInserts=true
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
-      minimum-idle: 5
+      minimum-idle: 10
       idle-timeout: 30000
       connection-timeout: 20000
       pool-name: VyomHikariPool
@@ -28,6 +28,9 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
 
   flyway:
     enabled: true
@@ -39,6 +42,34 @@ spring:
     serialization:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
+vyom:
+  jwt:
+    secret: ${JWT_SECRET:vyom-development-only-hmac-sha256-signing-secret-key-32-bytes-minimum}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+  admin:
+    bootstrap:
+      enabled: ${VYOM_ADMIN_BOOTSTRAP_ENABLED:false}
+      email: ${VYOM_ADMIN_BOOTSTRAP_EMAIL:}
+      password: ${VYOM_ADMIN_BOOTSTRAP_PASSWORD:}
+      full-name: ${VYOM_ADMIN_BOOTSTRAP_FULL_NAME:System Administrator}
+  idempotency:
+    timeout-seconds: ${IDEMPOTENCY_TIMEOUT_SECONDS:120}
+    janitor:
+      enabled: ${IDEMPOTENCY_JANITOR_ENABLED:true}
+      interval-ms: ${IDEMPOTENCY_JANITOR_INTERVAL_MS:60000}
+      initial-delay-ms: ${IDEMPOTENCY_JANITOR_INITIAL_DELAY_MS:10000}
 
 logging:
   level:

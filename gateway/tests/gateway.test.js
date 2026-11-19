@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const http = require('node:http');
 const app = require('../src/app');
 const { BackendClient } = require('../src/services/backendClient');
+const config = require('../src/config');
 
 describe('VYOM API Gateway Tests', () => {
   let mockBackendServer;
@@ -102,6 +103,7 @@ describe('VYOM API Gateway Tests', () => {
     const defaultBackendClient = require('../src/services/backendClient');
     defaultBackendClient.baseUrl = mockBackendBaseUrl;
     defaultBackendClient.timeoutMs = 1000; // Fast timeout for tests
+    config.backendBaseUrl = mockBackendBaseUrl;
 
     // 2. Start Gateway server on ephemeral port
     gatewayServer = http.createServer(app);
@@ -162,6 +164,57 @@ describe('VYOM API Gateway Tests', () => {
     assert.strictEqual(res.status, 201);
     assert.strictEqual(res.headers.get('x-request-id'), customId);
     assert.strictEqual(lastBackendRequest.headers['x-correlation-id'], customId);
+  });
+
+  test('SEC-P3-01: Replaces malformed or oversized X-Request-Id with safe generated ID', async () => {
+    const malformedId = 'malicious-id-with-spaces and <script>alert(1)</script>';
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/wallets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-Id': malformedId
+      },
+      body: JSON.stringify({ ownerName: 'Eve', currency: 'INR' })
+    });
+
+    assert.strictEqual(res.status, 201);
+    const assignedId = res.headers.get('x-request-id');
+    assert.ok(assignedId && assignedId.startsWith('req-'));
+    assert.ok(!assignedId.includes('<'));
+    assert.ok(!assignedId.includes('>'));
+    assert.ok(!assignedId.includes(' '));
+  });
+
+  test('SEC-P3-01: Replaces oversized X-Request-Id (>64 chars) with safe generated ID', async () => {
+    const oversizedId = 'b'.repeat(128);
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/wallets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-Id': oversizedId
+      },
+      body: JSON.stringify({ ownerName: 'Eve', currency: 'INR' })
+    });
+
+    assert.strictEqual(res.status, 201);
+    const assignedId = res.headers.get('x-request-id');
+    assert.ok(assignedId && assignedId.startsWith('req-'));
+    assert.ok(assignedId.length <= 64);
+  });
+
+  test('SEC-P3-04: GET /health returns 503 when backend is down or unreachable', async () => {
+    const originalBaseUrl = config.backendBaseUrl;
+    try {
+      config.backendBaseUrl = 'http://127.0.0.1:59999'; // unreachable dead port
+      const res = await fetch(`${gatewayBaseUrl}/health`);
+      assert.strictEqual(res.status, 503);
+      const body = await res.json();
+      assert.strictEqual(body.status, 'DOWN');
+      assert.strictEqual(body.gateway, 'UP');
+      assert.strictEqual(body.backend, 'DOWN');
+    } finally {
+      config.backendBaseUrl = originalBaseUrl;
+    }
   });
 
   test('Forwarding valid transfer with Idempotency-Key header', async () => {
@@ -275,5 +328,115 @@ describe('VYOM API Gateway Tests', () => {
     const body = await res.json();
     assert.strictEqual(body.status, 404);
     assert.strictEqual(body.errorCode, 'ENDPOINT_NOT_FOUND');
+  });
+
+  test('Forwarding Authorization Bearer token to upstream backend', async () => {
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/transfers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'auth-test-key-1',
+        'Authorization': 'Bearer test-jwt-token-12345'
+      },
+      body: JSON.stringify({
+        sourceWalletId: '11111111-1111-1111-1111-111111111111',
+        destinationWalletId: '22222222-2222-2222-2222-222222222222',
+        amount: '100.5000',
+        currency: 'INR'
+      })
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.ok(lastBackendRequest);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+    assert.strictEqual(lastBackendRequest.headers['idempotency-key'], 'auth-test-key-1');
+    assert.strictEqual(lastBackendRequest.body.amount, '100.5000');
+  });
+
+  test('Forwarding POST /api/v1/auth/register through gateway', async () => {
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'gateway-user@example.com',
+        password: 'Password123!',
+        fullName: 'Gateway Test User'
+      })
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, '/api/v1/auth/register');
+    assert.strictEqual(lastBackendRequest.body.email, 'gateway-user@example.com');
+  });
+
+  test('Forwarding GET /api/v1/transactions with query parameters and auth', async () => {
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/transactions?page=0&size=10&status=SUCCESS`, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer test-jwt-token-12345'
+      }
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, '/api/v1/transactions?page=0&size=10&status=SUCCESS');
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+  });
+
+  test('Forwarding GET /api/v1/transactions/:id/receipt through gateway', async () => {
+    const txnId = '33333333-3333-3333-3333-333333333333';
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/transactions/${txnId}/receipt`, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer test-jwt-token-12345'
+      }
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/transactions/${txnId}/receipt`);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+  });
+
+  test('Forwarding POST /api/v1/transactions/:id/refund with Idempotency-Key and body', async () => {
+    const txnId = '33333333-3333-3333-3333-333333333333';
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/transactions/${txnId}/refund`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'refund-idem-key-1',
+        'Authorization': 'Bearer test-jwt-token-12345'
+      },
+      body: JSON.stringify({
+        amount: '25.0000',
+        reason: 'Customer return'
+      })
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/transactions/${txnId}/refunds`);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+    assert.strictEqual(lastBackendRequest.headers['idempotency-key'], 'refund-idem-key-1');
+    assert.strictEqual(lastBackendRequest.body.amount, '25.0000');
+    assert.strictEqual(lastBackendRequest.body.reason, 'Customer return');
+  });
+
+  test('Forwarding POST /api/v1/transactions/:id/disputes through gateway', async () => {
+    const txnId = '33333333-3333-3333-3333-333333333333';
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/transactions/${txnId}/disputes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-jwt-token-12345'
+      },
+      body: JSON.stringify({
+        reasonCode: 'UNAUTHORIZED_CHARGE',
+        description: 'Unauthorized payment attempt'
+      })
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/transactions/${txnId}/disputes`);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+    assert.strictEqual(lastBackendRequest.body.reasonCode, 'UNAUTHORIZED_CHARGE');
+    assert.strictEqual(lastBackendRequest.body.description, 'Unauthorized payment attempt');
   });
 });

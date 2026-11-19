@@ -297,7 +297,8 @@ public class ConcurrencyIntegrationTest extends BaseIntegrationTest {
         // Core Invariant: 10 * 50 = 500.0000 balance without lost updates
         Wallet finalWallet = walletRepository.findById(wallet.getId()).orElseThrow();
         assertThat(finalWallet.getBalance()).isEqualByComparingTo(new BigDecimal("500.0000"));
-        assertThat(ledgerEntryRepository.count()).isEqualTo(10);
+        // Double-entry accounting: 10 fundings produce 20 ledger entries (10 debit on system settlement, 10 credit on customer)
+        assertThat(ledgerEntryRepository.count()).isEqualTo(20);
     }
 }
 

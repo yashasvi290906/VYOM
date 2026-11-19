@@ -40,6 +40,9 @@ public class Funding {
     @Column(name = "status", nullable = false, length = 20)
     private FundingStatus status;
 
+    @Column(name = "transaction_id")
+    private UUID transactionId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -110,6 +113,14 @@ public class Funding {
 
     public void setStatus(FundingStatus status) {
         this.status = status;
+    }
+
+    public UUID getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(UUID transactionId) {
+        this.transactionId = transactionId;
     }
 
     public Instant getCreatedAt() {

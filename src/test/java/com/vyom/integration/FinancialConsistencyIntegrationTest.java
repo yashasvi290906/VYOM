@@ -50,13 +50,14 @@ public class FinancialConsistencyIntegrationTest extends BaseIntegrationTest {
             SELECT w.id,
                    w.owner_name,
                    w.balance,
+                   w.account_type,
                    COALESCE(SUM(CASE WHEN l.entry_type = 'CREDIT' THEN l.amount ELSE 0 END), 0) AS total_credits,
                    COALESCE(SUM(CASE WHEN l.entry_type = 'DEBIT' THEN l.amount ELSE 0 END), 0) AS total_debits,
                    COALESCE(SUM(CASE WHEN l.entry_type = 'CREDIT' THEN l.amount ELSE 0 END), 0) -
                    COALESCE(SUM(CASE WHEN l.entry_type = 'DEBIT' THEN l.amount ELSE 0 END), 0) AS computed_balance
             FROM wallets w
             LEFT JOIN ledger_entries l ON w.id = l.wallet_id
-            GROUP BY w.id, w.owner_name, w.balance
+            GROUP BY w.id, w.owner_name, w.balance, w.account_type
             """;
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
@@ -66,15 +67,18 @@ public class FinancialConsistencyIntegrationTest extends BaseIntegrationTest {
             BigDecimal actualBalance = (BigDecimal) row.get("balance");
             BigDecimal computedBalance = (BigDecimal) row.get("computed_balance");
             String owner = (String) row.get("owner_name");
+            String accountType = (String) row.get("account_type");
             UUID walletId = (UUID) row.get("id");
 
             assertThat(actualBalance)
                     .as("Wallet balance for %s (%s) must match computed ledger entries", owner, walletId)
                     .isEqualByComparingTo(computedBalance);
 
-            assertThat(actualBalance)
-                    .as("Wallet balance for %s (%s) must never be negative", owner, walletId)
-                    .isGreaterThanOrEqualTo(BigDecimal.ZERO);
+            if (!"SYSTEM_SETTLEMENT".equals(accountType)) {
+                assertThat(actualBalance)
+                        .as("Wallet balance for %s (%s) must never be negative", owner, walletId)
+                        .isGreaterThanOrEqualTo(BigDecimal.ZERO);
+            }
         }
 
         // Verify every transfer has exactly one DEBIT and one CREDIT of equal amounts

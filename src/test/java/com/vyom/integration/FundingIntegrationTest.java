@@ -86,15 +86,16 @@ public class FundingIntegrationTest extends BaseIntegrationTest {
         assertThat(funding.getAmount()).isEqualByComparingTo(new BigDecimal("1000.0000"));
         assertThat(funding.getStatus()).isEqualTo(FundingStatus.COMPLETED);
 
-        // Verify single CREDIT Ledger Entry
+        // Verify double-entry Ledger Entries (1 DEBIT on system settlement, 1 CREDIT on customer)
         List<LedgerEntry> entries = ledgerEntryRepository.findByFundingId(funding.getId());
-        assertThat(entries).hasSize(1);
-        LedgerEntry entry = entries.get(0);
-        assertThat(entry.getEntryType()).isEqualTo(EntryType.CREDIT);
-        assertThat(entry.getAmount()).isEqualByComparingTo(new BigDecimal("1000.0000"));
-        assertThat(entry.getBalanceAfter()).isEqualByComparingTo(new BigDecimal("1000.0000"));
-        assertThat(entry.getFundingId()).isEqualTo(funding.getId());
-        assertThat(entry.getTransferId()).isNull();
+        assertThat(entries).hasSize(2);
+        LedgerEntry debitEntry = entries.stream().filter(e -> e.getEntryType() == EntryType.DEBIT).findFirst().orElseThrow();
+        LedgerEntry creditEntry = entries.stream().filter(e -> e.getEntryType() == EntryType.CREDIT).findFirst().orElseThrow();
+        assertThat(debitEntry.getAmount()).isEqualByComparingTo(new BigDecimal("1000.0000"));
+        assertThat(creditEntry.getAmount()).isEqualByComparingTo(new BigDecimal("1000.0000"));
+        assertThat(creditEntry.getBalanceAfter()).isEqualByComparingTo(new BigDecimal("1000.0000"));
+        assertThat(creditEntry.getFundingId()).isEqualTo(funding.getId());
+        assertThat(creditEntry.getTransferId()).isNull();
     }
 
     @Test
@@ -172,9 +173,9 @@ public class FundingIntegrationTest extends BaseIntegrationTest {
         Wallet updated = walletRepository.findById(wallet.getId()).orElseThrow();
         assertThat(updated.getBalance()).isEqualByComparingTo(new BigDecimal("250.0000"));
 
-        // Only ONE funding record and ONE ledger entry
+        // Only ONE funding record and TWO double-entry ledger entries
         assertThat(fundingRepository.count()).isEqualTo(1);
-        assertThat(ledgerEntryRepository.count()).isEqualTo(1);
+        assertThat(ledgerEntryRepository.count()).isEqualTo(2);
     }
 
     @Test
@@ -253,7 +254,7 @@ public class FundingIntegrationTest extends BaseIntegrationTest {
         Wallet updated = walletRepository.findById(wallet.getId()).orElseThrow();
         assertThat(updated.getBalance()).isEqualByComparingTo(new BigDecimal("300.0000"));
         assertThat(fundingRepository.count()).isEqualTo(1);
-        assertThat(ledgerEntryRepository.count()).isEqualTo(1);
+        assertThat(ledgerEntryRepository.count()).isEqualTo(2);
     }
 }
 

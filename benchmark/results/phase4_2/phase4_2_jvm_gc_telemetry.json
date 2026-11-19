@@ -1,0 +1,173 @@
+{
+  "capturedAt": "2026-11-18T07:59:37.057Z",
+  "jvmRuntime": {
+    "javaVersion": "v24.11.0",
+    "gcCollector": "G1 Garbage Collector (-XX:+UseG1GC)",
+    "heapSettings": "-Xms512m -Xmx1g",
+    "finalHeapUsedMb": 239.43,
+    "finalHeapMaxMb": 1024,
+    "gcPauseSummary": {
+      "pauseCount": 58,
+      "pauseTotalSec": 0.441,
+      "pauseMaxSec": 0.009
+    },
+    "threadsSummary": {
+      "live": 58,
+      "peak": 58
+    }
+  },
+  "hikariSummary": {
+    "finalActive": 0,
+    "finalPending": 0,
+    "finalTotal": 20,
+    "maxPoolSize": 20
+  },
+  "concurrencySweepSamples": [
+    {
+      "vus": 1,
+      "httpRps": 104.3,
+      "financialTps": 64.5,
+      "p50": 9.9,
+      "p95": 17.4,
+      "p99": 21.9,
+      "hikariActive": 1,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 284.19,
+      "procCpuPercent": 5.42
+    },
+    {
+      "vus": 5,
+      "httpRps": 332.79,
+      "financialTps": 200.6,
+      "p50": 13.97,
+      "p95": 30.34,
+      "p99": 46.56,
+      "hikariActive": 2,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 309.43,
+      "procCpuPercent": 13.04
+    },
+    {
+      "vus": 10,
+      "httpRps": 376.45,
+      "financialTps": 226.17,
+      "p50": 23.3,
+      "p95": 46.84,
+      "p99": 72.45,
+      "hikariActive": 4,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 232.43,
+      "procCpuPercent": 11.23
+    },
+    {
+      "vus": 15,
+      "httpRps": 429.73,
+      "financialTps": 257.63,
+      "p50": 31.09,
+      "p95": 65,
+      "p99": 109.67,
+      "hikariActive": 15,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 349.34,
+      "procCpuPercent": 9.81
+    },
+    {
+      "vus": 20,
+      "httpRps": 416.85,
+      "financialTps": 247.58,
+      "p50": 40.09,
+      "p95": 108.15,
+      "p99": 220.56,
+      "hikariActive": 16,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 68.97,
+      "procCpuPercent": 9.8
+    },
+    {
+      "vus": 30,
+      "httpRps": 397.65,
+      "financialTps": 238.86,
+      "p50": 49.67,
+      "p95": 250.01,
+      "p99": 453.79,
+      "hikariActive": 20,
+      "hikariPending": 3,
+      "jvmHeapUsedMb": 323.78,
+      "procCpuPercent": 8.04
+    }
+  ],
+  "workloadProfileSamples": [
+    {
+      "category": "Category A: Read-Heavy",
+      "httpRps": 591.34,
+      "financialTps": 0,
+      "p50": 15.72,
+      "p95": 25.84,
+      "p99": 33.73,
+      "hikariActive": 0,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 210.69,
+      "procCpuPercent": 5.8
+    },
+    {
+      "category": "Category B: Write-Heavy",
+      "httpRps": 247.55,
+      "financialTps": 247.51,
+      "p50": 31.62,
+      "p95": 92.61,
+      "p99": 172.44,
+      "hikariActive": 6,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 149.68,
+      "procCpuPercent": 8.08
+    },
+    {
+      "category": "Category C: Mixed Standard",
+      "httpRps": 278.18,
+      "financialTps": 154.22,
+      "p50": 22.33,
+      "p95": 83.6,
+      "p99": 225.91,
+      "hikariActive": 1,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 169.28,
+      "procCpuPercent": 6.68
+    },
+    {
+      "category": "Category D: Idempotency-Heavy",
+      "httpRps": 408.11,
+      "financialTps": 80.32,
+      "p50": 17.66,
+      "p95": 59.37,
+      "p99": 92.01,
+      "hikariActive": 0,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 252.41,
+      "procCpuPercent": 6.34
+    },
+    {
+      "category": "Category E: Contention-Heavy (Hot Wallets)",
+      "httpRps": 143.76,
+      "financialTps": 143.77,
+      "p50": 65.48,
+      "p95": 129.65,
+      "p99": 200.65,
+      "hikariActive": 5,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 178.45,
+      "procCpuPercent": 2.53
+    },
+    {
+      "category": "Category F: Rejection Workload (Insufficient Funds)",
+      "httpRps": 283.3,
+      "financialTps": 0,
+      "p50": 20.3,
+      "p95": 91.96,
+      "p99": 142.87,
+      "hikariActive": 0,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 238.43,
+      "procCpuPercent": 3.89
+    }
+  ]
+}

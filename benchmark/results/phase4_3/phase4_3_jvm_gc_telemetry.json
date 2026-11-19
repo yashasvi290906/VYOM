@@ -1,0 +1,83 @@
+{
+  "capturedAt": "2026-11-18T08:37:06.211Z",
+  "jvmRuntime": {
+    "javaVersion": "v24.11.0",
+    "gcCollector": "G1 Garbage Collector (-XX:+UseG1GC)",
+    "heapSettings": "-Xms512m -Xmx1g",
+    "finalHeapUsedMb": 338.74,
+    "finalHeapMaxMb": 1024,
+    "gcPauseSummary": {
+      "pauseCount": 29,
+      "pauseTotalSec": 0.259,
+      "pauseMaxSec": 0.027
+    },
+    "threadsSummary": {
+      "live": 45,
+      "peak": 46
+    }
+  },
+  "hikariSummary": {
+    "finalActive": 7,
+    "finalPending": 0,
+    "finalTotal": 20,
+    "maxPoolSize": 20
+  },
+  "concurrencySweepSamples": [
+    {
+      "vus": 5,
+      "httpRps": 241.08,
+      "financialTps": 142.11,
+      "p50": 16.71,
+      "p95": 45.63,
+      "p99": 78.71,
+      "transferP50": 20.49,
+      "transferP95": 48.49,
+      "hikariActive": 1,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 200.61,
+      "procCpuPercent": 28.59
+    },
+    {
+      "vus": 10,
+      "httpRps": 380.03,
+      "financialTps": 229.67,
+      "p50": 23.97,
+      "p95": 47.12,
+      "p99": 72.03,
+      "transferP50": 25.52,
+      "transferP95": 48.8,
+      "hikariActive": 2,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 165.61,
+      "procCpuPercent": 9.94
+    },
+    {
+      "vus": 15,
+      "httpRps": 416.79,
+      "financialTps": 246.34,
+      "p50": 33.21,
+      "p95": 59.15,
+      "p99": 90.83,
+      "transferP50": 34.59,
+      "transferP95": 61.17,
+      "hikariActive": 8,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 266.38,
+      "procCpuPercent": 15.47
+    },
+    {
+      "vus": 20,
+      "httpRps": 396.65,
+      "financialTps": 238.37,
+      "p50": 43.08,
+      "p95": 104,
+      "p99": 251.6,
+      "transferP50": 46.2,
+      "transferP95": 108.29,
+      "hikariActive": 11,
+      "hikariPending": 0,
+      "jvmHeapUsedMb": 220.83,
+      "procCpuPercent": 9.62
+    }
+  ]
+}

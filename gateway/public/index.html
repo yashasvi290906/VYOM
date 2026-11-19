@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VYOM — Digital Payments Platform</title>
+  <title>VYOM — Digital Payments & Transaction Platform</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <!-- Header -->
+
+  <!-- Top App Header -->
   <header class="app-header">
     <div class="header-container">
       <div class="header-brand">
-        <h1 class="app-title">VYOM <span style="font-size: 0.85em; opacity: 0.85; font-weight: normal;">| व्योम</span></h1>
+        <h1 class="app-title" style="cursor: pointer;" id="header-brand-link">VYOM <span style="font-size: 0.85em; opacity: 0.85; font-weight: normal;">| व्योम</span></h1>
         <p class="app-subtitle">Virtual Yatra of Money — Every transaction. One trusted space.</p>
       </div>
       <div class="header-status">
@@ -23,7 +24,60 @@
     </div>
   </header>
 
-  <!-- Active Wallet Bar -->
+  <!-- Navigation Bar with Tabs & Auth Controls -->
+  <nav class="nav-bar" aria-label="Main Navigation">
+    <div class="nav-container">
+      <ul class="nav-tabs" id="nav-tabs-list">
+        <!-- Public Tabs -->
+        <li class="nav-tab-item public-tab">
+          <button type="button" class="nav-tab-btn active" id="tab-btn-landing" data-view="landing">Home</button>
+        </li>
+        <!-- Authenticated Tabs (Initially Hidden) -->
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-dashboard" data-view="dashboard">Dashboard</button>
+        </li>
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-wallets" data-view="wallets">Wallets</button>
+        </li>
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-funding" data-view="funding">Top Up</button>
+        </li>
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-transfer" data-view="transfer">Transfer</button>
+        </li>
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-history" data-view="history">History</button>
+        </li>
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-disputes" data-view="disputes">Disputes</button>
+        </li>
+        <!-- Admin-Only Tab (Hidden unless user is ADMIN) -->
+        <li class="nav-tab-item admin-tab" style="display: none;" id="tab-item-admin">
+          <button type="button" class="nav-tab-btn" id="tab-btn-admin" data-view="admin">Admin Portal</button>
+        </li>
+      </ul>
+
+      <!-- Right Auth Bar Controls -->
+      <div class="nav-auth-controls">
+        <!-- Unauthenticated Controls -->
+        <div id="auth-controls-unauth" class="btn-group">
+          <button type="button" id="btn-nav-login" class="btn btn-sm btn-outline">Sign In</button>
+          <button type="button" id="btn-nav-register" class="btn btn-sm btn-primary">Register</button>
+        </div>
+
+        <!-- Authenticated Controls -->
+        <div id="auth-controls-auth" style="display: none; align-items: center; gap: 0.75rem;">
+          <div id="btn-nav-profile" class="user-badge-pill" title="Click to view profile">
+            <span id="nav-user-name">User</span>
+            <span id="nav-user-role" class="role-tag role-tag-user">USER</span>
+          </div>
+          <button type="button" id="btn-nav-logout" class="btn btn-sm btn-outline" style="color: #cbd5e1;">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Active Wallet Bar (Context Toolbar) -->
   <section class="active-wallet-bar" aria-label="Active Wallet Context">
     <div class="container active-wallet-inner">
       <div class="active-wallet-info">
@@ -32,6 +86,9 @@
         <span id="active-wallet-balance" class="active-wallet-balance"></span>
       </div>
       <div class="active-wallet-actions">
+        <select id="active-wallet-select" class="form-control" style="display: none; padding: 0.25rem 0.5rem; font-size: 0.8125rem; width: auto;" aria-label="Select Active Wallet">
+          <option value="">Switch Wallet...</option>
+        </select>
         <button type="button" id="btn-copy-active-id" class="btn btn-sm btn-outline" style="display: none;">Copy ID</button>
         <button type="button" id="btn-refresh-active" class="btn btn-sm btn-outline" style="display: none;">Refresh</button>
       </div>
@@ -39,234 +96,463 @@
   </section>
 
   <!-- Main Content Layout -->
-  <main class="container main-content">
-    <div class="dashboard-grid">
+  <main class="container main-content" style="padding-top: 1.5rem; padding-bottom: 3rem;">
 
-      <!-- Card 1: Create Wallet -->
-      <section class="card" id="card-create-wallet">
-        <div class="card-header">
-          <h2 class="card-title">Create Wallet</h2>
-          <span class="badge badge-info">Zero Balance</span>
+    <!-- ==================================================================== -->
+    <!-- VIEW 1: PUBLIC LANDING VIEW                                          -->
+    <!-- ==================================================================== -->
+    <div id="view-landing" class="view-panel active">
+      <div class="landing-hero">
+        <h2>Simulated Multi-Currency Digital Payments Platform</h2>
+        <p>
+          VYOM delivers bank-grade double-entry transaction processing, pessimistic row-locking concurrency control, and per-account idempotency. Engineered for deterministic financial integrity.
+        </p>
+        <div class="landing-badges">
+          <span class="pill-feature">Double-Entry Ledger</span>
+          <span class="pill-feature">PostgreSQL Row Locks</span>
+          <span class="pill-feature">Zero-Loss Idempotency</span>
+          <span class="pill-feature">Exact 4-Decimal Precision</span>
+          <span class="pill-feature">Auditable Receipts</span>
+        </div>
+        <div class="alert alert-warning" style="max-width: 700px; margin: 0 auto 1.5rem auto; text-align: left;">
+          <strong>Simulation Environment Notice:</strong> VYOM is a simulated financial platform for demonstrating transaction processing architecture. All wallets, balances, and funding operations use test data only. No real banking, UPI, or external card payment systems are accessed.
+        </div>
+        <div class="landing-cta-group">
+          <button type="button" id="btn-landing-register" class="btn btn-primary" style="padding: 0.75rem 1.75rem; font-size: 1rem;">Create Account</button>
+          <button type="button" id="btn-landing-login" class="btn btn-outline" style="padding: 0.75rem 1.75rem; font-size: 1rem; color: #ffffff; border-color: rgba(255,255,255,0.4);">Sign In to Wallet</button>
+        </div>
+      </div>
+
+      <div class="landing-grid">
+        <div class="feature-box">
+          <h3>Strict Double-Entry Bookkeeping</h3>
+          <p>Every funding, transfer, refund, and reversal writes balanced debit and credit entries to an immutable append-only ledger. Global financial invariants are verified on every transaction.</p>
+        </div>
+        <div class="feature-box">
+          <h3>Deterministic Concurrency Control</h3>
+          <p>Multi-wallet operations acquire row-level locks in deterministic ascending UUID order, eliminating deadlocks under extreme high-concurrency workloads.</p>
+        </div>
+        <div class="feature-box">
+          <h3>Per-User Idempotency Protection</h3>
+          <p>Every mutating request requires a unique idempotency key. Network retries return identical cached responses without accidental duplicate debits or double spends.</p>
+        </div>
+        <div class="feature-box">
+          <h3>Lifecycle & Administrative Oversight</h3>
+          <p>Comprehensive transaction tracking with dispute filings, customer-initiated refunds, and role-enforced administrative reversals protected by Spring Security RBAC.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 2: AUTHENTICATED DASHBOARD VIEW                                 -->
+    <!-- ==================================================================== -->
+    <div id="view-dashboard" class="view-panel">
+      <!-- Welcome Header -->
+      <div class="card mb-3" style="margin-bottom: 1.5rem; background: linear-gradient(to right, #ffffff, #f8fafc);">
+        <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">Welcome back, <span id="dash-user-name">User</span>!</h2>
+            <p class="text-muted" style="font-size: 0.9rem;">Authenticated as <strong id="dash-user-email">user@vyom.internal</strong> (<span id="dash-user-role-badge" class="role-tag role-tag-user">USER</span>)</p>
+          </div>
+          <div class="quick-actions-bar" style="margin-bottom: 0;">
+            <button type="button" id="dash-action-fund" class="btn btn-warning">Top Up Wallet</button>
+            <button type="button" id="dash-action-transfer" class="btn btn-primary">Transfer Funds</button>
+            <button type="button" id="dash-action-history" class="btn btn-secondary">History</button>
+            <button type="button" id="dash-action-dispute" class="btn btn-outline">Disputes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Owned Wallets Section -->
+      <section style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 700;">My Wallets</h3>
+          <button type="button" id="dash-btn-new-wallet" class="btn btn-sm btn-outline">+ Create New Wallet</button>
+        </div>
+        <div id="dash-wallets-container" class="wallets-summary-grid">
+          <div class="text-muted">Loading wallets...</div>
+        </div>
+      </section>
+
+      <!-- Recent Transactions Section -->
+      <section class="card card-full">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 class="card-title">Recent Transactions</h2>
+          <button type="button" id="dash-btn-view-all-txns" class="btn-link">View Full History &rarr;</button>
         </div>
         <div class="card-body">
-          <p class="card-description">Create a new simulated multi-currency wallet. New wallets start with a 0.00 balance.</p>
-          <form id="form-create-wallet">
-            <div class="form-group">
-              <label for="create-owner-name">Owner Name <span class="required">*</span></label>
-              <input type="text" id="create-owner-name" class="form-control" placeholder="e.g. Alice Sharma" required maxlength="100">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                  <th>Counterparty</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dash-recent-txns-body">
+                <tr>
+                  <td colspan="7" class="text-center text-muted">No recent transactions found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 3: WALLETS MANAGEMENT VIEW                                      -->
+    <!-- ==================================================================== -->
+    <div id="view-wallets" class="view-panel">
+      <div class="dashboard-grid">
+
+        <!-- Card 1: Create Wallet -->
+        <section class="card" id="card-create-wallet">
+          <div class="card-header">
+            <h2 class="card-title">Create Wallet</h2>
+            <span class="badge badge-info">Zero Balance</span>
+          </div>
+          <div class="card-body">
+            <p class="card-description">Create a new simulated multi-currency wallet. New wallets start with a 0.0000 balance.</p>
+            <form id="form-create-wallet">
+              <div class="form-group">
+                <label for="create-owner-name">Owner Name <span class="required">*</span></label>
+                <input type="text" id="create-owner-name" class="form-control" placeholder="e.g. Alice Sharma" required maxlength="100">
+              </div>
+              <div class="form-group">
+                <label for="create-currency">Currency <span class="required">*</span></label>
+                <select id="create-currency" class="form-control" required>
+                  <option value="INR" selected>INR — Indian Rupee</option>
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="GBP">GBP — British Pound</option>
+                </select>
+              </div>
+              <button type="submit" id="btn-create-wallet" class="btn btn-primary btn-block">
+                <span class="btn-text">Create Wallet</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </form>
+            <div id="create-wallet-result" class="result-box" style="display: none;">
+              <div class="result-row">
+                <span class="result-label">Wallet ID:</span>
+                <span id="res-created-id" class="result-value font-mono"></span>
+                <button type="button" id="btn-copy-created-id" class="btn btn-xs btn-outline">Copy</button>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Owner:</span>
+                <span id="res-created-owner" class="result-value"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Balance:</span>
+                <span id="res-created-balance" class="result-value font-bold"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Created At:</span>
+                <span id="res-created-time" class="result-value"></span>
+              </div>
+              <button type="button" id="btn-set-created-active" class="btn btn-sm btn-success mt-2">Set as Active Wallet</button>
             </div>
-            <div class="form-group">
-              <label for="create-currency">Currency <span class="required">*</span></label>
-              <select id="create-currency" class="form-control" required>
-                <option value="INR" selected>INR — Indian Rupee</option>
-                <option value="USD">USD — US Dollar</option>
-                <option value="EUR">EUR — Euro</option>
-                <option value="GBP">GBP — British Pound</option>
+          </div>
+        </section>
+
+        <!-- Card 3: Wallet Lookup -->
+        <section class="card" id="card-lookup-wallet">
+          <div class="card-header">
+            <h2 class="card-title">Wallet Lookup</h2>
+            <span class="badge badge-secondary">Query</span>
+          </div>
+          <div class="card-body">
+            <p class="card-description">Inspect real-time wallet balance and metadata directly from the PostgreSQL ledger.</p>
+            <form id="form-lookup-wallet">
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="lookup-wallet-id">Wallet ID <span class="required">*</span></label>
+                  <button type="button" id="btn-lookup-use-active" class="btn-link">Use Active Wallet</button>
+                </div>
+                <input type="text" id="lookup-wallet-id" class="form-control font-mono" placeholder="UUID" required>
+              </div>
+              <button type="submit" id="btn-lookup-wallet" class="btn btn-secondary btn-block">
+                <span class="btn-text">Fetch Wallet</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </form>
+            <div id="lookup-wallet-result" class="result-box" style="display: none;">
+              <div class="balance-display-card">
+                <span class="balance-display-label">Current Balance</span>
+                <div id="res-lookup-balance" class="balance-display-amount">0.0000</div>
+                <span id="res-lookup-currency" class="balance-display-currency">INR</span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Owner Name:</span>
+                <span id="res-lookup-owner" class="result-value"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Created At:</span>
+                <span id="res-lookup-created" class="result-value"></span>
+              </div>
+              <div class="btn-group mt-2">
+                <button type="button" id="btn-set-lookup-active" class="btn btn-sm btn-primary">Set as Active Wallet</button>
+                <button type="button" id="btn-lookup-view-txns" class="btn btn-sm btn-outline">View Transactions</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 4: SIMULATED WALLET FUNDING VIEW                                -->
+    <!-- ==================================================================== -->
+    <div id="view-funding" class="view-panel">
+      <div style="max-width: 680px; margin: 0 auto;">
+        <!-- Card 2: Simulated Wallet Funding -->
+        <section class="card" id="card-fund-wallet">
+          <div class="card-header">
+            <h2 class="card-title">Simulated Wallet Funding</h2>
+            <span class="badge badge-warning">Simulated Only</span>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-warning">
+              <strong>Demo Funds Only:</strong> Top up a simulated wallet for testing. No real banking credentials, payment gateways, or money are involved.
+            </div>
+            <form id="form-fund-wallet">
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="fund-wallet-id">Target Wallet ID <span class="required">*</span></label>
+                  <button type="button" id="btn-fund-use-active" class="btn-link">Use Active Wallet</button>
+                </div>
+                <input type="text" id="fund-wallet-id" class="form-control font-mono" placeholder="UUID (e.g. 123e4567-e89b...)" required>
+              </div>
+              <div class="form-group">
+                <label for="fund-amount">Amount <span class="required">*</span></label>
+                <input type="number" id="fund-amount" class="form-control" placeholder="1000.00" step="0.01" min="0.01" required>
+              </div>
+              <div class="form-group">
+                <label for="fund-description">Description</label>
+                <input type="text" id="fund-description" class="form-control" value="Demo wallet top-up" maxlength="255">
+              </div>
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="fund-idempotency-key">Idempotency Key <span class="required">*</span></label>
+                  <button type="button" id="btn-fund-regen-key" class="btn-link">Regenerate Key</button>
+                </div>
+                <input type="text" id="fund-idempotency-key" class="form-control font-mono" required>
+                <small class="form-hint">UUID to ensure idempotency. Keep identical to test deduplication.</small>
+              </div>
+              <button type="submit" id="btn-fund-wallet" class="btn btn-warning btn-block">
+                <span class="btn-text">Review & Add Funds</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </form>
+
+            <!-- Ambiguous Timeout Alert Banner -->
+            <div id="fund-timeout-alert" class="timeout-alert">
+              <h4>⚠️ Transaction Outcome Ambiguous (Timeout)</h4>
+              <p>The network request timed out waiting for the gateway. The financial operation may have completed on the backend. Your original Idempotency Key has been preserved. Do not submit a new payment with a different key.</p>
+              <button type="button" id="btn-fund-retry-timeout" class="btn btn-sm btn-warning">Retry with Preserved Key</button>
+            </div>
+
+            <div id="fund-wallet-result" class="result-box" style="display: none;">
+              <div class="result-row">
+                <span class="result-label">Funding ID:</span>
+                <span id="res-funded-id" class="result-value font-mono"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Status:</span>
+                <span id="res-funded-status" class="badge badge-success"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">New Balance:</span>
+                <span id="res-funded-balance" class="result-value font-bold text-success"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 5: FUND TRANSFER VIEW                                           -->
+    <!-- ==================================================================== -->
+    <div id="view-transfer" class="view-panel">
+      <div style="max-width: 680px; margin: 0 auto;">
+        <!-- Card 4: Fund Transfer -->
+        <section class="card" id="card-transfer-funds">
+          <div class="card-header">
+            <h2 class="card-title">Fund Transfer</h2>
+            <span class="badge badge-primary">Atomic Ledger</span>
+          </div>
+          <div class="card-body">
+            <p class="card-description">Execute an atomic, double-entry transfer between two wallets with strict row-locking and idempotency.</p>
+            <form id="form-transfer-funds">
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="transfer-source-id">Source Wallet ID <span class="required">*</span></label>
+                  <button type="button" id="btn-transfer-use-active-src" class="btn-link">Use Active</button>
+                </div>
+                <input type="text" id="transfer-source-id" class="form-control font-mono" placeholder="Debited wallet UUID" required>
+              </div>
+              <div class="form-group">
+                <label for="transfer-dest-id">Destination Wallet ID <span class="required">*</span></label>
+                <input type="text" id="transfer-dest-id" class="form-control font-mono" placeholder="Credited wallet UUID" required>
+              </div>
+              <div class="form-group">
+                <label for="transfer-currency">Currency <span class="required">*</span></label>
+                <select id="transfer-currency" class="form-control" required>
+                  <option value="INR" selected>INR — Indian Rupee</option>
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="GBP">GBP — British Pound</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="transfer-amount">Amount <span class="required">*</span></label>
+                <input type="number" id="transfer-amount" class="form-control" placeholder="100.00" step="0.01" min="0.01" required>
+              </div>
+              <div class="form-group">
+                <label for="transfer-description">Description</label>
+                <input type="text" id="transfer-description" class="form-control" value="Demo transfer" maxlength="255">
+              </div>
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="transfer-idempotency-key">Idempotency Key <span class="required">*</span></label>
+                  <button type="button" id="btn-transfer-regen-key" class="btn-link">Regenerate Key</button>
+                </div>
+                <input type="text" id="transfer-idempotency-key" class="form-control font-mono" required>
+                <small class="form-hint">UUID prevents duplicate debits. Resend identical key to verify deduplication.</small>
+              </div>
+              <button type="submit" id="btn-transfer" class="btn btn-primary btn-block">
+                <span class="btn-text">Review & Transfer Funds</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </form>
+
+            <!-- Ambiguous Timeout Alert Banner -->
+            <div id="transfer-timeout-alert" class="timeout-alert">
+              <h4>⚠️ Transfer Outcome Ambiguous (Timeout)</h4>
+              <p>The network request timed out waiting for the gateway. The financial transfer may have committed on the backend. Your original Idempotency Key has been preserved. Do not re-send with a new key.</p>
+              <button type="button" id="btn-transfer-retry-timeout" class="btn btn-sm btn-warning">Retry with Preserved Key</button>
+            </div>
+
+            <div id="transfer-result" class="result-box" style="display: none;">
+              <div class="result-row">
+                <span class="result-label">Transfer ID:</span>
+                <span id="res-transfer-id" class="result-value font-mono"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Status:</span>
+                <span id="res-transfer-status" class="badge badge-success"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Amount:</span>
+                <span id="res-transfer-amount" class="result-value font-bold"></span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Timestamp:</span>
+                <span id="res-transfer-time" class="result-value"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 6: TRANSACTION HISTORY & LEDGER VIEW                            -->
+    <!-- ==================================================================== -->
+    <div id="view-history" class="view-panel">
+      <!-- Section A: Account-Level Transactions -->
+      <section class="card card-full mb-3" style="margin-bottom: 2rem;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h2 class="card-title">Account Transactions</h2>
+            <span class="text-muted" style="font-size: 0.85rem;">Authoritative financial transaction records for your identity</span>
+          </div>
+          <button type="button" id="btn-refresh-user-txns" class="btn btn-sm btn-outline">Refresh Transactions</button>
+        </div>
+        <div class="card-body">
+          <!-- Filters Bar -->
+          <div class="filter-bar">
+            <div class="filter-group">
+              <label for="filter-txn-type">Type</label>
+              <select id="filter-txn-type" class="form-control">
+                <option value="">ALL TYPES</option>
+                <option value="TRANSFER">TRANSFER</option>
+                <option value="FUNDING">FUNDING</option>
+                <option value="REFUND">REFUND</option>
+                <option value="REVERSAL">REVERSAL</option>
               </select>
             </div>
-            <button type="submit" id="btn-create-wallet" class="btn btn-primary btn-block">
-              <span class="btn-text">Create Wallet</span>
-              <span class="btn-spinner" style="display: none;"></span>
-            </button>
-          </form>
-          <div id="create-wallet-result" class="result-box" style="display: none;">
-            <div class="result-row">
-              <span class="result-label">Wallet ID:</span>
-              <span id="res-created-id" class="result-value font-mono"></span>
-              <button type="button" id="btn-copy-created-id" class="btn btn-xs btn-outline">Copy</button>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Owner:</span>
-              <span id="res-created-owner" class="result-value"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Balance:</span>
-              <span id="res-created-balance" class="result-value font-bold"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Created At:</span>
-              <span id="res-created-time" class="result-value"></span>
-            </div>
-            <button type="button" id="btn-set-created-active" class="btn btn-sm btn-success mt-2">Set as Active Wallet</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Card 2: Simulated Wallet Funding -->
-      <section class="card" id="card-fund-wallet">
-        <div class="card-header">
-          <h2 class="card-title">Simulated Wallet Funding</h2>
-          <span class="badge badge-warning">Simulated Only</span>
-        </div>
-        <div class="card-body">
-          <div class="alert alert-warning">
-            <strong>Demo funds only:</strong> Top up a wallet for simulation testing. No real money or banking transactions are involved.
-          </div>
-          <form id="form-fund-wallet">
-            <div class="form-group">
-              <div class="label-row">
-                <label for="fund-wallet-id">Target Wallet ID <span class="required">*</span></label>
-                <button type="button" id="btn-fund-use-active" class="btn-link">Use Active Wallet</button>
-              </div>
-              <input type="text" id="fund-wallet-id" class="form-control font-mono" placeholder="UUID (e.g. 123e4567-e89b...)" required>
-            </div>
-            <div class="form-group">
-              <label for="fund-amount">Amount <span class="required">*</span></label>
-              <input type="number" id="fund-amount" class="form-control" placeholder="1000.00" step="0.01" min="0.01" required>
-            </div>
-            <div class="form-group">
-              <label for="fund-description">Description</label>
-              <input type="text" id="fund-description" class="form-control" value="Demo wallet top-up" maxlength="255">
-            </div>
-            <div class="form-group">
-              <div class="label-row">
-                <label for="fund-idempotency-key">Idempotency Key <span class="required">*</span></label>
-                <button type="button" id="btn-fund-regen-key" class="btn-link">Regenerate Key</button>
-              </div>
-              <input type="text" id="fund-idempotency-key" class="form-control font-mono" required>
-              <small class="form-hint">UUID to ensure idempotency. Keep identical to test deduplication.</small>
-            </div>
-            <button type="submit" id="btn-fund-wallet" class="btn btn-warning btn-block">
-              <span class="btn-text">Add Simulated Funds</span>
-              <span class="btn-spinner" style="display: none;"></span>
-            </button>
-          </form>
-          <div id="fund-wallet-result" class="result-box" style="display: none;">
-            <div class="result-row">
-              <span class="result-label">Funding ID:</span>
-              <span id="res-funded-id" class="result-value font-mono"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Status:</span>
-              <span id="res-funded-status" class="badge badge-success"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">New Balance:</span>
-              <span id="res-funded-balance" class="result-value font-bold text-success"></span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Card 3: Wallet Lookup -->
-      <section class="card" id="card-lookup-wallet">
-        <div class="card-header">
-          <h2 class="card-title">Wallet Lookup</h2>
-          <span class="badge badge-secondary">Query</span>
-        </div>
-        <div class="card-body">
-          <p class="card-description">Inspect real-time wallet balance and metadata directly from the PostgreSQL ledger.</p>
-          <form id="form-lookup-wallet">
-            <div class="form-group">
-              <div class="label-row">
-                <label for="lookup-wallet-id">Wallet ID <span class="required">*</span></label>
-                <button type="button" id="btn-lookup-use-active" class="btn-link">Use Active Wallet</button>
-              </div>
-              <input type="text" id="lookup-wallet-id" class="form-control font-mono" placeholder="UUID" required>
-            </div>
-            <button type="submit" id="btn-lookup-wallet" class="btn btn-secondary btn-block">
-              <span class="btn-text">Fetch Wallet</span>
-              <span class="btn-spinner" style="display: none;"></span>
-            </button>
-          </form>
-          <div id="lookup-wallet-result" class="result-box" style="display: none;">
-            <div class="balance-display-card">
-              <span class="balance-display-label">Current Balance</span>
-              <div id="res-lookup-balance" class="balance-display-amount">0.00</div>
-              <span id="res-lookup-currency" class="balance-display-currency">INR</span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Owner Name:</span>
-              <span id="res-lookup-owner" class="result-value"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Created At:</span>
-              <span id="res-lookup-created" class="result-value"></span>
-            </div>
-            <div class="btn-group mt-2">
-              <button type="button" id="btn-set-lookup-active" class="btn btn-sm btn-primary">Set as Active Wallet</button>
-              <button type="button" id="btn-lookup-view-txns" class="btn btn-sm btn-outline">View Transactions</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Card 4: Fund Transfer -->
-      <section class="card" id="card-transfer-funds">
-        <div class="card-header">
-          <h2 class="card-title">Fund Transfer</h2>
-          <span class="badge badge-primary">Atomic Ledger</span>
-        </div>
-        <div class="card-body">
-          <p class="card-description">Execute an atomic, double-entry transfer between two wallets with strict row-locking and idempotency.</p>
-          <form id="form-transfer-funds">
-            <div class="form-group">
-              <div class="label-row">
-                <label for="transfer-source-id">Source Wallet ID <span class="required">*</span></label>
-                <button type="button" id="btn-transfer-use-active-src" class="btn-link">Use Active</button>
-              </div>
-              <input type="text" id="transfer-source-id" class="form-control font-mono" placeholder="Debited wallet UUID" required>
-            </div>
-            <div class="form-group">
-              <label for="transfer-dest-id">Destination Wallet ID <span class="required">*</span></label>
-              <input type="text" id="transfer-dest-id" class="form-control font-mono" placeholder="Credited wallet UUID" required>
-            </div>
-            <div class="form-group">
-              <label for="transfer-currency">Currency <span class="required">*</span></label>
-              <select id="transfer-currency" class="form-control" required>
-                <option value="INR" selected>INR — Indian Rupee</option>
-                <option value="USD">USD — US Dollar</option>
-                <option value="EUR">EUR — Euro</option>
-                <option value="GBP">GBP — British Pound</option>
+            <div class="filter-group">
+              <label for="filter-txn-status">Status</label>
+              <select id="filter-txn-status" class="form-control">
+                <option value="">ALL STATUSES</option>
+                <option value="SUCCESS">SUCCESS</option>
+                <option value="FAILED">FAILED</option>
+                <option value="PARTIALLY_REFUNDED">PARTIALLY_REFUNDED</option>
+                <option value="REFUNDED">REFUNDED</option>
+                <option value="REVERSED">REVERSED</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="transfer-amount">Amount <span class="required">*</span></label>
-              <input type="number" id="transfer-amount" class="form-control" placeholder="100.00" step="0.01" min="0.01" required>
+            <div class="filter-group">
+              <label for="filter-txn-size">Page Size</label>
+              <select id="filter-txn-size" class="form-control">
+                <option value="10" selected>10 per page</option>
+                <option value="20">20 per page</option>
+                <option value="50">50 per page</option>
+              </select>
             </div>
-            <div class="form-group">
-              <label for="transfer-description">Description</label>
-              <input type="text" id="transfer-description" class="form-control" value="Demo transfer" maxlength="255">
+            <button type="button" id="btn-apply-txn-filters" class="btn btn-secondary btn-sm" style="align-self: flex-end;">Apply Filters</button>
+          </div>
+
+          <!-- Transactions Table -->
+          <div class="table-responsive">
+            <table class="data-table" id="table-user-txns">
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                  <th>Counterparty</th>
+                  <th>Date & Time</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="user-txns-table-body">
+                <tr>
+                  <td colspan="7" class="text-center text-muted">No transactions loaded.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Account Txns Pagination -->
+          <div class="pagination-bar" id="user-txns-pagination" style="display: none; margin-top: 1rem;">
+            <div class="pagination-info">
+              <span id="user-txns-pagination-summary">Showing 0-0 of 0</span>
             </div>
-            <div class="form-group">
-              <div class="label-row">
-                <label for="transfer-idempotency-key">Idempotency Key <span class="required">*</span></label>
-                <button type="button" id="btn-transfer-regen-key" class="btn-link">Regenerate Key</button>
-              </div>
-              <input type="text" id="transfer-idempotency-key" class="form-control font-mono" required>
-              <small class="form-hint">UUID prevents duplicate debits. Resend identical key to verify deduplication.</small>
-            </div>
-            <button type="submit" id="btn-transfer" class="btn btn-primary btn-block">
-              <span class="btn-text">Transfer Funds</span>
-              <span class="btn-spinner" style="display: none;"></span>
-            </button>
-          </form>
-          <div id="transfer-result" class="result-box" style="display: none;">
-            <div class="result-row">
-              <span class="result-label">Transfer ID:</span>
-              <span id="res-transfer-id" class="result-value font-mono"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Status:</span>
-              <span id="res-transfer-status" class="badge badge-success"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Amount:</span>
-              <span id="res-transfer-amount" class="result-value font-bold"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Timestamp:</span>
-              <span id="res-transfer-time" class="result-value"></span>
+            <div class="pagination-buttons">
+              <button type="button" id="btn-user-txns-prev" class="btn btn-sm btn-outline" disabled>Previous</button>
+              <span id="user-txns-page-indicator" class="page-indicator">Page 1 of 1</span>
+              <button type="button" id="btn-user-txns-next" class="btn btn-sm btn-outline" disabled>Next</button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Card 5: Transaction History (Full Width) -->
+      <!-- Section B: Card 5: Low-Level Wallet Ledger History (Original Card 5) -->
       <section class="card card-full" id="card-history">
         <div class="card-header">
-          <h2 class="card-title">Transaction & Ledger History</h2>
-          <span class="badge badge-secondary">Auditable Log</span>
+          <h2 class="card-title">Wallet Ledger Journal Entries</h2>
+          <span class="badge badge-secondary">Double-Entry Audit Log</span>
         </div>
         <div class="card-body">
           <p class="card-description">Inspect the append-only ledger entries for a wallet, ordered deterministically by timestamp and ID.</p>
@@ -288,7 +574,7 @@
             </div>
             <div class="history-actions">
               <button type="button" id="btn-load-history" class="btn btn-secondary">
-                <span class="btn-text">Load History</span>
+                <span class="btn-text">Load Ledger</span>
                 <span class="btn-spinner" style="display: none;"></span>
               </button>
             </div>
@@ -310,7 +596,7 @@
               </thead>
               <tbody id="history-table-body">
                 <tr id="history-empty-row">
-                  <td colspan="7" class="text-center text-muted">Enter a Wallet ID and click "Load History" to view ledger records.</td>
+                  <td colspan="7" class="text-center text-muted">Enter a Wallet ID and click "Load Ledger" to view ledger records.</td>
                 </tr>
               </tbody>
             </table>
@@ -329,9 +615,594 @@
           </div>
         </div>
       </section>
-
     </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 7: DISPUTES MANAGEMENT VIEW                                     -->
+    <!-- ==================================================================== -->
+    <div id="view-disputes" class="view-panel">
+      <section class="card card-full">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h2 class="card-title">Transaction Disputes</h2>
+            <span class="text-muted" style="font-size: 0.85rem;">Manage operational disputes filed on transactions. Disputes do not alter balances until resolved.</span>
+          </div>
+          <button type="button" id="btn-open-create-dispute" class="btn btn-sm btn-primary">+ File New Dispute</button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="data-table" id="table-disputes">
+              <thead>
+                <tr>
+                  <th>Dispute Ref</th>
+                  <th>Transaction ID</th>
+                  <th>Reason Code</th>
+                  <th>Status</th>
+                  <th>Description</th>
+                  <th>Filed Date</th>
+                  <th>Resolution Notes</th>
+                </tr>
+              </thead>
+              <tbody id="disputes-table-body">
+                <tr>
+                  <td colspan="7" class="text-center text-muted">No disputes filed.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 8: ADMIN PORTAL VIEW (ROLE: ADMIN ONLY)                         -->
+    <!-- ==================================================================== -->
+    <div id="view-admin" class="view-panel">
+      <div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+        <strong>Administrator Control Panel:</strong> Access to this section is restricted to accounts with <code>Role.ADMIN</code>. All actions are logged and verified by backend method-level security.
+      </div>
+
+      <div class="dashboard-grid mb-3" style="margin-bottom: 2rem;">
+        <!-- Admin Reversals Form -->
+        <section class="card" id="card-admin-reversals">
+          <div class="card-header">
+            <h2 class="card-title">Administrative Reversal</h2>
+            <span class="badge badge-danger">Compensatory</span>
+          </div>
+          <div class="card-body">
+            <p class="card-description">Execute an authoritative full reversal of an eligible transfer. Debits recipient, credits sender, and preserves double-entry journal balance.</p>
+            <form id="form-admin-reversal">
+              <div class="form-group">
+                <label for="admin-reversal-txn-id">Transaction UUID <span class="required">*</span></label>
+                <input type="text" id="admin-reversal-txn-id" class="form-control font-mono" placeholder="Target Transaction UUID" required>
+              </div>
+              <div class="form-group">
+                <label for="admin-reversal-reason">Reason</label>
+                <input type="text" id="admin-reversal-reason" class="form-control" value="Administrative reversal" maxlength="255">
+              </div>
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="admin-reversal-idemp-key">Idempotency Key <span class="required">*</span></label>
+                  <button type="button" id="btn-admin-regen-key" class="btn-link">Regen</button>
+                </div>
+                <input type="text" id="admin-reversal-idemp-key" class="form-control font-mono" required>
+              </div>
+              <button type="submit" id="btn-submit-admin-reversal" class="btn btn-danger btn-block">
+                <span class="btn-text">Execute Administrative Reversal</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- System Telemetry Card -->
+        <section class="card" id="card-admin-telemetry">
+          <div class="card-header">
+            <h2 class="card-title">System Health & Telemetry</h2>
+            <span class="badge badge-info">Actuator</span>
+          </div>
+          <div class="card-body">
+            <p class="card-description">Live service health probed via Spring Boot Actuator and Express Gateway.</p>
+            <div class="result-box" style="display: block;">
+              <div class="result-row">
+                <span class="result-label">Gateway Service:</span>
+                <span id="telemetry-gw-status" class="badge badge-success">UP</span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Backend Service:</span>
+                <span id="telemetry-backend-status" class="badge badge-success">UP</span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">PostgreSQL Database:</span>
+                <span id="telemetry-db-status" class="badge badge-success">CONNECTED</span>
+              </div>
+              <div class="result-row">
+                <span class="result-label">Precision Hygiene:</span>
+                <span class="badge badge-info">Exact Decimal (String)</span>
+              </div>
+            </div>
+            <button type="button" id="btn-refresh-telemetry" class="btn btn-sm btn-outline mt-2">Refresh Telemetry</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Admin Dispute Resolution Queue -->
+      <section class="card card-full">
+        <div class="card-header">
+          <h2 class="card-title">Platform Dispute Management Queue</h2>
+          <span class="badge badge-warning">Action Required</span>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="data-table" id="table-admin-disputes">
+              <thead>
+                <tr>
+                  <th>Dispute Ref</th>
+                  <th>Transaction ID</th>
+                  <th>User ID</th>
+                  <th>Reason Code</th>
+                  <th>Status</th>
+                  <th>Description</th>
+                  <th>Created</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-disputes-table-body">
+                <tr>
+                  <td colspan="8" class="text-center text-muted">Loading platform disputes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
   </main>
+
+  <!-- ====================================================================== -->
+  <!-- MODALS                                                                 -->
+  <!-- ====================================================================== -->
+
+  <!-- 1. Modal: Sign In -->
+  <div id="modal-login" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-login-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-login-title" class="modal-title">Sign In to VYOM</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-login">&times;</button>
+      </div>
+      <form id="form-login">
+        <div class="modal-body">
+          <div id="login-error-alert" class="alert alert-danger" style="display: none;"></div>
+          <div class="form-group">
+            <label for="login-email">Email Address <span class="required">*</span></label>
+            <input type="email" id="login-email" class="form-control" placeholder="user@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password <span class="required">*</span></label>
+            <div class="password-input-wrapper">
+              <input type="password" id="login-password" class="form-control" placeholder="Enter password" required>
+              <button type="button" class="password-toggle-btn" data-target="login-password">Show</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" id="btn-switch-to-register" class="btn-link">Create Account</button>
+          <div class="btn-group">
+            <button type="button" class="btn btn-outline" data-close-modal="modal-login">Cancel</button>
+            <button type="submit" id="btn-submit-login" class="btn btn-primary">
+              <span class="btn-text">Sign In</span>
+              <span class="btn-spinner" style="display: none;"></span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Modal: Register -->
+  <div id="modal-register" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-register-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-register-title" class="modal-title">Create VYOM Account</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-register">&times;</button>
+      </div>
+      <form id="form-register">
+        <div class="modal-body">
+          <div id="register-error-alert" class="alert alert-danger" style="display: none;"></div>
+          <div class="form-group">
+            <label for="reg-name">Full Name <span class="required">*</span></label>
+            <input type="text" id="reg-name" class="form-control" placeholder="e.g. Alice Sharma" required maxlength="100">
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email Address <span class="required">*</span></label>
+            <input type="email" id="reg-email" class="form-control" placeholder="alice@example.com" required maxlength="255">
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password <span class="required">*</span></label>
+            <div class="password-input-wrapper">
+              <input type="password" id="reg-password" class="form-control" placeholder="Minimum 6 characters" required minlength="6" maxlength="100">
+              <button type="button" class="password-toggle-btn" data-target="reg-password">Show</button>
+            </div>
+            <small class="form-hint">At least 6 characters.</small>
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" id="btn-switch-to-login" class="btn-link">Already have an account?</button>
+          <div class="btn-group">
+            <button type="button" class="btn btn-outline" data-close-modal="modal-register">Cancel</button>
+            <button type="submit" id="btn-submit-register" class="btn btn-primary">
+              <span class="btn-text">Create Account</span>
+              <span class="btn-spinner" style="display: none;"></span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Modal: User Profile -->
+  <div id="modal-profile" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-profile-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-profile-title" class="modal-title">Customer Profile</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-profile">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="result-box" style="display: block;">
+          <div class="result-row">
+            <span class="result-label">Full Name:</span>
+            <span id="prof-full-name" class="result-value font-bold"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Email:</span>
+            <span id="prof-email" class="result-value"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">User ID:</span>
+            <span id="prof-user-id" class="result-value font-mono" style="font-size: 0.8rem;"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Platform Role:</span>
+            <span id="prof-role" class="badge badge-info">USER</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Member Since:</span>
+            <span id="prof-created-at" class="result-value"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="modal-profile">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Modal: Funding Confirmation (Review Step) -->
+  <div id="modal-confirm-funding" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-fund-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-confirm-fund-title" class="modal-title">Review Simulated Funding</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-confirm-funding">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="review-box">
+          <div class="review-item">
+            <span class="review-label">Target Wallet:</span>
+            <span id="review-fund-wallet" class="review-val font-mono"></span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">Funding Amount:</span>
+            <span id="review-fund-amount" class="review-val font-bold text-success font-mono"></span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">Description:</span>
+            <span id="review-fund-desc" class="review-val"></span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">Idempotency Key:</span>
+            <span id="review-fund-key" class="review-val font-mono" style="font-size: 0.75rem;"></span>
+          </div>
+        </div>
+        <p class="text-muted" style="font-size: 0.85rem;">Clicking confirm will submit this funding operation to the double-entry ledger.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="modal-confirm-funding">Back / Edit</button>
+        <button type="button" id="btn-execute-confirmed-funding" class="btn btn-warning">
+          <span class="btn-text">Confirm & Add Funds</span>
+          <span class="btn-spinner" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Modal: Transfer Confirmation (Review Step) -->
+  <div id="modal-confirm-transfer" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-transfer-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-confirm-transfer-title" class="modal-title">Review Transfer</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-confirm-transfer">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="review-box">
+          <div class="review-item">
+            <span class="review-label">From (Debited):</span>
+            <span id="review-xfer-source" class="review-val font-mono"></span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">To (Credited):</span>
+            <span id="review-xfer-dest" class="review-val font-mono"></span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">Transfer Amount:</span>
+            <span id="review-xfer-amount" class="review-val font-bold font-mono"></span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">Fee Amount:</span>
+            <span class="review-val font-mono text-muted">0.0000 (Free)</span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">Description:</span>
+            <span id="review-xfer-desc" class="review-val"></span>
+          </div>
+          <div class="review-item">
+            <span class="review-label">Idempotency Key:</span>
+            <span id="review-xfer-key" class="review-val font-mono" style="font-size: 0.75rem;"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="modal-confirm-transfer">Back / Edit</button>
+        <button type="button" id="btn-execute-confirmed-transfer" class="btn btn-primary">
+          <span class="btn-text">Confirm & Send</span>
+          <span class="btn-spinner" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Modal: Transaction Details -->
+  <div id="modal-txn-details" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-txn-details-title">
+    <div class="modal-dialog modal-dialog-large">
+      <div class="modal-header">
+        <h3 id="modal-txn-details-title" class="modal-title">Transaction Details</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-txn-details">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="result-box" style="display: block;">
+          <div class="result-row">
+            <span class="result-label">Reference Number:</span>
+            <span id="det-ref-num" class="result-value font-mono font-bold"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Transaction Type:</span>
+            <span id="det-type" class="badge badge-info"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Status:</span>
+            <span id="det-status" class="badge"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Amount:</span>
+            <span id="det-amount" class="result-value font-bold font-mono"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Refunded Amount:</span>
+            <span id="det-refunded-amount" class="result-value font-mono">0.0000</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Remaining Refundable:</span>
+            <span id="det-remaining-refundable" class="result-value font-mono font-bold">0.0000</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Source Wallet ID:</span>
+            <span id="det-source-wallet" class="result-value font-mono" style="font-size: 0.8rem;"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Destination Wallet ID:</span>
+            <span id="det-dest-wallet" class="result-value font-mono" style="font-size: 0.8rem;"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Description:</span>
+            <span id="det-description" class="result-value"></span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Created At:</span>
+            <span id="det-created-at" class="result-value"></span>
+          </div>
+          <div class="result-row" id="det-failure-row" style="display: none;">
+            <span class="result-label text-danger">Failure Reason:</span>
+            <span id="det-failure-reason" class="result-value text-danger font-bold"></span>
+          </div>
+        </div>
+
+        <!-- Contextual Action Buttons -->
+        <div class="btn-group mt-3" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" id="det-btn-view-receipt" class="btn btn-sm btn-outline">View Official Receipt</button>
+          <button type="button" id="det-btn-request-refund" class="btn btn-sm btn-warning" style="display: none;">Issue Refund</button>
+          <button type="button" id="det-btn-raise-dispute" class="btn btn-sm btn-secondary" style="display: none;">File Dispute</button>
+          <button type="button" id="det-btn-admin-reverse" class="btn btn-sm btn-danger" style="display: none;">Administrative Reversal</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="modal-txn-details">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Modal: Official Transaction Receipt -->
+  <div id="modal-receipt" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-receipt-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-receipt-title" class="modal-title">Official Transaction Receipt</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-receipt">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="receipt-card" id="printable-receipt">
+          <div class="receipt-watermark" id="rcpt-watermark">SUCCESS</div>
+          <div class="receipt-header">
+            <div class="receipt-brand">VYOM | व्योम</div>
+            <div class="receipt-title">Official Financial Receipt</div>
+            <div class="font-mono text-muted" style="font-size: 0.8rem; margin-top: 0.25rem;">Ref: <span id="rcpt-ref">-</span></div>
+          </div>
+
+          <div class="receipt-amount-box">
+            <div class="amount-lbl">Total Transaction Amount</div>
+            <div class="amount-val" id="rcpt-amount">INR 0.0000</div>
+            <div style="font-size: 0.8rem; margin-top: 0.25rem;">
+              Status: <span id="rcpt-status" class="badge badge-success">SUCCESS</span>
+            </div>
+          </div>
+
+          <div class="receipt-grid">
+            <div class="receipt-party-box">
+              <h5>Sender</h5>
+              <div class="font-bold" id="rcpt-sender-name">-</div>
+              <div class="text-muted" id="rcpt-sender-email" style="font-size: 0.75rem;">-</div>
+              <div class="font-mono text-muted" id="rcpt-sender-wallet" style="font-size: 0.7rem;">-</div>
+            </div>
+            <div class="receipt-party-box">
+              <h5>Recipient</h5>
+              <div class="font-bold" id="rcpt-recip-name">-</div>
+              <div class="text-muted" id="rcpt-recip-email" style="font-size: 0.75rem;">-</div>
+              <div class="font-mono text-muted" id="rcpt-recip-wallet" style="font-size: 0.7rem;">-</div>
+            </div>
+          </div>
+
+          <div class="result-row" style="font-size: 0.8rem;">
+            <span class="result-label">Transaction Type:</span>
+            <span id="rcpt-type" class="result-value">-</span>
+          </div>
+          <div class="result-row" style="font-size: 0.8rem;">
+            <span class="result-label">Description:</span>
+            <span id="rcpt-desc" class="result-value">-</span>
+          </div>
+          <div class="result-row" style="font-size: 0.8rem;">
+            <span class="result-label">Completed At:</span>
+            <span id="rcpt-time" class="result-value font-mono">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button type="button" id="btn-print-receipt" class="btn btn-outline">Print / Save Receipt</button>
+        <button type="button" class="btn btn-primary" data-close-modal="modal-receipt">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Modal: Issue Customer Refund -->
+  <div id="modal-refund" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-refund-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-refund-title" class="modal-title">Issue Customer Refund</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-refund">&times;</button>
+      </div>
+      <form id="form-issue-refund">
+        <div class="modal-body">
+          <input type="hidden" id="refund-target-txn-id">
+          <div class="alert alert-info">
+            Refunding transaction <strong id="refund-display-ref"></strong>.
+            Remaining refundable: <strong id="refund-display-max" class="font-mono"></strong>
+          </div>
+          <div class="form-group">
+            <label for="refund-amount-input">Refund Amount (leave empty for full refund)</label>
+            <input type="number" id="refund-amount-input" class="form-control" step="0.01" min="0.01" placeholder="e.g. 100.00">
+          </div>
+          <div class="form-group">
+            <label for="refund-reason-input">Reason <span class="required">*</span></label>
+            <input type="text" id="refund-reason-input" class="form-control" value="Customer requested refund" required maxlength="255">
+          </div>
+          <div class="form-group">
+            <label for="refund-idemp-key">Idempotency Key <span class="required">*</span></label>
+            <input type="text" id="refund-idemp-key" class="form-control font-mono" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-refund">Cancel</button>
+          <button type="submit" id="btn-submit-refund" class="btn btn-warning">
+            <span class="btn-text">Submit Refund</span>
+            <span class="btn-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 9. Modal: Create Dispute -->
+  <div id="modal-create-dispute" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-create-dispute-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-create-dispute-title" class="modal-title">File Transaction Dispute</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-create-dispute">&times;</button>
+      </div>
+      <form id="form-create-dispute">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="dispute-txn-id">Transaction UUID <span class="required">*</span></label>
+            <input type="text" id="dispute-txn-id" class="form-control font-mono" placeholder="Transaction UUID" required>
+          </div>
+          <div class="form-group">
+            <label for="dispute-reason-code">Reason Code <span class="required">*</span></label>
+            <select id="dispute-reason-code" class="form-control" required>
+              <option value="GOODS_NOT_RECEIVED">GOODS_NOT_RECEIVED — Goods or service not received</option>
+              <option value="DEFECTIVE_PRODUCT">DEFECTIVE_PRODUCT — Item damaged or defective</option>
+              <option value="UNAUTHORIZED_TRANSACTION">UNAUTHORIZED_TRANSACTION — Fraud or unauthorized</option>
+              <option value="INCORRECT_AMOUNT">INCORRECT_AMOUNT — Incorrect amount debited</option>
+              <option value="DUPLICATE_DEBIT">DUPLICATE_DEBIT — Accidental duplicate debit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dispute-desc">Description of Dispute <span class="required">*</span></label>
+            <textarea id="dispute-desc" class="form-control" rows="3" placeholder="Explain the problem in detail..." required maxlength="1000"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-create-dispute">Cancel</button>
+          <button type="submit" id="btn-submit-dispute" class="btn btn-primary">
+            <span class="btn-text">File Dispute</span>
+            <span class="btn-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 10. Modal: Admin Resolve Dispute -->
+  <div id="modal-resolve-dispute" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-resolve-dispute-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-resolve-dispute-title" class="modal-title">Administrative Dispute Resolution</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-resolve-dispute">&times;</button>
+      </div>
+      <form id="form-resolve-dispute">
+        <div class="modal-body">
+          <input type="hidden" id="resolve-target-dispute-id">
+          <div class="alert alert-warning">
+            Resolving Dispute <strong id="resolve-display-ref"></strong>
+          </div>
+          <div class="form-group">
+            <label for="resolve-status-select">Resolution Decision <span class="required">*</span></label>
+            <select id="resolve-status-select" class="form-control" required>
+              <option value="RESOLVED_UPHELD">RESOLVED_UPHELD — Upheld in customer's favor</option>
+              <option value="RESOLVED_REJECTED">RESOLVED_REJECTED — Rejected after review</option>
+              <option value="CANCELLED">CANCELLED — Dispute cancelled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="resolve-notes-input">Resolution Notes</label>
+            <textarea id="resolve-notes-input" class="form-control" rows="3" placeholder="Enter findings, merchant communication, and justification..." maxlength="1000"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-resolve-dispute">Cancel</button>
+          <button type="submit" id="btn-submit-resolve-dispute" class="btn btn-danger">
+            <span class="btn-text">Record Decision</span>
+            <span class="btn-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Notification Toast Container -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
