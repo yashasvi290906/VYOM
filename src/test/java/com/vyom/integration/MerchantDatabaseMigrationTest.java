@@ -11,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.sql.DataSource;
@@ -41,12 +40,8 @@ public class MerchantDatabaseMigrationTest {
     }
 
     private JdbcTemplate getAppUserJdbcTemplate() {
-        DriverManagerDataSource appDataSource = new DriverManagerDataSource();
-        appDataSource.setDriverClassName("org.postgresql.Driver");
-        appDataSource.setUrl(datasourceUrl);
-        appDataSource.setUsername("vyom_app");
-        appDataSource.setPassword("vyom_test_app_pw");
-        return new JdbcTemplate(appDataSource);
+        TestDatabaseRoleProvisioner.provisionTestRole(jdbcTemplate);
+        return TestDatabaseRoleProvisioner.createTestAppJdbcTemplate(datasourceUrl);
     }
 
     @Test
@@ -144,21 +139,23 @@ public class MerchantDatabaseMigrationTest {
     @DisplayName("DB-MCH-03: PostgreSQL Check Constraint chk_merchants_onboarding_status rejects invalid status")
     void testInvalidOnboardingStatusCheckConstraint() {
         UUID userId = UUID.randomUUID();
+        String userEmail = "chk1." + userId + "@vyom.internal";
         jdbcTemplate.update(
                 "INSERT INTO users (id, email, password_hash, full_name, role, created_at, updated_at) " +
-                        "VALUES (?, 'chk1.user@vyom.internal', 'hash', 'Check User', 'USER', NOW(), NOW())",
-                userId);
+                        "VALUES (?, ?, 'hash', 'Check User', 'USER', NOW(), NOW())",
+                userId, userEmail);
 
         UUID merchantId = UUID.randomUUID();
+        String mCode = "MCH-INV-" + UUID.randomUUID().toString().substring(0, 8);
         assertThatThrownBy(() -> jdbcTemplate.update(
                 "INSERT INTO merchants " +
                         "(id, merchant_code, business_name, legal_business_name, business_type, business_category, " +
                         " registration_email, business_phone, country, business_address, city, state, postal_code, " +
                         " onboarding_status, account_status, created_by) " +
-                        "VALUES (?, 'MCH-INVALID-001', 'Invalid Shop', 'Invalid Shop Ltd', 'PRIVATE_LIMITED', 'RETAIL', " +
+                        "VALUES (?, ?, 'Invalid Shop', 'Invalid Shop Ltd', 'PRIVATE_LIMITED', 'RETAIL', " +
                         " 'inv@shop.com', '+919876543210', 'IND', '123 St', 'City', 'State', '123456', " +
                         " 'BOGUS_STATUS', 'INACTIVE', ?)",
-                merchantId, userId))
+                merchantId, mCode, userId))
                 .isInstanceOf(DataIntegrityViolationException.class)
                 .hasMessageContaining("chk_merchants_onboarding_status");
     }
@@ -167,21 +164,24 @@ public class MerchantDatabaseMigrationTest {
     @DisplayName("DB-MCH-04: PostgreSQL Unique Constraint uq_merchant_member_user rejects duplicate membership")
     void testDuplicateMembershipUniqueConstraint() {
         UUID userId = UUID.randomUUID();
+        String userEmail = "uq." + userId + "@vyom.internal";
         jdbcTemplate.update(
                 "INSERT INTO users (id, email, password_hash, full_name, role, created_at, updated_at) " +
-                        "VALUES (?, 'uq.user@vyom.internal', 'hash', 'UQ User', 'USER', NOW(), NOW())",
-                userId);
+                        "VALUES (?, ?, 'hash', 'UQ User', 'USER', NOW(), NOW())",
+                userId, userEmail);
 
         UUID merchantId = UUID.randomUUID();
+        String mCode = "MCH-UQ-" + UUID.randomUUID().toString().substring(0, 8);
+        String regEmail = "uq." + userId + "@shop.com";
         jdbcTemplate.update(
                 "INSERT INTO merchants " +
                         "(id, merchant_code, business_name, legal_business_name, business_type, business_category, " +
                         " registration_email, business_phone, country, business_address, city, state, postal_code, " +
                         " onboarding_status, account_status, created_by) " +
-                        "VALUES (?, 'MCH-UQ-001', 'UQ Shop', 'UQ Shop Ltd', 'PRIVATE_LIMITED', 'RETAIL', " +
-                        " 'uq@shop.com', '+919876543210', 'IND', '123 St', 'City', 'State', '123456', " +
+                        "VALUES (?, ?, 'UQ Shop', 'UQ Shop Ltd', 'PRIVATE_LIMITED', 'RETAIL', " +
+                        " ?, '+919876543210', 'IND', '123 St', 'City', 'State', '123456', " +
                         " 'SUBMITTED', 'INACTIVE', ?)",
-                merchantId, userId);
+                merchantId, mCode, regEmail, userId);
 
         // First membership insert: succeeds
         jdbcTemplate.update(
@@ -202,21 +202,24 @@ public class MerchantDatabaseMigrationTest {
     @DisplayName("DB-MCH-05: Foreign Key ON DELETE RESTRICT prevents deleting merchant with active members or audit logs")
     void testMerchantDeleteRestrictConstraint() {
         UUID userId = UUID.randomUUID();
+        String userEmail = "del." + userId + "@vyom.internal";
         jdbcTemplate.update(
                 "INSERT INTO users (id, email, password_hash, full_name, role, created_at, updated_at) " +
-                        "VALUES (?, 'del.user@vyom.internal', 'hash', 'Del User', 'USER', NOW(), NOW())",
-                userId);
+                        "VALUES (?, ?, 'hash', 'Del User', 'USER', NOW(), NOW())",
+                userId, userEmail);
 
         UUID merchantId = UUID.randomUUID();
+        String mCode = "MCH-DEL-" + UUID.randomUUID().toString().substring(0, 8);
+        String regEmail = "del." + userId + "@shop.com";
         jdbcTemplate.update(
                 "INSERT INTO merchants " +
                         "(id, merchant_code, business_name, legal_business_name, business_type, business_category, " +
                         " registration_email, business_phone, country, business_address, city, state, postal_code, " +
                         " onboarding_status, account_status, created_by) " +
-                        "VALUES (?, 'MCH-DEL-001', 'Del Shop', 'Del Shop Ltd', 'PRIVATE_LIMITED', 'RETAIL', " +
-                        " 'del@shop.com', '+919876543210', 'IND', '123 St', 'City', 'State', '123456', " +
+                        "VALUES (?, ?, 'Del Shop', 'Del Shop Ltd', 'PRIVATE_LIMITED', 'RETAIL', " +
+                        " ?, '+919876543210', 'IND', '123 St', 'City', 'State', '123456', " +
                         " 'SUBMITTED', 'INACTIVE', ?)",
-                merchantId, userId);
+                merchantId, mCode, regEmail, userId);
 
         jdbcTemplate.update(
                 "INSERT INTO merchant_audit_logs (id, merchant_id, actor_user_id, event_type, description, metadata, created_at) " +
@@ -230,26 +233,26 @@ public class MerchantDatabaseMigrationTest {
     }
 
     @Test
-    @DisplayName("DB-MCH-06: vyom_app least privilege prevents DELETE on merchants and UPDATE/DELETE on merchant_audit_logs")
+    @DisplayName("DB-MCH-06: vyom_test_app least privilege prevents DELETE on merchants and UPDATE/DELETE on merchant_audit_logs")
     void testVyomAppLeastPrivilegeOnMerchantTables() {
         JdbcTemplate appJdbc = getAppUserJdbcTemplate();
         UUID dummyId = UUID.randomUUID();
 
-        // 1. vyom_app cannot DELETE from merchants
+        // 1. vyom_test_app cannot DELETE from merchants
         assertThatThrownBy(() -> appJdbc.execute("DELETE FROM merchants WHERE id = '" + dummyId + "'"))
                 .isInstanceOf(DataAccessException.class)
                 .cause()
                 .isInstanceOf(PSQLException.class)
                 .hasMessageContaining("permission denied");
 
-        // 2. vyom_app cannot UPDATE merchant_audit_logs
+        // 2. vyom_test_app cannot UPDATE merchant_audit_logs
         assertThatThrownBy(() -> appJdbc.execute("UPDATE merchant_audit_logs SET description = 'Tampered' WHERE id = '" + dummyId + "'"))
                 .isInstanceOf(DataAccessException.class)
                 .cause()
                 .isInstanceOf(PSQLException.class)
                 .hasMessageContaining("permission denied");
 
-        // 3. vyom_app cannot DELETE from merchant_audit_logs
+        // 3. vyom_test_app cannot DELETE from merchant_audit_logs
         assertThatThrownBy(() -> appJdbc.execute("DELETE FROM merchant_audit_logs WHERE id = '" + dummyId + "'"))
                 .isInstanceOf(DataAccessException.class)
                 .cause()

@@ -37,11 +37,22 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Provision Least-Privilege Database Roles
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          if ! command -v psql &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          psql -h localhost -p 5432 -U postgres -d payledger_test -v ON_ERROR_STOP=1 -v APP_PASSWORD='vyom_app_ci_pw' -v FLYWAY_PASSWORD='vyom_flyway_ci_pw' -f scripts/setup_least_privilege_user.sql
+
       - name: Run Maven Tests
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/payledger_test
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgrespassword
+          DB_MIGRATION_USER: vyom_flyway
+          DB_MIGRATION_PASSWORD: vyom_flyway_ci_pw
           JWT_SECRET: c2VjdXJlLXRlc3Qtand0LXNlY3JldC1mb3ItY2ktaGFybmVzcy12YWxpZGF0aW9uLTEyMzQ1Njc4OTA=
         run: |
           chmod +x ./mvnw
