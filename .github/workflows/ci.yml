@@ -91,6 +91,9 @@ jobs:
           NODE_ENV: test
         run: npm test --prefix gateway
 
+      - name: Run Financial Reconciliation CLI Tests
+        run: node --test benchmark/*.test.js
+
       - name: Syntax Check Gateway and Benchmark Scripts
         run: |
           find gateway/src gateway/public/js gateway/tests benchmark -name "*.js" -exec node -c {} +
