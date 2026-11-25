@@ -1,22 +1,71 @@
-const { execSync } = require('child_process');
+const { execFileSync } = require('node:child_process');
 
-const PSQL_PATH = 'D:\\Postgres\\bin\\psql.exe';
-const args = process.argv.slice(2);
-const dbArgIdx = args.indexOf('--db');
-const DB_NAME = (dbArgIdx !== -1 && args[dbArgIdx + 1])
-  ? args[dbArgIdx + 1]
-  : (process.env.BENCHMARK_DB_NAME || 'payledger_benchmark');
+function resolveDatabaseName(args, env) {
+  const dbArgIdx = args.indexOf('--db');
 
-function runQuery(sql) {
+  if (dbArgIdx !== -1) {
+    const value = args[dbArgIdx + 1];
+
+    if (!value || value.startsWith('--')) {
+      throw new Error('Missing database name after --db.');
+    }
+
+    return value;
+  }
+
+  return env.BENCHMARK_DB_NAME || 'payledger_benchmark';
+}
+
+const DB_NAME = resolveDatabaseName(process.argv.slice(2), process.env);
+
+function buildPsqlArgs(env, dbName = DB_NAME) {
+  const user = env.BENCHMARK_DB_USER || env.PGUSER || 'postgres';
+  const host = env.BENCHMARK_DB_HOST || env.PGHOST;
+  const port = env.BENCHMARK_DB_PORT || env.PGPORT;
+
+  const args = [
+    '-X',
+    '-q',
+    '-t',
+    '-A',
+    '-v',
+    'ON_ERROR_STOP=1',
+    '-U',
+    user,
+    '-d',
+    dbName
+  ];
+
+  if (host) {
+    args.push('-h', host);
+  }
+
+  if (port) {
+    args.push('-p', port);
+  }
+
+  return args;
+}
+
+function runQuery(sql, options = {}) {
+  const env = options.env || process.env;
+  const execute = options.execFile || execFileSync;
+  const dbName = options.dbName || DB_NAME;
+  const psqlPath = env.PSQL_PATH || 'psql';
+
   try {
-    const output = execSync(`"${PSQL_PATH}" -U postgres -d ${DB_NAME} -t -A`, {
+    const output = execute(psqlPath, buildPsqlArgs(env, dbName), {
       input: sql,
       encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env
     });
+
     return output.trim();
   } catch (err) {
-    throw new Error(`RECONCILIATION QUERY EXECUTION ERROR on database '${DB_NAME}': ${err.message}\nSQL: ${sql}`);
+    throw new Error(
+      `RECONCILIATION QUERY EXECUTION ERROR on database '${dbName}': ${err.message}`
+    );
   }
 }
 
@@ -184,7 +233,7 @@ function reconcile() {
   return { allPassed, results };
 }
 
-module.exports = { reconcile, runQuery };
+module.exports = { reconcile, runQuery, buildPsqlArgs };
 
 if (require.main === module) {
   try {
