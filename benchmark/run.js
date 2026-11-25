@@ -42,19 +42,20 @@ async function waitForHealth(maxRetries = 30) {
 }
 
 async function getAdminToken() {
-  try {
-    const loginRes = await engine.executeRequest('/api/v1/auth/login', {
-      method: 'POST',
-      body: { email: 'admin@vyom.internal', password: 'AdminSecret123!' }
-    });
-    if (loginRes.ok && loginRes.data && loginRes.data.token) {
-      console.log(`[BOOTSTRAP] Successfully authenticated admin for Actuator telemetry.`);
-      return loginRes.data.token;
-    }
-  } catch (err) {
-    console.warn(`[BOOTSTRAP] Admin auth failed for Actuator: ${err.message}`);
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@vyom.internal';
+  const adminPassword = process.env.ADMIN_PASSWORD || process.env.VYOM_ADMIN_BOOTSTRAP_PASSWORD;
+  if (!adminPassword) {
+    throw new Error('ADMIN_PASSWORD or VYOM_ADMIN_BOOTSTRAP_PASSWORD environment variable must be set for Actuator telemetry.');
   }
-  return null;
+  const loginRes = await engine.executeRequest('/api/v1/auth/login', {
+    method: 'POST',
+    body: { email: adminEmail, password: adminPassword }
+  });
+  if (loginRes.ok && loginRes.data && loginRes.data.token) {
+    console.log(`[BOOTSTRAP] Successfully authenticated admin for Actuator telemetry.`);
+    return loginRes.data.token;
+  }
+  throw new Error(`Admin authentication failed for Actuator: ${loginRes.status} ${JSON.stringify(loginRes.data)}`);
 }
 
 async function seedUsers(count = 20) {

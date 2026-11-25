@@ -6,10 +6,13 @@ import com.vyom.dto.request.FundWalletRequest;
 import com.vyom.dto.response.FundingResponse;
 import com.vyom.dto.response.WalletResponse;
 import com.vyom.entity.enums.FundingStatus;
+import com.vyom.entity.enums.Role;
 import com.vyom.repository.UserRepository;
 import com.vyom.security.JwtTokenService;
+import com.vyom.security.UserPrincipal;
 import com.vyom.service.FundingService;
 import com.vyom.service.WalletService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -53,13 +58,22 @@ public class WalletControllerTest {
     @MockBean
     private UserRepository userRepository;
 
+    private final UUID mockUserId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+    @BeforeEach
+    void setUpSecurity() {
+        UserPrincipal principal = new UserPrincipal(mockUserId, "test@vyom.internal", "Test User", "", Role.USER);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
     @Test
     @DisplayName("POST /api/v1/wallets should return 201 Created on valid input")
     void shouldReturn201OnValidCreateWallet() throws Exception {
         UUID walletId = UUID.randomUUID();
         WalletResponse response = new WalletResponse(
                 walletId, "Alice", "INR", BigDecimal.ZERO.setScale(4), Instant.now(), Instant.now());
-        when(walletService.createWallet(any(CreateWalletRequest.class))).thenReturn(response);
+        when(walletService.createWallet(eq(mockUserId), any(CreateWalletRequest.class))).thenReturn(response);
 
         CreateWalletRequest request = new CreateWalletRequest("Alice", "INR");
 
@@ -91,7 +105,7 @@ public class WalletControllerTest {
         UUID walletId = UUID.randomUUID();
         WalletResponse response = new WalletResponse(
                 walletId, "Bob", "USD", new BigDecimal("500.0000"), Instant.now(), Instant.now());
-        when(walletService.getWallet(walletId)).thenReturn(response);
+        when(walletService.getWallet(walletId, mockUserId)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/wallets/" + walletId))
                 .andExpect(status().isOk())
@@ -107,7 +121,7 @@ public class WalletControllerTest {
                 UUID.randomUUID(), walletId, new BigDecimal("1000.0000"), "INR", "Demo top-up",
                 FundingStatus.COMPLETED, new BigDecimal("1000.0000"), Instant.now());
 
-        when(fundingService.fundWallet(eq("fund-key-1"), eq(walletId), any(FundWalletRequest.class)))
+        when(fundingService.fundWallet(eq(mockUserId), eq("fund-key-1"), eq(walletId), any(FundWalletRequest.class)))
                 .thenReturn(response);
 
         FundWalletRequest request = new FundWalletRequest(new BigDecimal("1000.00"), "Demo top-up");
@@ -136,4 +150,3 @@ public class WalletControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("INVALID_TRANSFER"));
     }
 }
-

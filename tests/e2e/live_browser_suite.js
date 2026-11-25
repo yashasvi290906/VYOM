@@ -20,8 +20,14 @@ if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 }
 
+const DB_NAME = process.env.E2E_DB_NAME || 'payledger_e2e_test';
+if (DB_NAME === 'payledger') {
+  console.error('[FATAL SAFETY GUARD] E2E test cannot run against production database payledger');
+  process.exit(1);
+}
+
 function runSql(sql) {
-  return execFileSync(PSQL_PATH, ['-U', 'postgres', '-d', 'payledger', '-t', '-A', '-c', sql], { encoding: 'utf8' }).trim();
+  return execFileSync(PSQL_PATH, ['-U', 'postgres', '-d', DB_NAME, '-t', '-A', '-c', sql], { encoding: 'utf8' }).trim();
 }
 
 async function sleep(ms) {
@@ -540,9 +546,14 @@ async function sleep(ms) {
     await page.click('#btn-nav-login');
     await sleep(400);
     await page.$eval('#login-email', el => el.value = '');
-    await page.type('#login-email', 'admin@vyom.internal');
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@vyom.internal';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error('ADMIN_PASSWORD environment variable required for Admin E2E Journey H');
+    }
+    await page.type('#login-email', adminEmail);
     await page.$eval('#login-password', el => el.value = '');
-    await page.type('#login-password', 'AdminPass123!');
+    await page.type('#login-password', adminPassword);
     await page.click('#btn-submit-login');
     await page.waitForSelector('#tab-item-admin', { visible: true, timeout: 6000 });
     await sleep(400);

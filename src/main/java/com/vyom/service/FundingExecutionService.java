@@ -63,10 +63,26 @@ public class FundingExecutionService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public FundingResponse execute(UUID userId, String idempotencyKey, UUID ownerToken, UUID walletId, FundWalletRequest request) {
+        if (userId == null) {
+            throw new AccessDeniedException("Full authentication is required to execute funding");
+        }
         BigDecimal amount = request.amount().setScale(4);
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidTransferException("Funding amount must be strictly positive");
+        }
+
+        // F35: Pre-lock ownership check: verify calling user owns wallet BEFORE acquiring row locks
+        // Use scalar queries to avoid polluting the PersistenceContext with a stale managed entity
+        String customerAccountType = walletRepository.findAccountTypeByWalletId(walletId)
+                .orElseThrow(() -> new WalletNotFoundException(walletId));
+        if ("SYSTEM_SETTLEMENT".equals(customerAccountType)) {
+            throw new InvalidTransferException("Cannot fund a system settlement account directly");
+        }
+        UUID customerOwnerId = walletRepository.findUserIdByWalletId(walletId).orElse(null);
+        if (customerOwnerId == null || !customerOwnerId.equals(userId)) {
+            log.warn("Access denied (pre-lock check): User {} does not own wallet {}", userId, walletId);
+            throw new AccessDeniedException("You do not have access to fund this wallet");
         }
 
         // 1. Determine customer wallet currency via scalar query without loading entity into persistence context
@@ -100,6 +116,9 @@ public class FundingExecutionService {
                 .orElseThrow(() -> new WalletNotFoundException(firstLockId));
         Wallet secondWallet = walletRepository.findByIdForUpdate(secondLockId)
                 .orElseThrow(() -> new WalletNotFoundException(secondLockId));
+
+        entityManager.refresh(firstWallet);
+        entityManager.refresh(secondWallet);
 
         Wallet lockedCustomer = firstWallet.getId().equals(customerWalletId) ? firstWallet : secondWallet;
         Wallet lockedSystem = firstWallet.getId().equals(systemWalletId) ? firstWallet : secondWallet;
@@ -190,11 +209,6 @@ public class FundingExecutionService {
                 amount, lockedCustomer.getCurrency(), walletId, savedTransaction.getReferenceNumber(), newSystemBalance, newCustomerBalance);
 
         return response;
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
-    public FundingResponse execute(String idempotencyKey, UUID ownerToken, UUID walletId, FundWalletRequest request) {
-        return execute(null, idempotencyKey, ownerToken, walletId, request);
     }
 }
 

@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -60,6 +61,7 @@ public class IdempotencyRecord {
     @Column(name = "owner_token", nullable = false)
     private UUID ownerToken;
 
+    @Version
     @Column(name = "version", nullable = false)
     private Long version = 1L;
 

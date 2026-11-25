@@ -7,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 @Service
@@ -23,26 +25,43 @@ public class AdminBootstrapService implements CommandLineRunner {
     private static final Pattern HAS_DIGIT = Pattern.compile("[0-9]");
     private static final Pattern HAS_SPECIAL = Pattern.compile("[^A-Za-z0-9]");
 
+    // PostgreSQL transactional advisory lock ID for serializing multi-instance admin bootstrap
+    private static final long BOOTSTRAP_ADVISORY_LOCK_ID = 7429103L;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
     private final boolean bootstrapEnabled;
     private final String adminEmail;
     private final String adminPassword;
     private final String adminFullName;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public AdminBootstrapService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            @Value("${vyom.admin.bootstrap.enabled:false}") boolean bootstrapEnabled,
-            @Value("${vyom.admin.bootstrap.email:}") String adminEmail,
-            @Value("${vyom.admin.bootstrap.password:}") String adminPassword,
-            @Value("${vyom.admin.bootstrap.full-name:System Administrator}") String adminFullName) {
+            JdbcTemplate jdbcTemplate,
+            @Value("${vyom.admin.bootstrap.enabled:${ADMIN_BOOTSTRAP_ENABLED:false}}") boolean bootstrapEnabled,
+            @Value("${vyom.admin.bootstrap.email:${ADMIN_BOOTSTRAP_EMAIL:${ADMIN_EMAIL:}}}") String adminEmail,
+            @Value("${vyom.admin.bootstrap.password:${VYOM_ADMIN_BOOTSTRAP_PASSWORD:${ADMIN_BOOTSTRAP_PASSWORD:${ADMIN_PASSWORD:}}}}") String adminPassword,
+            @Value("${vyom.admin.bootstrap.full-name:${ADMIN_BOOTSTRAP_FULL_NAME:System Administrator}}") String adminFullName) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
         this.bootstrapEnabled = bootstrapEnabled;
         this.adminEmail = adminEmail;
         this.adminPassword = adminPassword;
         this.adminFullName = adminFullName;
+    }
+
+    public AdminBootstrapService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            boolean bootstrapEnabled,
+            String adminEmail,
+            String adminPassword,
+            String adminFullName) {
+        this(userRepository, passwordEncoder, null, bootstrapEnabled, adminEmail, adminPassword, adminFullName);
     }
 
     @Override
@@ -51,6 +70,16 @@ public class AdminBootstrapService implements CommandLineRunner {
         if (!bootstrapEnabled) {
             log.debug("Administrator bootstrap is disabled.");
             return;
+        }
+
+        // Concurrency lock: Acquire transaction-scoped advisory lock to serialize multi-instance startup
+        if (jdbcTemplate != null) {
+            try {
+                jdbcTemplate.execute("SELECT pg_advisory_xact_lock(" + BOOTSTRAP_ADVISORY_LOCK_ID + ")");
+                log.debug("Acquired PostgreSQL advisory transaction lock {} for admin bootstrap serialization", BOOTSTRAP_ADVISORY_LOCK_ID);
+            } catch (Exception e) {
+                log.warn("Could not acquire advisory lock for admin bootstrap: {}", e.getMessage());
+            }
         }
 
         // Rule: Bootstrap cannot silently recreate or reset an existing administrator.
@@ -65,11 +94,12 @@ public class AdminBootstrapService implements CommandLineRunner {
         }
 
         if (adminPassword.length() < 12
+                || adminPassword.getBytes(StandardCharsets.UTF_8).length > 72
                 || !HAS_UPPER.matcher(adminPassword).find()
                 || !HAS_LOWER.matcher(adminPassword).find()
                 || !HAS_DIGIT.matcher(adminPassword).find()
                 || !HAS_SPECIAL.matcher(adminPassword).find()) {
-            throw new IllegalStateException("Bootstrap administrator password must be at least 12 characters and contain uppercase, lowercase, digit, and special character.");
+            throw new IllegalStateException("Bootstrap administrator password must be at least 12 characters (and at most 72 bytes) and contain uppercase, lowercase, digit, and special character.");
         }
 
         String normalizedEmail = adminEmail.toLowerCase().trim();

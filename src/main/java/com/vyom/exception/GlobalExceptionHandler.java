@@ -118,6 +118,84 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, "DISPUTE_CONFLICT", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(MerchantNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMerchantNotFound(MerchantNotFoundException ex, HttpServletRequest request) {
+        log.warn("Merchant not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, "MERCHANT_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MerchantMembershipNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMerchantMembershipNotFound(MerchantMembershipNotFoundException ex, HttpServletRequest request) {
+        log.warn("Merchant membership not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, "MEMBERSHIP_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidMerchantTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidMerchantTransition(InvalidMerchantTransitionException ex, HttpServletRequest request) {
+        log.warn("Invalid merchant lifecycle transition: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "INVALID_MERCHANT_TRANSITION", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(LastOwnerProtectionException.class)
+    public ResponseEntity<ErrorResponse> handleLastOwnerProtection(LastOwnerProtectionException ex, HttpServletRequest request) {
+        log.warn("Last active owner protection violation: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "LAST_OWNER_PROTECTION_VIOLATION", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InsufficientMerchantPrivilegeException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientMerchantPrivilege(InsufficientMerchantPrivilegeException ex, HttpServletRequest request) {
+        log.warn("Insufficient merchant privilege: {}", ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, "INSUFFICIENT_MERCHANT_PRIVILEGE", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MerchantAccountSuspendedException.class)
+    public ResponseEntity<ErrorResponse> handleMerchantAccountSuspended(MerchantAccountSuspendedException ex, HttpServletRequest request) {
+        log.warn("Merchant account suspended: {}", ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, "MERCHANT_ACCOUNT_SUSPENDED", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateMembershipException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateMembership(DuplicateMembershipException ex, HttpServletRequest request) {
+        log.warn("Duplicate merchant membership: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "DUPLICATE_MEMBERSHIP", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException ex, HttpServletRequest request) {
+        log.warn("Payment order not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(CheckoutSessionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCheckoutSessionNotFound(CheckoutSessionNotFoundException ex, HttpServletRequest request) {
+        log.warn("Checkout session not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, "CHECKOUT_SESSION_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OrderAlreadyPaidException.class)
+    public ResponseEntity<ErrorResponse> handleOrderAlreadyPaid(OrderAlreadyPaidException ex, HttpServletRequest request) {
+        log.warn("Payment order already paid: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "ORDER_ALREADY_PAID", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OrderExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleOrderExpired(OrderExpiredException ex, HttpServletRequest request) {
+        log.warn("Payment order expired: {}", ex.getMessage());
+        return buildResponse(HttpStatus.GONE, "ORDER_EXPIRED", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidOrderStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOrderState(InvalidOrderStateException ex, HttpServletRequest request) {
+        log.warn("Invalid payment order state: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "INVALID_ORDER_STATE", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateMerchantOrderIdException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateMerchantOrderId(DuplicateMerchantOrderIdException ex, HttpServletRequest request) {
+        log.warn("Duplicate merchant order ID: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "DUPLICATE_MERCHANT_ORDER_ID", ex.getMessage(), request);
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
         log.warn("Illegal state conflict on {}: {}", request.getRequestURI(), ex.getMessage());

@@ -51,6 +51,12 @@
         <li class="nav-tab-item auth-tab" style="display: none;">
           <button type="button" class="nav-tab-btn" id="tab-btn-disputes" data-view="disputes">Disputes</button>
         </li>
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-merchants" data-view="merchants">Merchants</button>
+        </li>
+        <li class="nav-tab-item auth-tab" style="display: none;">
+          <button type="button" class="nav-tab-btn" id="tab-btn-checkout" data-view="checkout">Pay Merchant</button>
+        </li>
         <!-- Admin-Only Tab (Hidden unless user is ADMIN) -->
         <li class="nav-tab-item admin-tab" style="display: none;" id="tab-item-admin">
           <button type="button" class="nav-tab-btn" id="tab-btn-admin" data-view="admin">Admin Portal</button>
@@ -655,6 +661,458 @@
     </div>
 
     <!-- ==================================================================== -->
+    <!-- VIEW: MERCHANTS ECOSYSTEM & WORKSPACE (Phases 1 & 2.1)               -->
+    <!-- ==================================================================== -->
+    <div id="view-merchants" class="view-panel">
+      <!-- Merchant Sub-navigation Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div class="btn-group">
+          <button type="button" id="btn-merchant-sub-list" class="btn btn-sm btn-primary">My Businesses</button>
+          <button type="button" id="btn-merchant-sub-register" class="btn btn-sm btn-outline">+ Register Business</button>
+        </div>
+        <div id="merchant-active-pill" style="display: none; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 9999px;">
+          <span style="font-size: 0.75rem; color: #94a3b8;">Active Store:</span>
+          <strong id="merchant-active-name" style="color: #f8fafc; font-size: 0.875rem;">None</strong>
+          <span id="merchant-active-code" class="font-mono text-muted" style="font-size: 0.75rem;"></span>
+          <span id="merchant-active-role" class="badge badge-info" style="font-size: 0.7rem;"></span>
+        </div>
+      </div>
+
+      <!-- SUBPANEL 1: My Merchants List -->
+      <div id="merchant-subpanel-list">
+        <section class="card card-full">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">My Merchant Businesses</h3>
+            <button type="button" id="btn-refresh-merchants" class="btn btn-sm btn-outline">Refresh</button>
+          </div>
+          <div class="card-body">
+            <div id="merchant-list-loading" class="text-center text-muted py-3" style="display: none;">
+              Loading business memberships...
+            </div>
+            <div id="merchant-list-empty" class="text-center text-muted py-4" style="display: none;">
+              <p style="font-size: 1.05rem; margin-bottom: 1rem;">You do not have any registered merchant businesses yet.</p>
+              <button type="button" id="btn-register-first-merchant" class="btn btn-primary">Register Your Business</button>
+            </div>
+            <div id="merchant-list-cards" class="dashboard-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- SUBPANEL 2: Register Merchant Form -->
+      <div id="merchant-subpanel-register" style="display: none;">
+        <section class="card card-full" style="max-width: 800px; margin: 0 auto;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">Register Business Account</h3>
+            <button type="button" id="btn-cancel-register-merchant" class="btn btn-sm btn-outline">Cancel</button>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info mb-3">
+              <strong>Merchant Onboarding:</strong> Register your business to establish merchant identity and configure commercial payment acceptance. Applications are reviewed by compliance.
+            </div>
+            <form id="form-register-merchant">
+              <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group mb-3">
+                  <label for="mch-reg-name">Display / Trading Name <span class="required">*</span></label>
+                  <input type="text" id="mch-reg-name" class="form-control" required minlength="2" maxlength="150" placeholder="e.g. Acme Supermart">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="mch-reg-legal">Legal Business Name <span class="required">*</span></label>
+                  <input type="text" id="mch-reg-legal" class="form-control" required minlength="2" maxlength="200" placeholder="e.g. Acme Supermart Private Limited">
+                </div>
+              </div>
+              <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group mb-3">
+                  <label for="mch-reg-type">Business Entity Type <span class="required">*</span></label>
+                  <select id="mch-reg-type" class="form-control" required>
+                    <option value="PROPRIETORSHIP">Proprietorship</option>
+                    <option value="PARTNERSHIP">Partnership</option>
+                    <option value="PRIVATE_LIMITED" selected>Private Limited</option>
+                    <option value="PUBLIC_LIMITED">Public Limited</option>
+                    <option value="LLP">LLP</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="mch-reg-cat">Business Category <span class="required">*</span></label>
+                  <select id="mch-reg-cat" class="form-control" required>
+                    <option value="RETAIL" selected>Retail & E-Commerce</option>
+                    <option value="FOOD_BEVERAGE">Food & Beverage</option>
+                    <option value="SERVICES">Services</option>
+                    <option value="DIGITAL_GOODS">Digital Goods</option>
+                    <option value="TRAVEL">Travel & Hospitality</option>
+                    <option value="EDUCATION">Education</option>
+                    <option value="HEALTHCARE">Healthcare</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group mb-3">
+                  <label for="mch-reg-email">Business Registration Email <span class="required">*</span></label>
+                  <input type="email" id="mch-reg-email" class="form-control font-mono" required placeholder="contact@acme.com">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="mch-reg-phone">Business Phone Number <span class="required">*</span></label>
+                  <input type="tel" id="mch-reg-phone" class="form-control" required placeholder="+919876543210">
+                </div>
+              </div>
+              <div class="form-group mb-3">
+                <label for="mch-reg-street">Street Address <span class="required">*</span></label>
+                <input type="text" id="mch-reg-street" class="form-control" required placeholder="123 MG Road, Suite 400">
+              </div>
+              <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem;">
+                <div class="form-group mb-3">
+                  <label for="mch-reg-city">City <span class="required">*</span></label>
+                  <input type="text" id="mch-reg-city" class="form-control" required placeholder="Bengaluru">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="mch-reg-state">State <span class="required">*</span></label>
+                  <input type="text" id="mch-reg-state" class="form-control" required placeholder="Karnataka">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="mch-reg-postal">Postal Code <span class="required">*</span></label>
+                  <input type="text" id="mch-reg-postal" class="form-control" required placeholder="560001">
+                </div>
+              </div>
+              <button type="submit" id="btn-submit-register-merchant" class="btn btn-primary btn-block" style="margin-top: 1rem; width: 100%;">
+                <span class="btn-text">Submit Onboarding Application</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+
+      <!-- SUBPANEL 3: Merchant Dashboard Workspace -->
+      <div id="merchant-subpanel-dashboard" style="display: none;">
+        <!-- Header -->
+        <div class="card mb-3" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(56, 189, 248, 0.3);">
+          <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                <h2 id="mch-dash-name" style="font-size: 1.5rem; color: #f8fafc; margin: 0;">Acme Retail</h2>
+                <span id="mch-dash-code" class="font-mono text-muted" style="font-size: 0.8125rem;">MCH-000000</span>
+              </div>
+              <p id="mch-dash-legal" class="text-muted" style="font-size: 0.875rem; margin: 0;">Legal: Acme Retail Enterprises Pvt Ltd</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span id="mch-dash-onboard-badge" class="badge badge-info">APPROVED</span>
+              <span id="mch-dash-account-badge" class="badge badge-success">ACTIVE</span>
+              <span id="mch-dash-role-badge" class="role-tag role-tag-user">OWNER</span>
+              <button type="button" id="btn-mch-back-list" class="btn btn-sm btn-outline">&larr; Switch Business</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Subtabs -->
+        <div style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(148, 163, 184, 0.2); display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-sm btn-primary mch-tab-btn" data-mchtab="overview" id="mch-tab-overview">Overview</button>
+          <button type="button" class="btn btn-sm btn-outline mch-tab-btn" data-mchtab="orders" id="mch-tab-orders">Orders & Checkout</button>
+          <button type="button" class="btn btn-sm btn-outline mch-tab-btn" data-mchtab="profile" id="mch-tab-profile">Business Profile</button>
+          <button type="button" class="btn btn-sm btn-outline mch-tab-btn" data-mchtab="team" id="mch-tab-team">Team Management</button>
+          <button type="button" class="btn btn-sm btn-outline mch-tab-btn" data-mchtab="audit" id="mch-tab-audit">Audit Trail</button>
+        </div>
+
+        <!-- SUBTAB 1: Overview -->
+        <div id="mch-view-overview" class="mch-subtab-view">
+          <section class="card mb-3">
+            <div class="card-header">
+              <h3 class="card-title" style="font-size: 1.1rem;">Store Onboarding Progress</h3>
+              <span id="mch-progress-pct" class="badge badge-info">100% Complete</span>
+            </div>
+            <div class="card-body">
+              <div style="background: rgba(15, 23, 42, 0.6); border-radius: 9999px; height: 8px; overflow: hidden; margin-bottom: 1.5rem;">
+                <div id="mch-progress-bar" style="background: #38bdf8; width: 100%; height: 100%;"></div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="padding: 0.75rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.1);">
+                  <div style="font-size: 0.8125rem; color: #94a3b8;">1. Business Details</div>
+                  <strong style="color: #4ade80;">✓ Verified</strong>
+                </div>
+                <div style="padding: 0.75rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.1);">
+                  <div style="font-size: 0.8125rem; color: #94a3b8;">2. Store Location</div>
+                  <strong style="color: #4ade80;">✓ Verified</strong>
+                </div>
+                <div style="padding: 0.75rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.1);">
+                  <div style="font-size: 0.8125rem; color: #94a3b8;">3. Ownership & RBAC</div>
+                  <strong style="color: #4ade80;">✓ Active</strong>
+                </div>
+                <div style="padding: 0.75rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.1);">
+                  <div style="font-size: 0.8125rem; color: #94a3b8;">4. Platform Approval</div>
+                  <strong id="mch-status-check-text" style="color: #4ade80;">✓ Approved</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card mb-3">
+            <div class="card-header">
+              <h3 class="card-title" style="font-size: 1.1rem;">Commercial Payment Acceptance</h3>
+              <span class="badge badge-success">Phase 2.1 Active</span>
+            </div>
+            <div class="card-body">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="padding: 1.25rem; background: rgba(30, 41, 59, 0.6); border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.1);">
+                  <div style="font-size: 0.8125rem; color: #94a3b8;">Commercial Payables Balance</div>
+                  <div id="mch-dash-payable-balance" style="font-size: 1.75rem; font-weight: 700; color: #38bdf8; margin: 0.25rem 0;">₹0.00</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Subledger tracked</div>
+                </div>
+                <div style="padding: 1.25rem; background: rgba(30, 41, 59, 0.6); border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.1);">
+                  <div style="font-size: 0.8125rem; color: #94a3b8;">Orders Created</div>
+                  <div id="mch-dash-order-count" style="font-size: 1.75rem; font-weight: 700; color: #f8fafc; margin: 0.25rem 0;">0</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Total commercial orders</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- SUBTAB 2: Orders (Phase 2.1) -->
+        <div id="mch-view-orders" class="mch-subtab-view" style="display: none;">
+          <section class="card card-full">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h3 class="card-title" style="margin: 0;">Commercial Payment Orders</h3>
+                <p class="card-description" style="margin: 0.25rem 0 0 0;">Create payment orders and monitor incoming checkout payments.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <select id="mch-orders-filter-status" class="form-control form-control-sm" style="width: auto;">
+                  <option value="">All Statuses</option>
+                  <option value="CREATED">CREATED</option>
+                  <option value="PAID">PAID</option>
+                  <option value="EXPIRED">EXPIRED</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
+                <button type="button" id="btn-refresh-mch-orders" class="btn btn-sm btn-outline">Refresh</button>
+                <button type="button" id="btn-mch-new-order" class="btn btn-sm btn-primary">+ Create Order</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table" id="table-mch-orders">
+                  <thead>
+                    <tr>
+                      <th>Order Reference</th>
+                      <th>Invoice ID</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Customer Ref</th>
+                      <th>Created At</th>
+                      <th>Expires At</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mch-orders-table-body">
+                    <tr><td colspan="8" class="text-center text-muted">Loading orders...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- SUBTAB 3: Business Profile -->
+        <div id="mch-view-profile" class="mch-subtab-view" style="display: none;">
+          <section class="card card-full">
+            <div class="card-header">
+              <h3 class="card-title">Manage Business Profile</h3>
+            </div>
+            <div class="card-body">
+              <form id="form-update-merchant-profile">
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group mb-3">
+                    <label for="mch-prof-name">Display Name</label>
+                    <input type="text" id="mch-prof-name" class="form-control" required minlength="2" maxlength="150">
+                  </div>
+                  <div class="form-group mb-3">
+                    <label for="mch-prof-phone">Business Phone</label>
+                    <input type="tel" id="mch-prof-phone" class="form-control" required>
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="mch-prof-website">Website URL</label>
+                  <input type="url" id="mch-prof-website" class="form-control" maxlength="255">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="mch-prof-support-email">Customer Support Email</label>
+                  <input type="email" id="mch-prof-support-email" class="form-control font-mono">
+                </div>
+                <button type="submit" id="btn-submit-update-mch-profile" class="btn btn-primary" style="margin-top: 1rem;">
+                  <span class="btn-text">Save Changes</span>
+                  <span class="btn-spinner" style="display: none;"></span>
+                </button>
+              </form>
+            </div>
+          </section>
+        </div>
+
+        <!-- SUBTAB 4: Team Management -->
+        <div id="mch-view-team" class="mch-subtab-view" style="display: none;">
+          <section class="card card-full">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3 class="card-title">Team & Permissions (RBAC)</h3>
+                <p class="card-description">Manage roles across Owner, Admin, Operator, Developer, Support, and Viewer.</p>
+              </div>
+              <button type="button" id="btn-add-team-member" class="btn btn-sm btn-primary">+ Invite Member</button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table" id="table-mch-members">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Email</th>
+                      <th>Merchant Role</th>
+                      <th>Status</th>
+                      <th>Joined At</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mch-members-table-body">
+                    <tr><td colspan="6" class="text-center text-muted">Loading team members...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- SUBTAB 5: Audit Trail -->
+        <div id="mch-view-audit" class="mch-subtab-view" style="display: none;">
+          <section class="card card-full">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 class="card-title">Merchant Audit Trail</h3>
+              <button type="button" id="btn-refresh-mch-audit" class="btn btn-sm btn-outline">Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table" id="table-mch-audit">
+                  <thead>
+                    <tr>
+                      <th>Event Type</th>
+                      <th>Description</th>
+                      <th>Actor</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mch-audit-table-body">
+                    <tr><td colspan="4" class="text-center text-muted">Loading audit logs...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW: CHECKOUT / PAY MERCHANT (Phase 2.1)                            -->
+    <!-- ==================================================================== -->
+    <div id="view-checkout" class="view-panel">
+      <!-- Checkout Order Resolution & Payment Card -->
+      <section class="card mb-4" style="max-width: 800px; margin: 0 auto 2rem auto;">
+        <div class="card-header">
+          <h3 class="card-title">Pay Merchant Order</h3>
+          <p class="card-description">Enter an order reference or checkout session link to pay directly from your VYOM wallet.</p>
+        </div>
+        <div class="card-body">
+          <form id="form-lookup-order" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 0.75rem;">
+              <input type="text" id="checkout-lookup-ref" class="form-control font-mono" placeholder="Enter Order Reference (e.g. ORD-20261121-ABCD)" required>
+              <button type="submit" id="btn-lookup-order" class="btn btn-primary" style="white-space: nowrap;">
+                <span class="btn-text">Lookup Order</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Order Bill Box (hidden initially) -->
+          <div id="checkout-order-details" style="display: none; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+              <div>
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em;">Merchant</span>
+                <h4 id="checkout-merchant-name" style="color: #f8fafc; font-size: 1.25rem; margin: 0.25rem 0 0 0;">Acme Retail</h4>
+                <span id="checkout-merchant-code" class="font-mono text-muted" style="font-size: 0.75rem;">MCH-000000</span>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em;">Amount Due</span>
+                <div id="checkout-order-amount" style="font-size: 1.75rem; font-weight: 700; color: #38bdf8;">₹0.00</div>
+                <span id="checkout-order-status" class="badge badge-info">CREATED</span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 0.75rem 0; border-top: 1px solid rgba(148, 163, 184, 0.1); border-bottom: 1px solid rgba(148, 163, 184, 0.1); font-size: 0.875rem;">
+              <div>
+                <span class="text-muted">Order Ref:</span> <span id="checkout-order-ref" class="font-mono" style="color: #f8fafc;"></span>
+              </div>
+              <div>
+                <span class="text-muted">Expires In:</span> <span id="checkout-countdown" style="color: #fbbf24; font-weight: 600;">--:--</span>
+              </div>
+              <div style="grid-column: span 2;">
+                <span class="text-muted">Description:</span> <span id="checkout-order-desc" style="color: #cbd5e1;"></span>
+              </div>
+            </div>
+
+            <!-- Payment Form -->
+            <form id="form-execute-checkout-pay" style="margin-top: 1.5rem;">
+              <div class="form-group mb-3">
+                <label for="checkout-payer-wallet-select">Select Payment Wallet <span class="required">*</span></label>
+                <select id="checkout-payer-wallet-select" class="form-control" required>
+                  <option value="">-- Choose a Wallet --</option>
+                </select>
+                <small class="form-text text-muted" id="checkout-wallet-hint">Only wallets in the matching currency are available.</small>
+              </div>
+
+              <div id="checkout-insufficient-alert" class="alert alert-danger" style="display: none; margin-bottom: 1rem;">
+                <strong>Insufficient balance:</strong> Selected wallet does not have enough funds to complete this payment.
+              </div>
+
+              <button type="submit" id="btn-submit-checkout-pay" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; width: 100%;">
+                <span class="btn-text">Pay Now</span>
+                <span class="btn-spinner" style="display: none;"></span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customer Commercial Payment History -->
+      <section class="card card-full">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 class="card-title">My Merchant Payments</h3>
+            <p class="card-description">Historical transactions paid to merchants across checkout sessions.</p>
+          </div>
+          <button type="button" id="btn-refresh-my-payments" class="btn btn-sm btn-outline">Refresh</button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="data-table" id="table-my-payments">
+              <thead>
+                <tr>
+                  <th>Attempt Reference</th>
+                  <th>Order Reference</th>
+                  <th>Merchant</th>
+                  <th>Amount</th>
+                  <th>Payment Method</th>
+                  <th>Status</th>
+                  <th>Completed At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="my-payments-table-body">
+                <tr><td colspan="8" class="text-center text-muted">Loading payment history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================================================================== -->
     <!-- VIEW 8: ADMIN PORTAL VIEW (ROLE: ADMIN ONLY)                         -->
     <!-- ==================================================================== -->
     <div id="view-admin" class="view-panel">
@@ -1201,6 +1659,196 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Reject Merchant -->
+  <div id="modal-admin-reject-merchant" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-admin-reject-merchant-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-admin-reject-merchant-title" class="modal-title">Reject Merchant Application</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-admin-reject-merchant">&times;</button>
+      </div>
+      <form id="form-admin-reject-merchant">
+        <div class="modal-body">
+          <input type="hidden" id="admin-reject-merchant-id">
+          <div class="alert alert-warning">
+            Rejecting application for <strong id="admin-reject-merchant-name"></strong>
+          </div>
+          <div class="form-group mb-3">
+            <label for="admin-reject-reason-input">Rejection Reason <span class="required">*</span></label>
+            <textarea id="admin-reject-reason-input" class="form-control" rows="3" placeholder="Explain the regulatory or validation failure..." required maxlength="500"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-admin-reject-merchant">Cancel</button>
+          <button type="submit" id="btn-submit-admin-reject-merchant" class="btn btn-danger">
+            <span class="btn-text">Reject Application</span>
+            <span class="btn-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Suspend Merchant -->
+  <div id="modal-admin-suspend-merchant" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-admin-suspend-merchant-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-admin-suspend-merchant-title" class="modal-title">Suspend Merchant Account</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-admin-suspend-merchant">&times;</button>
+      </div>
+      <form id="form-admin-suspend-merchant">
+        <div class="modal-body">
+          <input type="hidden" id="admin-suspend-merchant-id">
+          <div class="alert alert-danger">
+            Suspending account for <strong id="admin-suspend-merchant-name"></strong>. This will block all commercial payments.
+          </div>
+          <div class="form-group mb-3">
+            <label for="admin-suspend-reason-input">Suspension Reason <span class="required">*</span></label>
+            <textarea id="admin-suspend-reason-input" class="form-control" rows="3" placeholder="Specify risk, dispute volume, or compliance violation reason..." required maxlength="500"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-admin-suspend-merchant">Cancel</button>
+          <button type="submit" id="btn-submit-admin-suspend-merchant" class="btn btn-danger">
+            <span class="btn-text">Suspend Account</span>
+            <span class="btn-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Create Merchant Payment Order (Phase 2.1) -->
+  <div id="modal-mch-create-order" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-mch-create-order-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-mch-create-order-title" class="modal-title">Create Payment Order</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-mch-create-order">&times;</button>
+      </div>
+      <form id="form-mch-create-order">
+        <div class="modal-body">
+          <div class="form-group mb-3">
+            <label for="mch-order-id-input">Merchant Order / Invoice ID <span class="required">*</span></label>
+            <input type="text" id="mch-order-id-input" class="form-control font-mono" placeholder="e.g. INV-2026-001" required maxlength="64">
+          </div>
+          <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+            <div class="form-group mb-3">
+              <label for="mch-order-amount-input">Amount <span class="required">*</span></label>
+              <input type="number" step="0.0001" min="0.01" max="10000000" id="mch-order-amount-input" class="form-control font-mono" placeholder="0.00" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="mch-order-currency-select">Currency <span class="required">*</span></label>
+              <select id="mch-order-currency-select" class="form-control" required>
+                <option value="INR">INR</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="mch-order-custref-input">Customer Reference</label>
+            <input type="text" id="mch-order-custref-input" class="form-control" placeholder="Optional customer ID or email" maxlength="100">
+          </div>
+          <div class="form-group mb-3">
+            <label for="mch-order-desc-input">Description</label>
+            <input type="text" id="mch-order-desc-input" class="form-control" placeholder="e.g. Store checkout purchase" maxlength="255">
+          </div>
+          <div class="form-group mb-3">
+            <label for="mch-order-expiry-input">Expires In (Minutes)</label>
+            <input type="number" min="5" max="1440" id="mch-order-expiry-input" class="form-control" value="30">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-mch-create-order">Cancel</button>
+          <button type="submit" id="btn-submit-mch-create-order" class="btn btn-primary">
+            <span class="btn-text">Generate Order</span>
+            <span class="btn-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: View Order Attempts (Phase 2.1) -->
+  <div id="modal-mch-order-attempts" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-mch-order-attempts-title">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-mch-order-attempts-title" class="modal-title">Order Payment Attempts</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-mch-order-attempts">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="mch-order-attempts-summary" class="alert alert-info mb-3"></div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Seq</th>
+                <th>Attempt Reference</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Failure Reason</th>
+                <th>Tx Reference</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="mch-order-attempts-tbody">
+              <tr><td colspan="7" class="text-center text-muted">No attempts found.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="modal-mch-order-attempts">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Checkout Payment Receipt (Phase 2.1) -->
+  <div id="modal-checkout-receipt" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-checkout-receipt-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-checkout-receipt-title" class="modal-title">Payment Receipt</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-checkout-receipt">&times;</button>
+      </div>
+      <div class="modal-body" id="checkout-receipt-body">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: rgba(74, 222, 128, 0.15); border-radius: 50%; color: #4ade80; font-size: 1.5rem; margin-bottom: 0.5rem;">✓</div>
+          <h4 style="color: #f8fafc; margin: 0; font-size: 1.25rem;">Payment Successful</h4>
+          <span id="receipt-merchant-name" style="color: #94a3b8; font-size: 0.9rem;">Acme Retail</span>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 0.5rem; padding: 1.25rem; font-size: 0.875rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+            <span class="text-muted">Amount Paid:</span>
+            <strong id="receipt-amount" style="color: #38bdf8; font-size: 1.1rem;">₹0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+            <span class="text-muted">Receipt Ref:</span>
+            <span id="receipt-ref" class="font-mono text-muted"></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+            <span class="text-muted">Order Ref:</span>
+            <span id="receipt-order-ref" class="font-mono text-muted"></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+            <span class="text-muted">Attempt Ref:</span>
+            <span id="receipt-attempt-ref" class="font-mono text-muted"></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+            <span class="text-muted">Payer Wallet:</span>
+            <span id="receipt-payer-wallet" class="font-mono text-muted"></span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span class="text-muted">Timestamp:</span>
+            <span id="receipt-timestamp" class="text-muted"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="modal-checkout-receipt">Close</button>
+      </div>
     </div>
   </div>
 

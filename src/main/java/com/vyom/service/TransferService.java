@@ -7,6 +7,7 @@ import com.vyom.entity.enums.OperationType;
 import com.vyom.exception.InvalidTransferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -26,6 +27,9 @@ public class TransferService {
     }
 
     public TransferResponse transfer(UUID userId, String idempotencyKey, CreateTransferRequest request) {
+        if (userId == null) {
+            throw new AccessDeniedException("Full authentication is required to initiate a transfer");
+        }
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");
         }
@@ -50,30 +54,4 @@ public class TransferService {
             throw e;
         }
     }
-
-    public TransferResponse transfer(String idempotencyKey, CreateTransferRequest request) {
-        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
-            throw new InvalidTransferException("Idempotency-Key header is required");
-        }
-
-        String sanitizedKey = idempotencyKey.trim();
-        String fingerprint = idempotencyService.computeTransferFingerprint(request);
-
-        IdempotencyReservationResult<TransferResponse> reservation = idempotencyService.reserveKey(
-                sanitizedKey, OperationType.TRANSFER, fingerprint, TransferResponse.class);
-        if (reservation.isCompleted()) {
-            log.info("Returning cached response for transfer idempotency key '{}'", sanitizedKey);
-            return reservation.cachedResponse();
-        }
-
-        UUID ownerToken = reservation.ownerToken();
-        try {
-            return transferExecutionService.execute(sanitizedKey, ownerToken, request);
-        } catch (Exception e) {
-            log.error("Transfer execution failed for idempotency key '{}': {}", sanitizedKey, e.getMessage());
-            idempotencyService.markFailed(sanitizedKey, ownerToken);
-            throw e;
-        }
-    }
 }
-

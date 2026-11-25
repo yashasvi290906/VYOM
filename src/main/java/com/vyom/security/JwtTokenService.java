@@ -52,10 +52,26 @@ public class JwtTokenService {
     }
 
     private byte[] resolveAndValidateSecret(String secret, Environment environment) {
-        boolean isProduction = isProductionEnvironment(environment);
+        boolean isDevOrTest = isDevOrTestEnvironment(environment);
         String effectiveSecret = (secret != null) ? secret.trim() : "";
 
-        if (isProduction) {
+        if (isDevOrTest) {
+            // Explicit development or test environment
+            if (effectiveSecret.isEmpty()) {
+                log.warn("No JWT secret explicitly configured. Falling back to development-only default key for dev/test profile. DO NOT USE IN PRODUCTION.");
+                return DEV_DEFAULT_SECRET.getBytes(StandardCharsets.UTF_8);
+            }
+
+            if (effectiveSecret.getBytes(StandardCharsets.UTF_8).length < MINIMUM_SECRET_BYTES) {
+                throw new IllegalStateException(
+                        "Configured JWT secret must be at least " + MINIMUM_SECRET_BYTES + " bytes (256 bits) for HMAC-SHA256.");
+            }
+
+            log.info("JWT token service initialized with configured secret ({} bytes)",
+                    effectiveSecret.getBytes(StandardCharsets.UTF_8).length);
+            return effectiveSecret.getBytes(StandardCharsets.UTF_8);
+        } else {
+            // Production, default, staging, or un-profiled environment: fail closed
             if (effectiveSecret.isEmpty()) {
                 throw new IllegalStateException(
                         "JWT secret must be explicitly configured in production environment (set JWT_SECRET or vyom.jwt.secret).");
@@ -78,30 +94,18 @@ public class JwtTokenService {
             log.info("JWT token service initialized for production environment with secure key ({} bytes)",
                     effectiveSecret.getBytes(StandardCharsets.UTF_8).length);
             return effectiveSecret.getBytes(StandardCharsets.UTF_8);
-        } else {
-            // Non-production environment (development, test, or local default)
-            if (effectiveSecret.isEmpty()) {
-                log.warn("No JWT secret explicitly configured. Falling back to development-only default key. DO NOT USE IN PRODUCTION.");
-                return DEV_DEFAULT_SECRET.getBytes(StandardCharsets.UTF_8);
-            }
-
-            if (effectiveSecret.getBytes(StandardCharsets.UTF_8).length < MINIMUM_SECRET_BYTES) {
-                throw new IllegalStateException(
-                        "Configured JWT secret must be at least " + MINIMUM_SECRET_BYTES + " bytes (256 bits) for HMAC-SHA256.");
-            }
-
-            log.info("JWT token service initialized with configured secret ({} bytes)",
-                    effectiveSecret.getBytes(StandardCharsets.UTF_8).length);
-            return effectiveSecret.getBytes(StandardCharsets.UTF_8);
         }
     }
 
-    private boolean isProductionEnvironment(Environment environment) {
+    private boolean isDevOrTestEnvironment(Environment environment) {
         if (environment == null) {
-            return false;
+            // Standalone unit tests without Spring ApplicationContext
+            return true;
         }
         for (String profile : environment.getActiveProfiles()) {
-            if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+            if ("dev".equalsIgnoreCase(profile)
+                    || "local-dev".equalsIgnoreCase(profile)
+                    || "test".equalsIgnoreCase(profile)) {
                 return true;
             }
         }
@@ -159,6 +163,13 @@ public class JwtTokenService {
 
             if (!MessageDigest.isEqual(parts[2].getBytes(StandardCharsets.UTF_8), expectedSignature.getBytes(StandardCharsets.UTF_8))) {
                 log.warn("Invalid JWT signature");
+                return false;
+            }
+
+            byte[] headerBytes = Base64.getUrlDecoder().decode(parts[0]);
+            JsonNode header = objectMapper.readTree(headerBytes);
+            if (!header.has("alg") || !"HS256".equals(header.get("alg").asText())) {
+                log.warn("Rejected JWT with unsupported or missing alg claim");
                 return false;
             }
 

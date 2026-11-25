@@ -1,6 +1,19 @@
 const crypto = require('crypto');
 
 /**
+ * Seedable PRNG (Mulberry32) for reproducible benchmark operation generation (F08)
+ */
+function createPrng(seed = 123456789) {
+  let s = Math.floor(seed) >>> 0;
+  return function() {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
  * High-precision percentile calculator
  */
 function calculatePercentiles(latencies) {
@@ -59,13 +72,14 @@ class BenchmarkEngine {
 
     try {
       const res = await fetch(url, fetchOpts);
-      const durationMs = performance.now() - start;
       let bodyText = null;
       try {
         bodyText = await res.text();
       } catch {
         // ignore body read error
       }
+      // F08: Record duration only after full response payload has finished streaming
+      const durationMs = performance.now() - start;
 
       let parsed = null;
       if (bodyText) {
@@ -112,12 +126,16 @@ class BenchmarkEngine {
       users = [],
       mix = { transfer: 0.5, fund: 0.2, balance: 0.2, replay: 0.1 },
       recentTransactions = [],
-      replayKeys = []
+      replayKeys = [],
+      seed = 12345
     } = plan;
 
     if (!users || users.length === 0) {
       throw new Error('Benchmark requires seeded users.');
     }
+
+    const prng = createPrng(seed);
+    const randVal = () => prng();
 
     const state = {
       totalRequests: 0,
@@ -162,7 +180,7 @@ class BenchmarkEngine {
     }
 
     const pickOp = () => {
-      const rand = Math.random() * cumulative;
+      const rand = randVal() * cumulative;
       for (const item of cumulativeWeights) {
         if (rand <= item.threshold) return item.op;
       }
@@ -299,7 +317,7 @@ class BenchmarkEngine {
 
           } else if (op === 'receipt') {
             if (recentTransactions.length > 0) {
-              const target = recentTransactions[Math.floor(Math.random() * recentTransactions.length)];
+              const target = recentTransactions[Math.floor(randVal() * recentTransactions.length)];
               const res = await this.executeRequest(`/api/v1/transactions/${target.id}/receipt`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${target.token}` }
@@ -316,7 +334,7 @@ class BenchmarkEngine {
 
           } else if (op === 'replay') {
             if (replayKeys.length > 0) {
-              const item = replayKeys[Math.floor(Math.random() * replayKeys.length)];
+              const item = replayKeys[Math.floor(randVal() * replayKeys.length)];
               const res = await this.executeRequest('/api/v1/transfers', {
                 method: 'POST',
                 headers: {

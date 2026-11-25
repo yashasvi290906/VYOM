@@ -1,0 +1,76 @@
+name: VYOM Continuous Integration
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-test:
+    name: Spring Boot Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: payledger_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Maven Tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/payledger_test
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgrespassword
+          JWT_SECRET: c2VjdXJlLXRlc3Qtand0LXNlY3JldC1mb3ItY2ktaGFybmVzcy12YWxpZGF0aW9uLTEyMzQ1Njc4OTA=
+        run: |
+          chmod +x ./mvnw
+          ./mvnw test
+
+  gateway-test:
+    name: Express API Gateway Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22 (Engine >= 22.12.0)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: gateway/package.json
+
+      - name: Install Gateway Dependencies
+        run: npm ci --prefix gateway
+
+      - name: Run Gateway Unit Tests
+        env:
+          JWT_SECRET: c2VjdXJlLXRlc3Qtand0LXNlY3JldC1mb3ItY2ktaGFybmVzcy12YWxpZGF0aW9uLTEyMzQ1Njc4OTA=
+          NODE_ENV: test
+        run: npm test --prefix gateway
+
+      - name: Syntax Check Gateway and Benchmark Scripts
+        run: |
+          find gateway/src gateway/public/js gateway/tests benchmark -name "*.js" -exec node -c {} +

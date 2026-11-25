@@ -159,6 +159,33 @@ const UI = (() => {
     return parts[0] + '.' + parts[1].padEnd(4, '0').slice(0, 4);
   }
 
+  function toBasisUnits(val) {
+    if (val === null || val === undefined || val === '') return 0n;
+    const s = String(val).trim();
+    if (!s || s === 'NaN') return 0n;
+    const isNeg = s.startsWith('-');
+    const clean = isNeg ? s.slice(1) : s;
+    const parts = clean.split('.');
+    try {
+      const whole = BigInt(parts[0] || '0');
+      const fracStr = (parts[1] || '').padEnd(4, '0').slice(0, 4);
+      const frac = BigInt(fracStr);
+      const units = whole * 10000n + frac;
+      return isNeg ? -units : units;
+    } catch {
+      return 0n;
+    }
+  }
+
+  function fromBasisUnits(units) {
+    const isNeg = units < 0n;
+    const abs = isNeg ? -units : units;
+    const whole = abs / 10000n;
+    const frac = abs % 10000n;
+    const formatted = `${whole}.${frac.toString().padStart(4, '0')}`;
+    return isNeg ? `-${formatted}` : formatted;
+  }
+
   function formatDateTime(isoString) {
     if (!isoString) return '-';
     try {
@@ -923,10 +950,11 @@ const UI = (() => {
     document.getElementById('det-amount').textContent = `${txn.currency} ${formatAmount(txn.amount)}`;
     document.getElementById('det-refunded-amount').textContent = formatAmount(txn.refundedAmount || '0.0000');
 
-    // Calculate remaining refundable accurately
-    const totalAmt = parseFloat(txn.amount) || 0;
-    const refAmt = parseFloat(txn.refundedAmount) || 0;
-    const remaining = Math.max(totalAmt - refAmt, 0).toFixed(4);
+    // Calculate remaining refundable accurately using exact integer basis units
+    const totalUnits = toBasisUnits(txn.amount);
+    const refUnits = toBasisUnits(txn.refundedAmount);
+    const remUnits = totalUnits - refUnits;
+    const remaining = fromBasisUnits(remUnits > 0n ? remUnits : 0n);
     document.getElementById('det-remaining-refundable').textContent = `${txn.currency} ${remaining}`;
 
     document.getElementById('det-source-wallet').textContent = txn.sourceWalletId || 'None (System)';
@@ -952,7 +980,7 @@ const UI = (() => {
 
     // Refund: allowed if user is recipient and transaction is SUCCESS/PARTIALLY_REFUNDED and remaining > 0
     const isRecipient = user && txn.recipientUserId === user.id;
-    const isRefundable = (txn.status === 'SUCCESS' || txn.status === 'PARTIALLY_REFUNDED') && parseFloat(remaining) > 0;
+    const isRefundable = (txn.status === 'SUCCESS' || txn.status === 'PARTIALLY_REFUNDED') && remUnits > 0n;
     if (isRecipient && isRefundable) {
       btnRefund.style.display = 'inline-block';
       btnRefund.onclick = () => onRefund(txn, remaining);
@@ -971,7 +999,7 @@ const UI = (() => {
 
     // Reversal: allowed if user is ADMIN and txn is SUCCESS and not refunded
     const isAdmin = user && user.role === 'ADMIN';
-    if (isAdmin && txn.status === 'SUCCESS' && parseFloat(refAmt) === 0) {
+    if (isAdmin && txn.status === 'SUCCESS' && refUnits === 0n) {
       btnReverse.style.display = 'inline-block';
       btnReverse.onclick = () => onReverse(txn);
     } else {
@@ -1057,6 +1085,573 @@ const UI = (() => {
     });
   }
 
+  function getMerchantStatusBadge(status) {
+    if (status === 'APPROVED' || status === 'ACTIVE') return 'badge badge-success';
+    if (status === 'SUBMITTED' || status === 'UNDER_REVIEW') return 'badge badge-warning';
+    if (status === 'DRAFT') return 'badge badge-info';
+    return 'badge badge-danger';
+  }
+
+  function getMerchantRoleBadge(role) {
+    if (role === 'MERCHANT_OWNER') return 'badge badge-warning';
+    if (role === 'MERCHANT_ADMIN') return 'badge badge-info';
+    if (role === 'MERCHANT_OPERATOR') return 'badge badge-success';
+    return 'badge badge-secondary';
+  }
+
+  function renderMerchantCards(memberships, onSelectMerchant) {
+    const container = document.getElementById('merchant-cards-container');
+    const emptyState = document.getElementById('merchant-empty-state');
+    const loadingState = document.getElementById('merchant-list-loading');
+    if (loadingState) loadingState.style.display = 'none';
+
+    if (!container) return;
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    if (!memberships || memberships.length === 0) {
+      if (emptyState) emptyState.style.display = 'block';
+      container.style.display = 'none';
+      return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    container.style.display = 'grid';
+
+    memberships.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.cssText = 'background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.15); display: flex; flex-direction: column; justify-content: space-between;';
+
+      const header = document.createElement('div');
+      header.className = 'card-header';
+      header.style.cssText = 'display: flex; justify-content: space-between; align-items: flex-start;';
+
+      const titleGroup = document.createElement('div');
+      const h3 = document.createElement('h3');
+      h3.style.cssText = 'margin: 0; font-size: 1.1rem; color: #f8fafc;';
+      h3.textContent = m.displayName;
+      const codeSpan = document.createElement('div');
+      codeSpan.className = 'font-mono text-muted';
+      codeSpan.style.fontSize = '0.75rem';
+      codeSpan.textContent = m.businessCode;
+      titleGroup.appendChild(h3);
+      titleGroup.appendChild(codeSpan);
+
+      const badgesGroup = document.createElement('div');
+      badgesGroup.style.cssText = 'display: flex; gap: 0.35rem; flex-direction: column; align-items: flex-end;';
+
+      const roleBadge = document.createElement('span');
+      roleBadge.className = getMerchantRoleBadge(m.role);
+      roleBadge.textContent = m.role.replace('MERCHANT_', '');
+      badgesGroup.appendChild(roleBadge);
+
+      const statusBadge = document.createElement('span');
+      statusBadge.className = getMerchantStatusBadge(m.onboardingStatus);
+      statusBadge.textContent = m.onboardingStatus;
+      badgesGroup.appendChild(statusBadge);
+
+      header.appendChild(titleGroup);
+      header.appendChild(badgesGroup);
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      body.style.padding = '1rem 1.25rem';
+
+      const catInfo = document.createElement('div');
+      catInfo.style.cssText = 'font-size: 0.8125rem; color: #94a3b8; margin-bottom: 0.5rem;';
+      catInfo.textContent = `${m.category || 'COMMERCIAL'} • ${m.businessType || 'PRIVATE_LIMITED'}`;
+      body.appendChild(catInfo);
+
+      const accInfo = document.createElement('div');
+      accInfo.style.cssText = 'font-size: 0.8125rem; display: flex; align-items: center; gap: 0.5rem;';
+      const accDot = document.createElement('span');
+      accDot.style.cssText = `width: 8px; height: 8px; border-radius: 50%; background: ${m.accountStatus === 'ACTIVE' ? '#22c55e' : (m.accountStatus === 'SUSPENDED' ? '#ef4444' : '#f59e0b')}; display: inline-block;`;
+      const accText = document.createElement('span');
+      accText.className = 'text-muted';
+      accText.textContent = `Account: ${m.accountStatus}`;
+      accInfo.appendChild(accDot);
+      accInfo.appendChild(accText);
+      body.appendChild(accInfo);
+
+      const footer = document.createElement('div');
+      footer.style.cssText = 'padding: 0.75rem 1.25rem 1.25rem; border-top: 1px solid rgba(148, 163, 184, 0.1); display: flex; justify-content: flex-end;';
+
+      const btnDashboard = document.createElement('button');
+      btnDashboard.type = 'button';
+      btnDashboard.className = 'btn btn-sm btn-primary';
+      btnDashboard.textContent = 'Manage Merchant →';
+      btnDashboard.onclick = () => onSelectMerchant(m);
+      footer.appendChild(btnDashboard);
+
+      card.appendChild(header);
+      card.appendChild(body);
+      card.appendChild(footer);
+      container.appendChild(card);
+    });
+  }
+
+  function renderMerchantMembersTable(members, callerRole, onUpdateRole, onRevokeMember) {
+    const tbody = document.getElementById('mch-members-table-body');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    if (!members || members.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 6;
+      cell.className = 'text-center text-muted';
+      cell.textContent = 'No team members registered.';
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    const canManage = callerRole === 'MERCHANT_OWNER' || callerRole === 'MERCHANT_ADMIN';
+
+    members.forEach(m => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = m.fullName || m.userName || '-';
+      tr.appendChild(tdName);
+
+      const tdEmail = document.createElement('td');
+      tdEmail.className = 'font-mono';
+      tdEmail.textContent = m.email || m.userEmail || '-';
+      tr.appendChild(tdEmail);
+
+      const tdRole = document.createElement('td');
+      const badgeRole = document.createElement('span');
+      badgeRole.className = getMerchantRoleBadge(m.role);
+      badgeRole.textContent = m.role;
+      tdRole.appendChild(badgeRole);
+      tr.appendChild(tdRole);
+
+      const tdStatus = document.createElement('td');
+      const badgeStatus = document.createElement('span');
+      badgeStatus.className = m.membershipStatus === 'ACTIVE' ? 'badge badge-success' : 'badge badge-danger';
+      badgeStatus.textContent = m.membershipStatus;
+      tdStatus.appendChild(badgeStatus);
+      tr.appendChild(tdStatus);
+
+      const tdJoined = document.createElement('td');
+      tdJoined.textContent = formatDateTime(m.createdAt);
+      tr.appendChild(tdJoined);
+
+      const tdActions = document.createElement('td');
+      if (canManage && m.membershipStatus === 'ACTIVE') {
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'btn-group';
+
+        const isSelf = m.isCaller;
+        const targetIsOwner = m.role === 'MERCHANT_OWNER';
+        const callerIsOwner = callerRole === 'MERCHANT_OWNER';
+
+        if ((callerIsOwner || (callerRole === 'MERCHANT_ADMIN' && !targetIsOwner)) && !isSelf) {
+          const btnChangeRole = document.createElement('button');
+          btnChangeRole.type = 'button';
+          btnChangeRole.className = 'btn btn-xs btn-outline';
+          btnChangeRole.textContent = 'Change Role';
+          btnChangeRole.onclick = () => onUpdateRole(m);
+          btnGroup.appendChild(btnChangeRole);
+
+          const btnRevoke = document.createElement('button');
+          btnRevoke.type = 'button';
+          btnRevoke.className = 'btn btn-xs btn-outline btn-danger';
+          btnRevoke.textContent = 'Revoke';
+          btnRevoke.onclick = () => onRevokeMember(m);
+          btnGroup.appendChild(btnRevoke);
+        } else if (isSelf) {
+          const selfTag = document.createElement('span');
+          selfTag.className = 'text-muted';
+          selfTag.style.fontSize = '0.75rem';
+          selfTag.textContent = '(You)';
+          btnGroup.appendChild(selfTag);
+        }
+
+        tdActions.appendChild(btnGroup);
+      } else {
+        tdActions.textContent = '-';
+      }
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderMerchantAuditTable(auditLogs) {
+    const tbody = document.getElementById('mch-audit-table-body');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    if (!auditLogs || auditLogs.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 4;
+      cell.className = 'text-center text-muted';
+      cell.textContent = 'No audit log entries recorded.';
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    auditLogs.forEach(l => {
+      const tr = document.createElement('tr');
+
+      const tdType = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'badge badge-info';
+      badge.textContent = l.eventType;
+      tdType.appendChild(badge);
+      tr.appendChild(tdType);
+
+      const tdDesc = document.createElement('td');
+      tdDesc.textContent = l.description || '-';
+      tr.appendChild(tdDesc);
+
+      const tdActor = document.createElement('td');
+      tdActor.className = 'font-mono text-muted';
+      tdActor.textContent = l.actorEmail || (l.actorUserId ? l.actorUserId.substring(0, 8) : 'System');
+      tr.appendChild(tdActor);
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = formatDateTime(l.createdAt);
+      tr.appendChild(tdDate);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderAdminMerchantsTable(merchants, onApprove, onReject, onSuspend, onReactivate) {
+    const tbody = document.getElementById('admin-merchants-table-body');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    if (!merchants || merchants.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 7;
+      cell.className = 'text-center text-muted';
+      cell.textContent = 'No merchant applications found.';
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    merchants.forEach(m => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      const nameDiv = document.createElement('div');
+      nameDiv.style.fontWeight = '600';
+      nameDiv.textContent = m.displayName;
+      const codeSpan = document.createElement('div');
+      codeSpan.className = 'font-mono text-muted';
+      codeSpan.style.fontSize = '0.75rem';
+      codeSpan.textContent = m.businessCode;
+      tdName.appendChild(nameDiv);
+      tdName.appendChild(codeSpan);
+      tr.appendChild(tdName);
+
+      const tdCat = document.createElement('td');
+      tdCat.textContent = `${m.category || '-'} / ${m.businessType || '-'}`;
+      tr.appendChild(tdCat);
+
+      const tdEmail = document.createElement('td');
+      tdEmail.className = 'font-mono';
+      tdEmail.textContent = m.registrationEmail || '-';
+      tr.appendChild(tdEmail);
+
+      const tdOnb = document.createElement('td');
+      const badgeOnb = document.createElement('span');
+      badgeOnb.className = getMerchantStatusBadge(m.onboardingStatus);
+      badgeOnb.textContent = m.onboardingStatus;
+      tdOnb.appendChild(badgeOnb);
+      tr.appendChild(tdOnb);
+
+      const tdAcc = document.createElement('td');
+      const badgeAcc = document.createElement('span');
+      badgeAcc.className = m.accountStatus === 'ACTIVE' ? 'badge badge-success' : (m.accountStatus === 'SUSPENDED' ? 'badge badge-danger' : 'badge badge-warning');
+      badgeAcc.textContent = m.accountStatus;
+      tdAcc.appendChild(badgeAcc);
+      tr.appendChild(tdAcc);
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = formatDateTime(m.createdAt);
+      tr.appendChild(tdDate);
+
+      const tdActions = document.createElement('td');
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'btn-group';
+
+      if (m.onboardingStatus === 'SUBMITTED' || m.onboardingStatus === 'UNDER_REVIEW') {
+        const btnApprove = document.createElement('button');
+        btnApprove.type = 'button';
+        btnApprove.className = 'btn btn-xs btn-success';
+        btnApprove.textContent = 'Approve';
+        btnApprove.onclick = () => onApprove(m);
+        btnGroup.appendChild(btnApprove);
+
+        const btnReject = document.createElement('button');
+        btnReject.type = 'button';
+        btnReject.className = 'btn btn-xs btn-danger';
+        btnReject.textContent = 'Reject';
+        btnReject.onclick = () => onReject(m);
+        btnGroup.appendChild(btnReject);
+      } else if (m.onboardingStatus === 'APPROVED') {
+        if (m.accountStatus === 'ACTIVE') {
+          const btnSuspend = document.createElement('button');
+          btnSuspend.type = 'button';
+          btnSuspend.className = 'btn btn-xs btn-outline btn-danger';
+          btnSuspend.textContent = 'Suspend';
+          btnSuspend.onclick = () => onSuspend(m);
+          btnGroup.appendChild(btnSuspend);
+        } else if (m.accountStatus === 'SUSPENDED') {
+          const btnReactivate = document.createElement('button');
+          btnReactivate.type = 'button';
+          btnReactivate.className = 'btn btn-xs btn-outline btn-success';
+          btnReactivate.textContent = 'Reactivate';
+          btnReactivate.onclick = () => onReactivate(m);
+          btnGroup.appendChild(btnReactivate);
+        }
+      }
+
+      tdActions.appendChild(btnGroup);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderMerchantOrdersTable(orders, onCopyRef, onCancel, onViewAttempts) {
+    const tbody = document.getElementById('mch-orders-table-body');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    if (!orders || orders.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 8;
+      cell.className = 'text-center text-muted';
+      cell.textContent = 'No commercial orders found.';
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    orders.forEach(o => {
+      const tr = document.createElement('tr');
+
+      const tdRef = document.createElement('td');
+      tdRef.className = 'font-mono';
+      tdRef.style.fontWeight = '600';
+      tdRef.textContent = o.orderReference;
+      tr.appendChild(tdRef);
+
+      const tdInv = document.createElement('td');
+      tdInv.className = 'font-mono text-muted';
+      tdInv.textContent = o.merchantOrderId || '-';
+      tr.appendChild(tdInv);
+
+      const tdAmt = document.createElement('td');
+      tdAmt.textContent = `${formatAmount(o.amount)} ${o.currency}`;
+      tdAmt.style.fontWeight = '600';
+      tr.appendChild(tdAmt);
+
+      const tdStat = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = o.status === 'PAID' ? 'badge badge-success' : (o.status === 'CREATED' ? 'badge badge-info' : (o.status === 'EXPIRED' ? 'badge badge-warning' : 'badge badge-danger'));
+      badge.textContent = o.status;
+      tdStat.appendChild(badge);
+      tr.appendChild(tdStat);
+
+      const tdCust = document.createElement('td');
+      tdCust.textContent = o.customerReference || '-';
+      tr.appendChild(tdCust);
+
+      const tdCreated = document.createElement('td');
+      tdCreated.textContent = formatDateTime(o.createdAt);
+      tr.appendChild(tdCreated);
+
+      const tdExp = document.createElement('td');
+      tdExp.textContent = formatDateTime(o.expiresAt);
+      tr.appendChild(tdExp);
+
+      const tdActions = document.createElement('td');
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'btn-group';
+
+      const btnCopy = document.createElement('button');
+      btnCopy.type = 'button';
+      btnCopy.className = 'btn btn-xs btn-outline';
+      btnCopy.textContent = 'Copy Ref';
+      btnCopy.onclick = () => onCopyRef(o);
+      btnGroup.appendChild(btnCopy);
+
+      const btnAttempts = document.createElement('button');
+      btnAttempts.type = 'button';
+      btnAttempts.className = 'btn btn-xs btn-outline';
+      btnAttempts.textContent = 'Attempts';
+      btnAttempts.onclick = () => onViewAttempts(o);
+      btnGroup.appendChild(btnAttempts);
+
+      if (o.status === 'CREATED') {
+        const btnCancel = document.createElement('button');
+        btnCancel.type = 'button';
+        btnCancel.className = 'btn btn-xs btn-danger';
+        btnCancel.textContent = 'Cancel';
+        btnCancel.onclick = () => onCancel(o);
+        btnGroup.appendChild(btnCancel);
+      }
+
+      tdActions.appendChild(btnGroup);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderMerchantOrderAttemptsTable(attempts) {
+    const tbody = document.getElementById('mch-order-attempts-tbody');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    if (!attempts || attempts.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 7;
+      cell.className = 'text-center text-muted';
+      cell.textContent = 'No payment attempts recorded for this order.';
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    attempts.forEach(a => {
+      const tr = document.createElement('tr');
+
+      const tdSeq = document.createElement('td');
+      tdSeq.textContent = '#' + a.sequenceNumber;
+      tr.appendChild(tdSeq);
+
+      const tdRef = document.createElement('td');
+      tdRef.className = 'font-mono';
+      tdRef.textContent = a.attemptReference;
+      tr.appendChild(tdRef);
+
+      const tdMethod = document.createElement('td');
+      tdMethod.textContent = a.paymentMethod || 'CUSTOMER_WALLET';
+      tr.appendChild(tdMethod);
+
+      const tdStat = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = a.status === 'SUCCESS' ? 'badge badge-success' : (a.status === 'FAILED' ? 'badge badge-danger' : 'badge badge-info');
+      badge.textContent = a.status;
+      tdStat.appendChild(badge);
+      tr.appendChild(tdStat);
+
+      const tdFail = document.createElement('td');
+      tdFail.className = 'text-muted';
+      tdFail.textContent = a.failureReason ? `${a.failureCode}: ${a.failureReason}` : '-';
+      tr.appendChild(tdFail);
+
+      const tdTx = document.createElement('td');
+      tdTx.className = 'font-mono text-muted';
+      tdTx.textContent = a.transactionReference || (a.transactionId ? a.transactionId.substring(0, 8) : '-');
+      tr.appendChild(tdTx);
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = formatDateTime(a.completedAt || a.createdAt);
+      tr.appendChild(tdDate);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderMyPaymentsTable(payments, onViewReceipt) {
+    const tbody = document.getElementById('my-payments-table-body');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    if (!payments || payments.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 8;
+      cell.className = 'text-center text-muted';
+      cell.textContent = 'No merchant payments found.';
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    payments.forEach(p => {
+      const tr = document.createElement('tr');
+
+      const tdAttempt = document.createElement('td');
+      tdAttempt.className = 'font-mono';
+      tdAttempt.textContent = p.attemptReference;
+      tr.appendChild(tdAttempt);
+
+      const tdOrder = document.createElement('td');
+      tdOrder.className = 'font-mono';
+      tdOrder.textContent = p.orderReference;
+      tr.appendChild(tdOrder);
+
+      const tdMch = document.createElement('td');
+      tdMch.style.fontWeight = '600';
+      tdMch.textContent = p.merchantName;
+      tr.appendChild(tdMch);
+
+      const tdAmt = document.createElement('td');
+      tdAmt.style.fontWeight = '600';
+      tdAmt.textContent = `${formatAmount(p.amount)} ${p.currency}`;
+      tr.appendChild(tdAmt);
+
+      const tdMethod = document.createElement('td');
+      tdMethod.textContent = p.paymentMethod || 'CUSTOMER_WALLET';
+      tr.appendChild(tdMethod);
+
+      const tdStat = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = p.status === 'SUCCESS' ? 'badge badge-success' : 'badge badge-danger';
+      badge.textContent = p.status;
+      tdStat.appendChild(badge);
+      tr.appendChild(tdStat);
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = formatDateTime(p.completedAt || p.createdAt);
+      tr.appendChild(tdDate);
+
+      const tdActions = document.createElement('td');
+      if (p.status === 'SUCCESS' && p.transactionReference) {
+        const btnReceipt = document.createElement('button');
+        btnReceipt.type = 'button';
+        btnReceipt.className = 'btn btn-xs btn-outline';
+        btnReceipt.textContent = 'Receipt';
+        btnReceipt.onclick = () => onViewReceipt(p);
+        tdActions.appendChild(btnReceipt);
+      } else {
+        tdActions.textContent = '-';
+      }
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function showCheckoutReceipt(receipt) {
+    document.getElementById('receipt-merchant-name').textContent = receipt.merchantName || 'Merchant';
+    document.getElementById('receipt-amount').textContent = `${formatAmount(receipt.amount)} ${receipt.currency}`;
+    document.getElementById('receipt-ref').textContent = receipt.receiptReference || receipt.transactionReference;
+    document.getElementById('receipt-order-ref').textContent = receipt.orderReference;
+    document.getElementById('receipt-attempt-ref').textContent = receipt.attemptReference;
+    document.getElementById('receipt-payer-wallet').textContent = receipt.payerMaskedWallet;
+    document.getElementById('receipt-timestamp').textContent = formatDateTime(receipt.completedAt);
+    openModal('modal-checkout-receipt');
+  }
+
   return {
     showToast,
     setButtonLoading,
@@ -1067,6 +1662,8 @@ const UI = (() => {
     populateWalletDropdown,
     formatDateTime,
     formatAmount,
+    toBasisUnits,
+    fromBasisUnits,
     openModal,
     closeModal,
     initModals,
@@ -1082,6 +1679,16 @@ const UI = (() => {
     showTransactionDetails,
     showReceipt,
     showTimeoutAlert,
-    handleApiError
+    handleApiError,
+    getMerchantStatusBadge,
+    getMerchantRoleBadge,
+    renderMerchantCards,
+    renderMerchantMembersTable,
+    renderMerchantAuditTable,
+    renderAdminMerchantsTable,
+    renderMerchantOrdersTable,
+    renderMerchantOrderAttemptsTable,
+    renderMyPaymentsTable,
+    showCheckoutReceipt
   };
 })();

@@ -1,6 +1,7 @@
 package com.vyom.controller;
 
 import com.vyom.dto.request.CreateRefundRequest;
+import com.vyom.dto.request.ReversalRequest;
 import com.vyom.dto.response.PagedResponse;
 import com.vyom.dto.response.RefundResponse;
 import com.vyom.dto.response.TransactionReceiptResponse;
@@ -100,14 +101,22 @@ public class TransactionController {
     public ResponseEntity<RefundResponse> reverseTransaction(
             @PathVariable UUID id,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
-            @RequestParam(required = false, defaultValue = "Administrative reversal") String reason) {
+            @RequestParam(required = false) String reason,
+            @Valid @RequestBody(required = false) ReversalRequest body) {
 
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");
         }
         UUID adminUserId = SecurityUtils.getCurrentUserId();
 
-        RefundResponse response = refundService.reverse(adminUserId, idempotencyKey, id, reason);
+        String effectiveReason = "Administrative reversal";
+        if (body != null && body.reason() != null && !body.reason().trim().isEmpty()) {
+            effectiveReason = body.reason().trim();
+        } else if (reason != null && !reason.trim().isEmpty()) {
+            effectiveReason = reason.trim();
+        }
+
+        RefundResponse response = refundService.reverse(adminUserId, idempotencyKey, id, effectiveReason);
         return ResponseEntity.ok(response);
     }
 }

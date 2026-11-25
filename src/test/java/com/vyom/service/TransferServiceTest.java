@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,10 +36,22 @@ public class TransferServiceTest {
     private TransferExecutionService transferExecutionService;
 
     private TransferService transferService;
+    private final UUID testUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     @BeforeEach
     void setUp() {
         transferService = new TransferService(idempotencyService, transferExecutionService);
+    }
+
+    @Test
+    @DisplayName("Should throw AccessDeniedException when userId is null")
+    void shouldThrowWhenUserIdIsNull() {
+        CreateTransferRequest req = new CreateTransferRequest(
+                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.00"), "INR", "Test");
+
+        assertThatThrownBy(() -> transferService.transfer(null, "key-1", req))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Full authentication is required");
     }
 
     @Test
@@ -46,11 +60,11 @@ public class TransferServiceTest {
         CreateTransferRequest req = new CreateTransferRequest(
                 UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.00"), "INR", "Test");
 
-        assertThatThrownBy(() -> transferService.transfer(null, req))
+        assertThatThrownBy(() -> transferService.transfer(testUserId, null, req))
                 .isInstanceOf(InvalidTransferException.class)
                 .hasMessageContaining("Idempotency-Key header is required");
 
-        assertThatThrownBy(() -> transferService.transfer("   ", req))
+        assertThatThrownBy(() -> transferService.transfer(testUserId, "   ", req))
                 .isInstanceOf(InvalidTransferException.class)
                 .hasMessageContaining("Idempotency-Key header is required");
     }
@@ -62,60 +76,59 @@ public class TransferServiceTest {
         CreateTransferRequest req = new CreateTransferRequest(
                 UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.00"), "INR", "Test");
 
-        when(idempotencyService.computeTransferFingerprint(req)).thenReturn("hash-123");
+        when(idempotencyService.computeTransferFingerprint(testUserId, req)).thenReturn("hash-123");
         TransferResponse cached = new TransferResponse(
                 UUID.randomUUID(), req.sourceWalletId(), req.destinationWalletId(),
                 req.amount(), req.currency(), req.description(), TransferStatus.COMPLETED, Instant.now());
-        when(idempotencyService.reserveKey(key, OperationType.TRANSFER, "hash-123", TransferResponse.class))
+        when(idempotencyService.reserveKey(testUserId, key, OperationType.TRANSFER, "hash-123", TransferResponse.class))
                 .thenReturn(IdempotencyReservationResult.completed(cached));
 
-        TransferResponse result = transferService.transfer(key, req);
+        TransferResponse result = transferService.transfer(testUserId, key, req);
 
         assertThat(result).isSameAs(cached);
-        verify(transferExecutionService, never()).execute(any(), any(), any());
+        verify(transferExecutionService, never()).execute(any(), any(), any(), any());
     }
 
     @Test
-    @DisplayName("Should call transferExecutionService and execute transfer when key is new")
+    @DisplayName("Should execute transfer and return response when key is new")
     void shouldExecuteTransferWhenKeyIsNew() {
         String key = "test-key";
         UUID ownerToken = UUID.randomUUID();
         CreateTransferRequest req = new CreateTransferRequest(
                 UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.00"), "INR", "Test");
 
-        when(idempotencyService.computeTransferFingerprint(req)).thenReturn("hash-123");
-        when(idempotencyService.reserveKey(key, OperationType.TRANSFER, "hash-123", TransferResponse.class))
+        when(idempotencyService.computeTransferFingerprint(testUserId, req)).thenReturn("hash-123");
+        when(idempotencyService.reserveKey(testUserId, key, OperationType.TRANSFER, "hash-123", TransferResponse.class))
                 .thenReturn(IdempotencyReservationResult.reserved(ownerToken));
 
         TransferResponse fresh = new TransferResponse(
                 UUID.randomUUID(), req.sourceWalletId(), req.destinationWalletId(),
                 req.amount(), req.currency(), req.description(), TransferStatus.COMPLETED, Instant.now());
-        when(transferExecutionService.execute(key, ownerToken, req)).thenReturn(fresh);
+        when(transferExecutionService.execute(testUserId, key, ownerToken, req)).thenReturn(fresh);
 
-        TransferResponse result = transferService.transfer(key, req);
+        TransferResponse result = transferService.transfer(testUserId, key, req);
 
         assertThat(result).isSameAs(fresh);
-        verify(transferExecutionService).execute(key, ownerToken, req);
+        verify(transferExecutionService).execute(testUserId, key, ownerToken, req);
     }
 
     @Test
-    @DisplayName("Should mark idempotency key as failed when execution throws exception")
+    @DisplayName("Should mark idempotency key as failed when execution fails")
     void shouldMarkFailedOnException() {
         String key = "test-key";
         UUID ownerToken = UUID.randomUUID();
         CreateTransferRequest req = new CreateTransferRequest(
                 UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.00"), "INR", "Test");
 
-        when(idempotencyService.computeTransferFingerprint(req)).thenReturn("hash-123");
-        when(idempotencyService.reserveKey(key, OperationType.TRANSFER, "hash-123", TransferResponse.class))
+        when(idempotencyService.computeTransferFingerprint(testUserId, req)).thenReturn("hash-123");
+        when(idempotencyService.reserveKey(testUserId, key, OperationType.TRANSFER, "hash-123", TransferResponse.class))
                 .thenReturn(IdempotencyReservationResult.reserved(ownerToken));
-        when(transferExecutionService.execute(key, ownerToken, req)).thenThrow(new RuntimeException("Simulated DB error"));
+        when(transferExecutionService.execute(testUserId, key, ownerToken, req)).thenThrow(new RuntimeException("Lock failure"));
 
-        assertThatThrownBy(() -> transferService.transfer(key, req))
+        assertThatThrownBy(() -> transferService.transfer(testUserId, key, req))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Simulated DB error");
+                .hasMessage("Lock failure");
 
-        verify(idempotencyService).markFailed(key, ownerToken);
+        verify(idempotencyService).markFailed(testUserId, key, ownerToken);
     }
 }
-

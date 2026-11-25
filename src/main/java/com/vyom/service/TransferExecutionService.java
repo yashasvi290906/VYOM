@@ -20,6 +20,7 @@ import com.vyom.repository.TransactionRepository;
 import com.vyom.repository.TransferRepository;
 import com.vyom.repository.WalletRepository;
 import com.vyom.util.ReferenceGenerator;
+import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
@@ -46,21 +47,27 @@ public class TransferExecutionService {
     private final TransactionRepository transactionRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
     private final IdempotencyService idempotencyService;
+    private final EntityManager entityManager;
 
     public TransferExecutionService(WalletRepository walletRepository,
                                     TransferRepository transferRepository,
                                     TransactionRepository transactionRepository,
                                     LedgerEntryRepository ledgerEntryRepository,
-                                    IdempotencyService idempotencyService) {
+                                    IdempotencyService idempotencyService,
+                                    EntityManager entityManager) {
         this.walletRepository = walletRepository;
         this.transferRepository = transferRepository;
         this.transactionRepository = transactionRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.idempotencyService = idempotencyService;
+        this.entityManager = entityManager;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public TransferResponse execute(UUID userId, String idempotencyKey, UUID ownerToken, CreateTransferRequest request) {
+        if (userId == null) {
+            throw new AccessDeniedException("Full authentication is required to execute a transfer");
+        }
         UUID sourceId = request.sourceWalletId();
         UUID destId = request.destinationWalletId();
         BigDecimal amount = request.amount().setScale(4);
@@ -74,6 +81,19 @@ public class TransferExecutionService {
         }
         if (request.currency() == null || request.currency().trim().isEmpty()) {
             throw new InvalidTransferException("Transfer currency is required");
+        }
+
+        // F35: Pre-lock ownership check: verify calling user owns source wallet BEFORE acquiring row locks
+        // Use scalar queries to avoid polluting the PersistenceContext with a stale managed entity
+        String sourceAccountType = walletRepository.findAccountTypeByWalletId(sourceId)
+                .orElseThrow(() -> new WalletNotFoundException(sourceId));
+        if ("SYSTEM_SETTLEMENT".equals(sourceAccountType) || "MERCHANT_PAYABLE".equals(sourceAccountType)) {
+            throw new InvalidTransferException("Settlement accounts cannot be used as a transfer source");
+        }
+        UUID sourceOwnerId = walletRepository.findUserIdByWalletId(sourceId).orElse(null);
+        if (sourceOwnerId == null || !sourceOwnerId.equals(userId)) {
+            log.warn("Access denied (pre-lock check): User {} does not own source wallet {}", userId, sourceId);
+            throw new AccessDeniedException("You do not own the source wallet");
         }
 
         // Direction A: Pre-generate transaction reference and timestamp outside the wallet-lock window
@@ -92,23 +112,24 @@ public class TransferExecutionService {
         Wallet secondWallet = walletRepository.findByIdForUpdate(secondLockId)
                 .orElseThrow(() -> new WalletNotFoundException(secondLockId));
 
+        entityManager.refresh(firstWallet);
+        entityManager.refresh(secondWallet);
+
         Wallet sourceWallet = firstWallet.getId().equals(sourceId) ? firstWallet : secondWallet;
         Wallet destWallet = firstWallet.getId().equals(destId) ? firstWallet : secondWallet;
 
-        // System settlement accounts cannot be used as transfer source or destination
-        if (sourceWallet.isSystemAccount()) {
-            throw new InvalidTransferException("System settlement accounts cannot be used as a transfer source");
+        // System and commercial settlement accounts cannot be used as transfer source or destination
+        if (sourceWallet.isSystemAccount() || sourceWallet.isMerchantPayableAccount()) {
+            throw new InvalidTransferException("Settlement accounts cannot be used as a transfer source");
         }
-        if (destWallet.isSystemAccount()) {
-            throw new InvalidTransferException("System settlement accounts cannot be used as a transfer destination");
+        if (destWallet.isSystemAccount() || destWallet.isMerchantPayableAccount()) {
+            throw new InvalidTransferException("Settlement accounts cannot be used as a transfer destination");
         }
 
-        // Ownership enforcement on source wallet
-        if (userId != null) {
-            if (sourceWallet.getUserId() == null || !sourceWallet.getUserId().equals(userId)) {
-                log.warn("Access denied: User {} does not own source wallet {}", userId, sourceId);
-                throw new AccessDeniedException("You do not own the source wallet");
-            }
+        // Post-lock defense-in-depth re-verification
+        if (sourceWallet.getUserId() == null || !sourceWallet.getUserId().equals(userId)) {
+            log.warn("Access denied: User {} does not own source wallet {}", userId, sourceId);
+            throw new AccessDeniedException("You do not own the source wallet");
         }
 
         // Currency validations
@@ -211,11 +232,6 @@ public class TransferExecutionService {
                 savedTransfer.getId(), savedTransaction.getReferenceNumber(), amount, sourceWallet.getCurrency(), sourceId, destId);
 
         return response;
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
-    public TransferResponse execute(String idempotencyKey, UUID ownerToken, CreateTransferRequest request) {
-        return execute(null, idempotencyKey, ownerToken, request);
     }
 }
 

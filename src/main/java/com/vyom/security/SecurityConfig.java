@@ -40,7 +40,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
@@ -52,9 +52,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/checkout/orders/**", "/api/v1/checkout/sessions/**").permitAll()
                         .requestMatchers("/health", "/actuator/health", "/actuator/health/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/transactions/*/reversal").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/disputes/*/resolve").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/**").authenticated()
                         .anyRequest().authenticated()

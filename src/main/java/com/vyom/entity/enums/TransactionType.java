@@ -4,5 +4,6 @@ public enum TransactionType {
     TRANSFER,
     FUNDING,
     REFUND,
-    REVERSAL
+    REVERSAL,
+    MERCHANT_PAYMENT
 }

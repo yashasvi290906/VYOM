@@ -52,6 +52,13 @@ public class Dispute {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
+    @Column(name = "resolved_by")
+    private UUID resolvedBy;
+
+    @jakarta.persistence.Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     public Dispute() {
     }
 
@@ -152,6 +159,22 @@ public class Dispute {
 
     public void setResolvedAt(Instant resolvedAt) {
         this.resolvedAt = resolvedAt;
+    }
+
+    public UUID getResolvedBy() {
+        return resolvedBy;
+    }
+
+    public void setResolvedBy(UUID resolvedBy) {
+        this.resolvedBy = resolvedBy;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     @Override

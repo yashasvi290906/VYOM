@@ -4,15 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vyom.dto.IdempotencyReservationResult;
 import com.vyom.dto.request.CreateTransferRequest;
 import com.vyom.dto.request.FundWalletRequest;
+import com.vyom.dto.response.IdempotencyStatusResponse;
 import com.vyom.entity.IdempotencyRecord;
 import com.vyom.entity.enums.IdempotencyStatus;
 import com.vyom.entity.enums.OperationType;
 import com.vyom.exception.IdempotencyConflictException;
 import com.vyom.repository.FundingRepository;
 import com.vyom.repository.IdempotencyRecordRepository;
+import com.vyom.repository.TransactionRepository;
 import com.vyom.repository.TransferRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -42,6 +45,7 @@ public class IdempotencyService {
     private final ObjectMapper objectMapper;
     private final Duration processingTimeout;
 
+    @Autowired
     public IdempotencyService(IdempotencyRecordRepository idempotencyRecordRepository,
                               TransferRepository transferRepository,
                               FundingRepository fundingRepository,
@@ -52,6 +56,15 @@ public class IdempotencyService {
         this.fundingRepository = fundingRepository;
         this.objectMapper = objectMapper;
         this.processingTimeout = Duration.ofSeconds(timeoutSeconds);
+    }
+
+    public IdempotencyService(IdempotencyRecordRepository idempotencyRecordRepository,
+                              TransferRepository transferRepository,
+                              FundingRepository fundingRepository,
+                              TransactionRepository transactionRepository,
+                              ObjectMapper objectMapper,
+                              long timeoutSeconds) {
+        this(idempotencyRecordRepository, transferRepository, fundingRepository, objectMapper, timeoutSeconds);
     }
 
     public Duration getProcessingTimeout() {
@@ -125,10 +138,51 @@ public class IdempotencyService {
         }
     }
 
+    public String computeMerchantPaymentFingerprint(UUID userId, String orderReference, UUID walletId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required and cannot be null");
+        }
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String raw = String.format("MERCHANT_PAYMENT:%s:%s:%s",
+                    userId,
+                    orderReference != null ? orderReference.trim() : "",
+                    walletId != null ? walletId.toString() : ""
+            );
+            byte[] hash = digest.digest(raw.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available in runtime", e);
+        }
+    }
+
+    public String computeOrderCreationFingerprint(UUID userId, UUID merchantId, String merchantOrderId, BigDecimal amount, String currency) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required and cannot be null");
+        }
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            BigDecimal normalizedAmount = amount != null
+                    ? amount.setScale(4, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+            String raw = String.format("ORDER_CREATION:%s:%s:%s:%s:%s",
+                    userId,
+                    merchantId,
+                    merchantOrderId != null ? merchantOrderId.trim() : "",
+                    normalizedAmount.toPlainString(),
+                    currency != null ? currency.toUpperCase().trim() : ""
+            );
+            byte[] hash = digest.digest(raw.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available in runtime", e);
+        }
+    }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public <T> IdempotencyReservationResult<T> reserveKey(UUID userId, String idempotencyKey, OperationType operationType, String fingerprint, Class<T> responseType) {
         if (userId == null) {
-            return reserveKey(idempotencyKey, operationType, fingerprint, responseType);
+            throw new IllegalArgumentException("userId is required and cannot be null");
         }
         UUID effectiveUserId = userId;
         Optional<IdempotencyRecord> existing = idempotencyRecordRepository.findByUserIdAndIdempotencyKey(effectiveUserId, idempotencyKey);
@@ -150,7 +204,7 @@ public class IdempotencyService {
                 log.warn("Idempotency key '{}' reused with different payload fingerprint for user {}. Existing: {}, New: {}",
                         idempotencyKey, effectiveUserId, record.getRequestFingerprint(), fingerprint);
                 throw new IdempotencyConflictException(String.format(
-                        "Idempotency key '%s' was already used for a different %s request",
+                        "Idempotency key '%s' was already used for a different %s request (has already been used with different request parameters)",
                         idempotencyKey, operationType.name().toLowerCase()));
             }
 
@@ -261,7 +315,7 @@ public class IdempotencyService {
                 log.warn("Idempotency key '{}' reused with different payload fingerprint. Existing: {}, New: {}",
                         idempotencyKey, record.getRequestFingerprint(), fingerprint);
                 throw new IdempotencyConflictException(String.format(
-                        "Idempotency key '%s' was already used for a different %s request",
+                        "Idempotency key '%s' was already used for a different %s request (has already been used with different request parameters)",
                         idempotencyKey, operationType.name().toLowerCase()));
             }
 
@@ -351,7 +405,7 @@ public class IdempotencyService {
             UUID fundingId = (operationType == OperationType.FUNDING) ? entityId : null;
 
             int updatedRows;
-            if (operationType == OperationType.REFUND || operationType == OperationType.REVERSAL) {
+            if (operationType == OperationType.REFUND || operationType == OperationType.REVERSAL || operationType == OperationType.MERCHANT_PAYMENT) {
                 updatedRows = idempotencyRecordRepository.completeTransactionWithFencingScoped(
                         DEFAULT_USER_ID,
                         idempotencyKey,
@@ -406,7 +460,7 @@ public class IdempotencyService {
             UUID fundingId = (operationType == OperationType.FUNDING) ? entityId : null;
 
             int updatedRows;
-            if (operationType == OperationType.REFUND || operationType == OperationType.REVERSAL) {
+            if (operationType == OperationType.REFUND || operationType == OperationType.REVERSAL || operationType == OperationType.MERCHANT_PAYMENT) {
                 updatedRows = idempotencyRecordRepository.completeTransactionWithFencingScoped(
                         effectiveUserId,
                         idempotencyKey,
@@ -471,5 +525,46 @@ public class IdempotencyService {
                 log.info("Idempotency key '{}' marked FAILED by owner token {} for user {}", idempotencyKey, ownerToken, userId);
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<IdempotencyStatusResponse> getStatus(UUID userId, String idempotencyKey) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required and cannot be null");
+        }
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("idempotencyKey is required and cannot be blank");
+        }
+        return idempotencyRecordRepository.findByUserIdAndIdempotencyKey(userId, idempotencyKey)
+                .map(record -> new IdempotencyStatusResponse(
+                        record.getIdempotencyKey(),
+                        record.getStatus(),
+                        record.getOperationType(),
+                        record.getResponseStatusCode(),
+                        record.getResponseBody(),
+                        record.getTransactionId() != null ? record.getTransactionId() :
+                                (record.getTransferId() != null ? record.getTransferId() : record.getFundingId()),
+                        record.getCreatedAt(),
+                        record.getUpdatedAt()
+                ));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<IdempotencyStatusResponse> getStatus(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("idempotencyKey is required and cannot be blank");
+        }
+        return idempotencyRecordRepository.findByIdempotencyKey(idempotencyKey)
+                .map(record -> new IdempotencyStatusResponse(
+                        record.getIdempotencyKey(),
+                        record.getStatus(),
+                        record.getOperationType(),
+                        record.getResponseStatusCode(),
+                        record.getResponseBody(),
+                        record.getTransactionId() != null ? record.getTransactionId() :
+                                (record.getTransferId() != null ? record.getTransferId() : record.getFundingId()),
+                        record.getCreatedAt(),
+                        record.getUpdatedAt()
+                ));
     }
 }

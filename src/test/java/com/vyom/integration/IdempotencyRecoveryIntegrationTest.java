@@ -47,7 +47,7 @@ public class IdempotencyRecoveryIntegrationTest extends BaseIntegrationTest {
         String key = UUID.randomUUID().toString();
 
         CreateTransferRequest req = new CreateTransferRequest(source.getId(), dest.getId(), new BigDecimal("50.0000"), "INR", "Test");
-        String fingerprint = idempotencyService.computeTransferFingerprint(req);
+        String fingerprint = idempotencyService.computeTransferFingerprint(DEFAULT_TEST_USER_ID, req);
 
         // Pre-insert an active PROCESSING record (updated 5 seconds ago)
         IdempotencyRecord active = new IdempotencyRecord(key, OperationType.TRANSFER, fingerprint, IdempotencyStatus.PROCESSING);
@@ -70,7 +70,7 @@ public class IdempotencyRecoveryIntegrationTest extends BaseIntegrationTest {
         String key = UUID.randomUUID().toString();
 
         CreateTransferRequest req = new CreateTransferRequest(source.getId(), dest.getId(), new BigDecimal("100.0000"), "INR", "Recovered transfer");
-        String fingerprint = idempotencyService.computeTransferFingerprint(req);
+        String fingerprint = idempotencyService.computeTransferFingerprint(DEFAULT_TEST_USER_ID, req);
 
         // Simulate a crashed server state: record was left in PROCESSING 10 minutes ago, no transfer committed
         IdempotencyRecord abandoned = new IdempotencyRecord(key, OperationType.TRANSFER, fingerprint, IdempotencyStatus.PROCESSING);

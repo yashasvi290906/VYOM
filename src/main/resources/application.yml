@@ -1,5 +1,6 @@
 server:
-  port: ${PORT:8080}
+  port: ${BACKEND_PORT:${SERVER_PORT:8080}}
+  address: ${SERVER_ADDRESS:127.0.0.1}
   shutdown: graceful
 
 spring:
@@ -8,8 +9,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payledger}?reWriteBatchedInserts=true
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:}
+    username: ${DB_USER:${SPRING_DATASOURCE_USERNAME:postgres}}
+    password: ${DB_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -37,6 +38,8 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     clean-disabled: true
+    user: ${DB_MIGRATION_USER:${FLYWAY_USER:${spring.datasource.username}}}
+    password: ${DB_MIGRATION_PASSWORD:${FLYWAY_PASSWORD:${spring.datasource.password}}}
 
   jackson:
     serialization:
@@ -56,7 +59,7 @@ management:
 
 vyom:
   jwt:
-    secret: ${JWT_SECRET:vyom-development-only-hmac-sha256-signing-secret-key-32-bytes-minimum}
+    secret: ${JWT_SECRET:}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
   admin:
     bootstrap:
@@ -74,5 +77,5 @@ vyom:
 logging:
   level:
     root: INFO
-    com.vyom: DEBUG
+    com.vyom: ${LOG_LEVEL_VYOM:INFO}
     org.hibernate.SQL: WARN

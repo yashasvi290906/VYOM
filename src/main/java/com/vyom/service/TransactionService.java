@@ -63,13 +63,27 @@ public class TransactionService {
             String reference,
             Pageable pageable) {
 
+        List<UUID> userWalletIds = walletRepository.findByUserId(userId).stream()
+                .map(Wallet::getId)
+                .toList();
+
         Specification<Transaction> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(cb.or(
+            Predicate userPartyPredicate = cb.or(
                     cb.equal(root.get("initiatorUserId"), userId),
                     cb.equal(root.get("recipientUserId"), userId)
-            ));
+            );
+
+            if (!userWalletIds.isEmpty()) {
+                Predicate walletPartyPredicate = cb.or(
+                        root.get("sourceWalletId").in(userWalletIds),
+                        root.get("destinationWalletId").in(userWalletIds)
+                );
+                predicates.add(cb.or(userPartyPredicate, walletPartyPredicate));
+            } else {
+                predicates.add(userPartyPredicate);
+            }
 
             if (type != null) {
                 predicates.add(cb.equal(root.get("transactionType"), type));
@@ -141,40 +155,91 @@ public class TransactionService {
         String activeDisputeRef = activeDispute.map(Dispute::getDisputeReference).orElse(null);
 
         // Fetch Parties
-        Wallet sourceWallet = walletRepository.findById(transaction.getSourceWalletId()).orElse(null);
-        Wallet destWallet = walletRepository.findById(transaction.getDestinationWalletId()).orElse(null);
+        Wallet sourceWallet = transaction.getSourceWalletId() != null 
+                ? walletRepository.findById(transaction.getSourceWalletId()).orElse(null) 
+                : null;
+        Wallet destWallet = transaction.getDestinationWalletId() != null 
+                ? walletRepository.findById(transaction.getDestinationWalletId()).orElse(null) 
+                : null;
 
+        User sourceOwnerUser = (sourceWallet != null && sourceWallet.getUserId() != null)
+                ? userRepository.findById(sourceWallet.getUserId()).orElse(null)
+                : null;
+        User destOwnerUser = (destWallet != null && destWallet.getUserId() != null)
+                ? userRepository.findById(destWallet.getUserId()).orElse(null)
+                : null;
         User initiatorUser = transaction.getInitiatorUserId() != null 
                 ? userRepository.findById(transaction.getInitiatorUserId()).orElse(null) 
                 : null;
-        User recipientUser = transaction.getRecipientUserId() != null 
-                ? userRepository.findById(transaction.getRecipientUserId()).orElse(null) 
-                : null;
 
-        boolean isSender = userId != null && userId.equals(transaction.getInitiatorUserId());
-        boolean isRecipient = userId != null && userId.equals(transaction.getRecipientUserId());
+        boolean isSender = userId != null && sourceWallet != null && userId.equals(sourceWallet.getUserId());
+        boolean isRecipient = userId != null && destWallet != null && userId.equals(destWallet.getUserId());
+        boolean isInitiator = userId != null && userId.equals(transaction.getInitiatorUserId());
 
-        // Masked Party Info for Sender
-        String senderName = initiatorUser != null ? initiatorUser.getFullName() : (sourceWallet != null ? sourceWallet.getOwnerName() : "System");
-        String senderEmail = initiatorUser != null ? initiatorUser.getEmail() : "";
+        // F13: Financial Sender attribution (debited party)
+        String senderName;
+        String senderEmail;
         String senderWalletIdStr = sourceWallet != null ? sourceWallet.getId().toString() : "";
+        boolean isSourceSystem = sourceWallet != null && sourceWallet.isSystemAccount();
+
+        if (isSourceSystem) {
+            senderName = "System Settlement Account";
+            senderEmail = "settlement@vyom.internal";
+        } else if (sourceOwnerUser != null) {
+            senderName = sourceOwnerUser.getFullName();
+            senderEmail = sourceOwnerUser.getEmail();
+        } else if (sourceWallet != null && sourceWallet.getOwnerName() != null) {
+            senderName = sourceWallet.getOwnerName();
+            senderEmail = "";
+        } else {
+            senderName = "System / Platform";
+            senderEmail = "";
+        }
 
         TransactionReceiptResponse.MaskedPartyInfo senderInfo = new TransactionReceiptResponse.MaskedPartyInfo(
-                isSender ? senderName : maskName(senderName),
-                isSender ? senderEmail : maskEmail(senderEmail),
-                isSender ? senderWalletIdStr : maskWalletId(sourceWallet != null ? sourceWallet.getId() : null)
+                (isSender || isSourceSystem) ? senderName : maskName(senderName),
+                (isSender || isSourceSystem) ? senderEmail : maskEmail(senderEmail),
+                (isSender || isSourceSystem) ? senderWalletIdStr : maskWalletId(sourceWallet != null ? sourceWallet.getId() : null)
         );
 
-        // Masked Party Info for Recipient
-        String destName = recipientUser != null ? recipientUser.getFullName() : (destWallet != null ? destWallet.getOwnerName() : "System");
-        String destEmail = recipientUser != null ? recipientUser.getEmail() : "";
+        // F13: Financial Recipient attribution (credited party)
+        String destName;
+        String destEmail;
         String destWalletIdStr = destWallet != null ? destWallet.getId().toString() : "";
+        boolean isDestSystem = destWallet != null && destWallet.isSystemAccount();
+
+        if (isDestSystem) {
+            destName = "System Settlement Account";
+            destEmail = "settlement@vyom.internal";
+        } else if (destOwnerUser != null) {
+            destName = destOwnerUser.getFullName();
+            destEmail = destOwnerUser.getEmail();
+        } else if (destWallet != null && destWallet.getOwnerName() != null) {
+            destName = destWallet.getOwnerName();
+            destEmail = "";
+        } else {
+            destName = "System / Platform";
+            destEmail = "";
+        }
 
         TransactionReceiptResponse.MaskedPartyInfo recipientInfo = new TransactionReceiptResponse.MaskedPartyInfo(
-                isRecipient ? destName : maskName(destName),
-                isRecipient ? destEmail : maskEmail(destEmail),
-                isRecipient ? destWalletIdStr : maskWalletId(destWallet != null ? destWallet.getId() : null)
+                (isRecipient || isDestSystem) ? destName : maskName(destName),
+                (isRecipient || isDestSystem) ? destEmail : maskEmail(destEmail),
+                (isRecipient || isDestSystem) ? destWalletIdStr : maskWalletId(destWallet != null ? destWallet.getId() : null)
         );
+
+        // F13: Operational Actor attribution (initiator/administrator)
+        TransactionReceiptResponse.MaskedPartyInfo operationalActorInfo = null;
+        if (initiatorUser != null) {
+            String actorName = initiatorUser.getFullName();
+            String actorEmail = initiatorUser.getEmail();
+            boolean showUnmasked = isInitiator || SecurityUtils.isCurrentUserAdmin();
+            operationalActorInfo = new TransactionReceiptResponse.MaskedPartyInfo(
+                    showUnmasked ? actorName : maskName(actorName),
+                    showUnmasked ? actorEmail : maskEmail(actorEmail),
+                    ""
+            );
+        }
 
         BigDecimal remainingRefundable = transaction.getAmount().subtract(transaction.getRefundedAmount());
 
@@ -190,6 +255,7 @@ public class TransactionService {
                 transaction.getDescription(),
                 senderInfo,
                 recipientInfo,
+                operationalActorInfo,
                 relatedReference,
                 activeDisputeStatus,
                 activeDisputeRef,
@@ -208,6 +274,15 @@ public class TransactionService {
         boolean isRecipient = userId.equals(transaction.getRecipientUserId());
         boolean isAdmin = SecurityUtils.isCurrentUserAdmin();
 
+        boolean ownsSourceWallet = transaction.getSourceWalletId() != null &&
+                walletRepository.findById(transaction.getSourceWalletId())
+                        .map(w -> userId.equals(w.getUserId()))
+                        .orElse(false);
+        boolean ownsDestWallet = transaction.getDestinationWalletId() != null &&
+                walletRepository.findById(transaction.getDestinationWalletId())
+                        .map(w -> userId.equals(w.getUserId()))
+                        .orElse(false);
+
         boolean isPartyToOriginal = false;
         if (transaction.getRelatedTransactionId() != null) {
             isPartyToOriginal = transactionRepository.findById(transaction.getRelatedTransactionId())
@@ -215,7 +290,7 @@ public class TransactionService {
                     .orElse(false);
         }
 
-        if (!isInitiator && !isRecipient && !isAdmin && !isPartyToOriginal) {
+        if (!isInitiator && !isRecipient && !isAdmin && !isPartyToOriginal && !ownsSourceWallet && !ownsDestWallet) {
             throw new AccessDeniedException("You do not have permission to access this transaction");
         }
     }

@@ -32,11 +32,8 @@ public class TransferController {
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");
         }
-        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
-        TransferResponse response = userId != null 
-                ? transferService.transfer(userId, idempotencyKey, request) 
-                : transferService.transfer(idempotencyKey, request);
+        UUID userId = SecurityUtils.getCurrentUserId();
+        TransferResponse response = transferService.transfer(userId, idempotencyKey, request);
         return ResponseEntity.ok(response);
     }
 }
-

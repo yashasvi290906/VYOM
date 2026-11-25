@@ -13,6 +13,7 @@ describe('VYOM API Gateway Tests', () => {
   let gatewayPort;
   let gatewayBaseUrl;
   let lastBackendRequest = null;
+  let actuatorHealthResponse = { status: 200, body: { status: 'UP' } };
 
   before(async () => {
     // 1. Start mock Spring Boot backend server on an ephemeral port
@@ -26,6 +27,24 @@ describe('VYOM API Gateway Tests', () => {
           headers: req.headers,
           body: body ? JSON.parse(body) : null
         };
+
+        if (req.url === '/actuator/health') {
+          res.writeHead(actuatorHealthResponse.status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(actuatorHealthResponse.body));
+          return;
+        }
+
+        if (req.url.startsWith('/api/v1/idempotency/status/')) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            idempotencyKey: req.url.split('/').pop(),
+            status: 'COMPLETED',
+            statusCode: 200,
+            createdAt: '2026-11-19T00:00:00Z',
+            completedAt: '2026-11-19T00:00:01Z'
+          }));
+          return;
+        }
 
         if (req.url === '/api/v1/wallets' && req.method === 'POST') {
           res.writeHead(201, { 'Content-Type': 'application/json' });
@@ -125,6 +144,25 @@ describe('VYOM API Gateway Tests', () => {
     assert.strictEqual(body.gateway, 'UP');
     assert.ok(body.backend);
     assert.ok(body.timestamp);
+  });
+
+  test('F38: Security headers are correctly set on responses', async () => {
+    const res = await fetch(`${gatewayBaseUrl}/health`);
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.headers.get('x-frame-options'), 'DENY');
+    assert.strictEqual(res.headers.get('x-content-type-options'), 'nosniff');
+    assert.strictEqual(res.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    assert.ok(res.headers.get('content-security-policy').includes("default-src 'self'"));
+    assert.ok(res.headers.get('permissions-policy').includes('camera=()'));
+    // Over plain HTTP without TLS proxy, HSTS must not be set (F10)
+    assert.strictEqual(res.headers.get('strict-transport-security'), null);
+
+    // Over TLS terminated reverse proxy (X-Forwarded-Proto: https), HSTS must be set (F10)
+    const httpsRes = await fetch(`${gatewayBaseUrl}/health`, {
+      headers: { 'X-Forwarded-Proto': 'https' }
+    });
+    assert.strictEqual(httpsRes.status, 200);
+    assert.strictEqual(httpsRes.headers.get('strict-transport-security'), 'max-age=31536000; includeSubDomains');
   });
 
   test('Serving static frontend assets: GET / serves index.html', async () => {
@@ -438,5 +476,166 @@ describe('VYOM API Gateway Tests', () => {
     assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
     assert.strictEqual(lastBackendRequest.body.reasonCode, 'UNAUTHORIZED_CHARGE');
     assert.strictEqual(lastBackendRequest.body.description, 'Unauthorized payment attempt');
+  });
+
+  test('F05: Forwarding GET /api/v1/idempotency/status/:key through gateway with Authorization', async () => {
+    const key = 'test-idemp-status-key-1234';
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/idempotency/status/${key}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer test-jwt-token-12345'
+      }
+    });
+
+    assert.strictEqual(res.status, 200);
+    const body = await res.json();
+    assert.strictEqual(body.status, 'COMPLETED');
+    assert.strictEqual(body.idempotencyKey, key);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/idempotency/status/${key}`);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+  });
+
+  test('F19: GET /health strictly fails with 503 when actuator returns 401, 404, or non-UP status', async () => {
+    try {
+      // 1. Actuator returns 401 Unauthorized
+      actuatorHealthResponse = { status: 401, body: { error: 'Unauthorized' } };
+      let res = await fetch(`${gatewayBaseUrl}/health`);
+      assert.strictEqual(res.status, 503);
+      let body = await res.json();
+      assert.strictEqual(body.status, 'DOWN');
+      assert.strictEqual(body.backend, 'HTTP_401');
+
+      // 2. Actuator returns 404 Not Found
+      actuatorHealthResponse = { status: 404, body: { error: 'Not Found' } };
+      res = await fetch(`${gatewayBaseUrl}/health`);
+      assert.strictEqual(res.status, 503);
+      body = await res.json();
+      assert.strictEqual(body.status, 'DOWN');
+      assert.strictEqual(body.backend, 'HTTP_404');
+
+      // 3. Actuator returns 200 with DOWN payload
+      actuatorHealthResponse = { status: 200, body: { status: 'DOWN', components: {} } };
+      res = await fetch(`${gatewayBaseUrl}/health`);
+      assert.strictEqual(res.status, 503);
+      body = await res.json();
+      assert.strictEqual(body.status, 'DOWN');
+      assert.strictEqual(body.backend, 'DOWN');
+
+      // 4. Actuator returns 200 with OUT_OF_SERVICE payload
+      actuatorHealthResponse = { status: 200, body: { status: 'OUT_OF_SERVICE' } };
+      res = await fetch(`${gatewayBaseUrl}/health`);
+      assert.strictEqual(res.status, 503);
+      body = await res.json();
+      assert.strictEqual(body.status, 'DOWN');
+      assert.strictEqual(body.backend, 'OUT_OF_SERVICE');
+    } finally {
+      // Restore healthy response
+      actuatorHealthResponse = { status: 200, body: { status: 'UP' } };
+    }
+  });
+
+  test('Forwarding POST /api/v1/merchants through gateway', async () => {
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/merchants`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-jwt-token-12345'
+      },
+      body: JSON.stringify({
+        displayName: 'Acme Supermart',
+        legalName: 'Acme Supermart Private Limited',
+        businessType: 'PRIVATE_LIMITED',
+        category: 'RETAIL',
+        registrationEmail: 'acme@example.com',
+        businessPhone: '+919876543210',
+        streetAddress: '123 MG Road',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        postalCode: '560001',
+        country: 'IND'
+      })
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, '/api/v1/merchants');
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+    assert.strictEqual(lastBackendRequest.body.displayName, 'Acme Supermart');
+  });
+
+  test('Forwarding GET /api/v1/merchants/my through gateway', async () => {
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/merchants/my`, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer test-jwt-token-12345'
+      }
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, '/api/v1/merchants/my');
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+  });
+
+  test('Forwarding POST /api/v1/admin/merchants/:id/approve through gateway', async () => {
+    const merchantId = '88888888-8888-8888-8888-888888888888';
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/admin/merchants/${merchantId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer admin-jwt-token-admin'
+      }
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/admin/merchants/${merchantId}/approve`);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer admin-jwt-token-admin');
+  });
+
+  test('Forwarding POST /api/v1/merchants/:id/orders through gateway', async () => {
+    const merchantId = '88888888-8888-8888-8888-888888888888';
+    const res = await fetch(`${gatewayBaseUrl}/api/v1/merchants/${merchantId}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-jwt-token-12345',
+        'Idempotency-Key': 'order-create-idemp-1'
+      },
+      body: JSON.stringify({
+        merchantOrderId: 'INV-1001',
+        amount: '500.0000',
+        currency: 'INR',
+        description: 'Store Purchase'
+      })
+    });
+
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/merchants/${merchantId}/orders`);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer test-jwt-token-12345');
+    assert.strictEqual(lastBackendRequest.headers['idempotency-key'], 'order-create-idemp-1');
+    assert.strictEqual(lastBackendRequest.body.merchantOrderId, 'INV-1001');
+  });
+
+  test('Forwarding GET /api/v1/checkout/orders/:ref and POST /pay through gateway', async () => {
+    const orderRef = 'ORD-20261121-ABCD';
+    const getRes = await fetch(`${gatewayBaseUrl}/api/v1/checkout/orders/${orderRef}`, {
+      method: 'GET'
+    });
+    assert.strictEqual(getRes.status, 200);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/checkout/orders/${orderRef}`);
+
+    const payRes = await fetch(`${gatewayBaseUrl}/api/v1/checkout/orders/${orderRef}/pay`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer customer-jwt-token-1',
+        'Idempotency-Key': 'checkout-pay-idemp-1'
+      },
+      body: JSON.stringify({
+        customerWalletId: '11111111-1111-1111-1111-111111111111'
+      })
+    });
+    assert.strictEqual(payRes.status, 200);
+    assert.strictEqual(lastBackendRequest.url, `/api/v1/checkout/orders/${orderRef}/pay`);
+    assert.strictEqual(lastBackendRequest.headers['authorization'], 'Bearer customer-jwt-token-1');
+    assert.strictEqual(lastBackendRequest.headers['idempotency-key'], 'checkout-pay-idemp-1');
+    assert.strictEqual(lastBackendRequest.body.customerWalletId, '11111111-1111-1111-1111-111111111111');
   });
 });

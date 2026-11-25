@@ -23,12 +23,20 @@ function calculatePercentiles(latencies) {
 }
 
 async function loginUser(baseUrl) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@vyom.internal';
+  const adminPassword = process.env.ADMIN_PASSWORD || process.env.VYOM_ADMIN_BOOTSTRAP_PASSWORD;
+  if (!adminPassword) {
+    throw new Error('ADMIN_PASSWORD or VYOM_ADMIN_BOOTSTRAP_PASSWORD environment variable must be set.');
+  }
   const res = await fetch(`${baseUrl}/api/v1/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'admin@vyom.internal', password: 'AdminSecret123!' })
+    body: JSON.stringify({ email: adminEmail, password: adminPassword })
   });
   const data = await res.json();
+  if (!res.ok || !data.token) {
+    throw new Error(`Admin login failed: ${res.status} ${JSON.stringify(data)}`);
+  }
   return data.token;
 }
 

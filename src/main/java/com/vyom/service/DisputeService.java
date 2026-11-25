@@ -43,7 +43,8 @@ public class DisputeService {
 
     @Transactional
     public DisputeResponse createDispute(UUID userId, UUID transactionId, CreateDisputeRequest request) {
-        Transaction transaction = transactionRepository.findById(transactionId)
+        // F14: Acquire pessimistic row lock on Transaction to prevent racing against reversals
+        Transaction transaction = transactionRepository.findByIdForUpdate(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException(transactionId));
 
         if (userId == null) {
@@ -110,15 +111,28 @@ public class DisputeService {
         if (!SecurityUtils.isCurrentUserAdmin()) {
             throw new AccessDeniedException("Only an administrator can resolve disputes");
         }
-        Dispute dispute = disputeRepository.findById(disputeId)
+        // F14: Acquire pessimistic row lock on Dispute to serialize concurrent resolution attempts
+        Dispute dispute = disputeRepository.findByIdForUpdate(disputeId)
                 .orElseThrow(() -> new IllegalArgumentException("Dispute not found: " + disputeId));
 
+        if (dispute.getStatus() == DisputeStatus.RESOLVED_UPHELD
+                || dispute.getStatus() == DisputeStatus.RESOLVED_REJECTED
+                || dispute.getStatus() == DisputeStatus.CANCELLED) {
+            throw new IllegalStateException("Dispute is already resolved and in terminal status: " + dispute.getStatus());
+        }
+
+        if (request.status() != DisputeStatus.RESOLVED_UPHELD && request.status() != DisputeStatus.RESOLVED_REJECTED) {
+            throw new IllegalArgumentException("Target resolution status must be RESOLVED_UPHELD or RESOLVED_REJECTED");
+        }
+
+        UUID adminId = SecurityUtils.getCurrentUserId();
         dispute.setStatus(request.status());
-        dispute.setResolutionNotes(request.resolutionNotes());
+        dispute.setResolutionNotes(request.resolutionNotes() != null ? request.resolutionNotes().trim() : "Resolved by admin");
         dispute.setResolvedAt(Instant.now());
+        dispute.setResolvedBy(adminId);
 
         Dispute saved = disputeRepository.save(dispute);
-        log.info("Dispute {} resolved with status: {}", saved.getDisputeReference(), saved.getStatus());
+        log.info("Dispute {} resolved with status: {} by admin {}", saved.getDisputeReference(), saved.getStatus(), adminId);
 
         return DisputeResponse.from(saved);
     }

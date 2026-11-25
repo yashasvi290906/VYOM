@@ -1,0 +1,40 @@
+# VYOM Production Caddy Reverse Proxy Configuration (F10, F09)
+# Automatic TLS with Let's Encrypt / ZeroSSL
+
+vyom.internal, pay.vyom.internal {
+    # Automatic HTTPS redirection and certificate management
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Reverse proxy to Express API Gateway
+    reverse_proxy 127.0.0.1:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        
+        # Health check and connection timeouts
+        transport http {
+            dial_timeout 5s
+            response_header_timeout 30s
+        }
+    }
+
+    # Request limits
+    request_body {
+        max_size 5MB
+    }
+
+    log {
+        output file /var/log/caddy/vyom.log {
+            roll_size 50mb
+            roll_keep 5
+        }
+    }
+}

@@ -3,23 +3,22 @@ const router = express.Router();
 const backendClient = require('../services/backendClient');
 const config = require('../config');
 
-// Health endpoint
+// Health endpoint (F19: Strict probe requiring HTTP 200 and status: UP from Spring Boot actuator)
 router.get('/health', async (req, res) => {
   let backendStatus = 'UNKNOWN';
   try {
     const probe = await fetch(`${config.backendBaseUrl}/actuator/health`, {
       method: 'GET',
       signal: AbortSignal.timeout(2000)
-    }).catch(async () => {
-      // Fallback probe to /api/v1/wallets/00000000-0000-0000-0000-000000000000
-      return fetch(`${config.backendBaseUrl}/api/v1/wallets/00000000-0000-0000-0000-000000000000`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(2000)
-      });
     });
 
-    if (probe && (probe.status === 200 || probe.status === 401 || probe.status === 404)) {
-      backendStatus = 'UP';
+    if (probe && probe.status === 200) {
+      const data = await probe.json().catch(() => null);
+      if (data && data.status === 'UP') {
+        backendStatus = 'UP';
+      } else {
+        backendStatus = data && data.status ? data.status : 'NON_UP_PAYLOAD';
+      }
     } else if (probe) {
       backendStatus = `HTTP_${probe.status}`;
     }
@@ -131,6 +130,127 @@ router.get('/api/v1/disputes/:id', (req, res) => {
 
 router.patch('/api/v1/disputes/:id/resolve', (req, res) => {
   return handleForward(req, res, `/api/v1/disputes/${encodeURIComponent(req.params.id)}/resolve`, { method: 'PATCH' });
+});
+
+// 8. Idempotency & In-Flight Status (F05)
+router.get('/api/v1/idempotency/status/:key', (req, res) => {
+  return handleForward(req, res, `/api/v1/idempotency/status/${encodeURIComponent(req.params.key)}`, { method: 'GET' });
+});
+
+// 9. Merchant Ecosystem (Phase 1)
+router.post('/api/v1/merchants', (req, res) => {
+  return handleForward(req, res, '/api/v1/merchants', { method: 'POST' });
+});
+
+router.get('/api/v1/merchants/me', (req, res) => {
+  return handleForward(req, res, '/api/v1/merchants/me', { method: 'GET' });
+});
+
+router.get('/api/v1/merchants/:id', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}`, { method: 'GET' });
+});
+
+router.patch('/api/v1/merchants/:id/profile', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/profile`, { method: 'PATCH' });
+});
+
+router.post('/api/v1/merchants/:id/submit', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/submit`, { method: 'POST' });
+});
+
+router.get('/api/v1/merchants/:id/audit-logs', (req, res) => {
+  const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/audit-logs${query}`, { method: 'GET' });
+});
+
+router.get('/api/v1/merchants/:id/members', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/members`, { method: 'GET' });
+});
+
+router.post('/api/v1/merchants/:id/members', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/members`, { method: 'POST' });
+});
+
+router.patch('/api/v1/merchants/:id/members/:mId', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/members/${encodeURIComponent(req.params.mId)}`, { method: 'PATCH' });
+});
+
+router.delete('/api/v1/merchants/:id/members/:mId', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/members/${encodeURIComponent(req.params.mId)}`, { method: 'DELETE' });
+});
+
+// 10. Admin Merchant Review
+router.get('/api/v1/admin/merchants', (req, res) => {
+  const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return handleForward(req, res, `/api/v1/admin/merchants${query}`, { method: 'GET' });
+});
+
+router.get('/api/v1/admin/merchants/:id', (req, res) => {
+  return handleForward(req, res, `/api/v1/admin/merchants/${encodeURIComponent(req.params.id)}`, { method: 'GET' });
+});
+
+router.post('/api/v1/admin/merchants/:id/approve', (req, res) => {
+  return handleForward(req, res, `/api/v1/admin/merchants/${encodeURIComponent(req.params.id)}/approve`, { method: 'POST' });
+});
+
+router.post('/api/v1/admin/merchants/:id/reject', (req, res) => {
+  return handleForward(req, res, `/api/v1/admin/merchants/${encodeURIComponent(req.params.id)}/reject`, { method: 'POST' });
+});
+
+router.post('/api/v1/admin/merchants/:id/suspend', (req, res) => {
+  return handleForward(req, res, `/api/v1/admin/merchants/${encodeURIComponent(req.params.id)}/suspend`, { method: 'POST' });
+});
+
+router.post('/api/v1/admin/merchants/:id/reactivate', (req, res) => {
+  return handleForward(req, res, `/api/v1/admin/merchants/${encodeURIComponent(req.params.id)}/reactivate`, { method: 'POST' });
+});
+
+// 11. Merchant Commercial Payment Orders (Phase 2.1)
+router.post('/api/v1/merchants/:id/orders', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/orders`, { method: 'POST' });
+});
+
+router.get('/api/v1/merchants/:id/orders', (req, res) => {
+  const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/orders${query}`, { method: 'GET' });
+});
+
+router.get('/api/v1/merchants/:id/orders/:orderId', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/orders/${encodeURIComponent(req.params.orderId)}`, { method: 'GET' });
+});
+
+router.post('/api/v1/merchants/:id/orders/:orderId/cancel', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/orders/${encodeURIComponent(req.params.orderId)}/cancel`, { method: 'POST' });
+});
+
+router.get('/api/v1/merchants/:id/orders/:orderId/attempts', (req, res) => {
+  return handleForward(req, res, `/api/v1/merchants/${encodeURIComponent(req.params.id)}/orders/${encodeURIComponent(req.params.orderId)}/attempts`, { method: 'GET' });
+});
+
+// 12. Checkout & Consumer Payments (Phase 2.1)
+router.get('/api/v1/checkout/orders/:ref', (req, res) => {
+  return handleForward(req, res, `/api/v1/checkout/orders/${encodeURIComponent(req.params.ref)}`, { method: 'GET' });
+});
+
+router.post('/api/v1/checkout/orders/:ref/pay', (req, res) => {
+  return handleForward(req, res, `/api/v1/checkout/orders/${encodeURIComponent(req.params.ref)}/pay`, { method: 'POST' });
+});
+
+router.get('/api/v1/checkout/sessions/:token', (req, res) => {
+  return handleForward(req, res, `/api/v1/checkout/sessions/${encodeURIComponent(req.params.token)}`, { method: 'GET' });
+});
+
+router.post('/api/v1/checkout/sessions/:token/pay', (req, res) => {
+  return handleForward(req, res, `/api/v1/checkout/sessions/${encodeURIComponent(req.params.token)}/pay`, { method: 'POST' });
+});
+
+router.get('/api/v1/checkout/receipts/:ref', (req, res) => {
+  return handleForward(req, res, `/api/v1/checkout/receipts/${encodeURIComponent(req.params.ref)}`, { method: 'GET' });
+});
+
+router.get('/api/v1/checkout/my-payments', (req, res) => {
+  const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  return handleForward(req, res, `/api/v1/checkout/my-payments${query}`, { method: 'GET' });
 });
 
 module.exports = router;

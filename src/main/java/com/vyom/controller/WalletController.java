@@ -41,10 +41,8 @@ public class WalletController {
 
     @PostMapping
     public ResponseEntity<WalletResponse> createWallet(@Valid @RequestBody CreateWalletRequest request) {
-        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
-        WalletResponse response = userId != null 
-                ? walletService.createWallet(userId, request) 
-                : walletService.createWallet(request);
+        UUID userId = SecurityUtils.getCurrentUserId();
+        WalletResponse response = walletService.createWallet(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -57,10 +55,8 @@ public class WalletController {
 
     @GetMapping("/{walletId}")
     public ResponseEntity<WalletResponse> getWallet(@PathVariable UUID walletId) {
-        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
-        WalletResponse response = userId != null 
-                ? walletService.getWallet(walletId, userId) 
-                : walletService.getWallet(walletId);
+        UUID userId = SecurityUtils.getCurrentUserId();
+        WalletResponse response = walletService.getWallet(walletId, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -72,10 +68,8 @@ public class WalletController {
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");
         }
-        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
-        FundingResponse response = userId != null 
-                ? fundingService.fundWallet(userId, idempotencyKey, walletId, request) 
-                : fundingService.fundWallet(idempotencyKey, walletId, request);
+        UUID userId = SecurityUtils.getCurrentUserId();
+        FundingResponse response = fundingService.fundWallet(userId, idempotencyKey, walletId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -88,11 +82,8 @@ public class WalletController {
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
 
-        UUID userId = SecurityUtils.getOptionalCurrentUserId().orElse(null);
-        PagedResponse<LedgerEntryResponse> response = userId != null 
-                ? walletService.getTransactionHistory(walletId, userId, pageable) 
-                : walletService.getTransactionHistory(walletId, pageable);
+        UUID userId = SecurityUtils.getCurrentUserId();
+        PagedResponse<LedgerEntryResponse> response = walletService.getTransactionHistory(walletId, userId, pageable);
         return ResponseEntity.ok(response);
     }
 }
-

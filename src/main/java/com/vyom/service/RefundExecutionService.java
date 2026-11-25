@@ -2,10 +2,12 @@ package com.vyom.service;
 
 import com.vyom.dto.request.CreateRefundRequest;
 import com.vyom.dto.response.RefundResponse;
+import com.vyom.entity.Dispute;
 import com.vyom.entity.LedgerEntry;
 import com.vyom.entity.Refund;
 import com.vyom.entity.Transaction;
 import com.vyom.entity.Wallet;
+import com.vyom.entity.enums.DisputeStatus;
 import com.vyom.entity.enums.EntryType;
 import com.vyom.entity.enums.OperationType;
 import com.vyom.entity.enums.RefundType;
@@ -16,6 +18,7 @@ import com.vyom.exception.InvalidTransferException;
 import com.vyom.exception.OverRefundException;
 import com.vyom.exception.TransactionNotFoundException;
 import com.vyom.exception.WalletNotFoundException;
+import com.vyom.repository.DisputeRepository;
 import com.vyom.repository.LedgerEntryRepository;
 import com.vyom.entity.User;
 import com.vyom.entity.enums.Role;
@@ -34,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -47,19 +51,22 @@ public class RefundExecutionService {
     private final LedgerEntryRepository ledgerEntryRepository;
     private final IdempotencyService idempotencyService;
     private final UserRepository userRepository;
+    private final DisputeRepository disputeRepository;
 
     public RefundExecutionService(TransactionRepository transactionRepository,
                                   WalletRepository walletRepository,
                                   RefundRepository refundRepository,
                                   LedgerEntryRepository ledgerEntryRepository,
                                   IdempotencyService idempotencyService,
-                                  UserRepository userRepository) {
+                                  UserRepository userRepository,
+                                  DisputeRepository disputeRepository) {
         this.transactionRepository = transactionRepository;
         this.walletRepository = walletRepository;
         this.refundRepository = refundRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.idempotencyService = idempotencyService;
         this.userRepository = userRepository;
+        this.disputeRepository = disputeRepository;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
@@ -68,6 +75,9 @@ public class RefundExecutionService {
         Transaction original = transactionRepository.findByIdForUpdate(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException(transactionId));
 
+        if (original.getTransactionType() == TransactionType.REFUND || original.getTransactionType() == TransactionType.REVERSAL) {
+            throw new IllegalStateException("Cannot refund a compensation transaction (REFUND or REVERSAL)");
+        }
         if (original.getStatus() == TransactionStatus.REVERSED) {
             throw new IllegalStateException("Cannot refund a reversed transaction");
         }
@@ -227,6 +237,9 @@ public class RefundExecutionService {
         Transaction original = transactionRepository.findByIdForUpdate(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException(transactionId));
 
+        if (original.getTransactionType() == TransactionType.REFUND || original.getTransactionType() == TransactionType.REVERSAL) {
+            throw new IllegalStateException("Cannot reverse a compensation transaction (REFUND or REVERSAL)");
+        }
         if (original.getStatus() == TransactionStatus.REVERSED) {
             throw new IllegalStateException("Transaction is already reversed");
         }
@@ -299,6 +312,20 @@ public class RefundExecutionService {
                 reason != null ? reason : "Administrative reversal"
         );
         Refund savedRefund = refundRepository.saveAndFlush(refund);
+
+        // 7b. Automatically resolve active dispute if present (F47)
+        List<Dispute> disputes = disputeRepository.findByTransactionId(original.getId());
+        for (Dispute dispute : disputes) {
+            if (dispute.getStatus() == DisputeStatus.OPEN || dispute.getStatus() == DisputeStatus.UNDER_REVIEW) {
+                dispute.setStatus(DisputeStatus.RESOLVED_UPHELD);
+                dispute.setResolvedBy(userId);
+                dispute.setResolvedAt(Instant.now());
+                dispute.setResolutionNotes("Automatically resolved upheld via administrative reversal " + savedChild.getReferenceNumber());
+                disputeRepository.save(dispute);
+                log.info("Dispute {} automatically transitioned to RESOLVED_UPHELD upon reversal of transaction {}",
+                        dispute.getDisputeReference(), original.getReferenceNumber());
+            }
+        }
 
         // 8. Record balanced compensating Ledger Entries
         LedgerEntry debitEntry = LedgerEntry.forTransaction(

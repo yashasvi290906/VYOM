@@ -124,6 +124,10 @@ function runReconciliation() {
   }).toString().trim();
 
   const lines = res.split('\n').filter(l => l.length > 0 && l.includes('|'));
+  if (lines.length !== 9) {
+    throw new Error(`Incomplete reconciliation run! Expected exactly 9 checks, but received ${lines.length}.`);
+  }
+
   const results = [];
   let allPassed = true;
 
@@ -517,14 +521,19 @@ async function loadUsers(engine, count = 30) {
 }
 
 async function getAdminToken(engine) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@vyom.internal';
+  const adminPassword = process.env.ADMIN_PASSWORD || process.env.VYOM_ADMIN_BOOTSTRAP_PASSWORD;
+  if (!adminPassword) {
+    throw new Error('ADMIN_PASSWORD or VYOM_ADMIN_BOOTSTRAP_PASSWORD environment variable must be set for telemetry collection.');
+  }
   const loginRes = await engine.executeRequest('/api/v1/auth/login', {
     method: 'POST',
-    body: { email: 'admin@vyom.internal', password: 'AdminSecret123!' }
+    body: { email: adminEmail, password: adminPassword }
   });
   if (loginRes.ok && loginRes.data && loginRes.data.token) {
     return loginRes.data.token;
   }
-  return null;
+  throw new Error(`Admin authentication failed for telemetry collection: ${loginRes.status} ${JSON.stringify(loginRes.data)}`);
 }
 
 function calculateSummaryStats(values) {

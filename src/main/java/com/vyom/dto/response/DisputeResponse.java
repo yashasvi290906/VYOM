@@ -16,7 +16,8 @@ public record DisputeResponse(
         String description,
         String resolutionNotes,
         Instant createdAt,
-        Instant resolvedAt
+        Instant resolvedAt,
+        UUID resolvedBy
 ) {
     public static DisputeResponse from(Dispute d) {
         return new DisputeResponse(
@@ -29,7 +30,8 @@ public record DisputeResponse(
                 d.getDescription(),
                 d.getResolutionNotes(),
                 d.getCreatedAt(),
-                d.getResolvedAt()
+                d.getResolvedAt(),
+                d.getResolvedBy()
         );
     }
 }

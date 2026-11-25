@@ -14,6 +14,11 @@ const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 const APP_URL = 'http://localhost:3000';
 const EVIDENCE_DIR = path.join(__dirname, '../../docs/evidence/phase5_1');
 const PSQL_PATH = 'D:\\Postgres\\bin\\psql.exe';
+const DB_NAME = process.env.E2E_DB_NAME || 'payledger_e2e_test';
+if (DB_NAME === 'payledger') {
+  console.error('[FATAL SAFETY GUARD] E2E test suite cannot run against production database payledger');
+  process.exit(1);
+}
 
 if (!fs.existsSync(EVIDENCE_DIR)) {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
@@ -21,7 +26,7 @@ if (!fs.existsSync(EVIDENCE_DIR)) {
 
 function runSql(sql) {
   try {
-    return execFileSync(PSQL_PATH, ['-U', 'postgres', '-d', 'payledger', '-t', '-A', '-c', sql], { encoding: 'utf8' }).trim();
+    return execFileSync(PSQL_PATH, ['-U', 'postgres', '-d', DB_NAME, '-t', '-A', '-c', sql], { encoding: 'utf8' }).trim();
   } catch (e) {
     console.error('SQL Execution Error:', e.message);
     throw e;
@@ -33,6 +38,7 @@ async function sleep(ms) {
 }
 
 (async () => {
+  let hasFatalError = false;
   console.log('================================================================');
   console.log('VYOM PHASE 5.1: INDEPENDENT SECURITY AUDIT & VERIFICATION SUITE');
   console.log('================================================================\n');
@@ -81,12 +87,19 @@ async function sleep(ms) {
     // Attempt 1: Try logging in with the old predictable default credentials (admin@vyom.internal / AdminPass123!)
     await page.type('#login-email', 'admin@vyom.internal');
     await page.type('#login-password', 'AdminPass123!');
-    await page.click('#btn-submit-login');
-    await sleep(1500);
 
+    // Intercept network response to prove actual HTTP 401
+    const [loginResponse] = await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/v1/auth/login') && r.request().method() === 'POST'),
+      page.click('#btn-submit-login')
+    ]);
+
+    const oldLoginStatus = loginResponse.status();
     const oldLoginErrorVisible = await page.evaluate(() => document.getElementById('login-error-alert').style.display !== 'none');
     const oldLoginErrorText = await page.evaluate(() => document.getElementById('login-error-alert').textContent);
-    recordStep('Admin Security', 'Old predictable admin credentials (AdminPass123!) are rejected with 401', oldLoginErrorVisible, oldLoginErrorText);
+    
+    assert.strictEqual(oldLoginStatus, 401, 'Old admin login must return HTTP 401');
+    recordStep('Admin Security', 'Old predictable admin credentials are rejected with confirmed HTTP 401', oldLoginStatus === 401 && oldLoginErrorVisible, `Status: ${oldLoginStatus}, Message: ${oldLoginErrorText}`);
     await page.screenshot({ path: path.join(EVIDENCE_DIR, '02_old_admin_login_rejected.png') });
 
     // Close and reopen modal
@@ -97,8 +110,11 @@ async function sleep(ms) {
     await sleep(400);
 
     // Attempt 2: Login with dynamically bootstrapped secure admin
-    const ADMIN_EMAIL = 'admin_audit@vyom.internal';
-    const ADMIN_PASS = 'AdminP@ssw0rd2026!';
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.ADMIN_BOOTSTRAP_EMAIL || 'admin_audit@vyom.internal';
+    const ADMIN_PASS = process.env.ADMIN_PASSWORD || process.env.ADMIN_BOOTSTRAP_PASSWORD || process.env.VYOM_ADMIN_BOOTSTRAP_PASSWORD;
+    if (!ADMIN_PASS) {
+      throw new Error('ADMIN_PASSWORD or ADMIN_BOOTSTRAP_PASSWORD environment variable required for E2E audit suite');
+    }
 
     await page.$eval('#login-email', el => el.value = '');
     await page.type('#login-email', ADMIN_EMAIL);
@@ -469,13 +485,20 @@ async function sleep(ms) {
     console.log('================================================================\n');
 
   } catch (err) {
+    hasFatalError = true;
     console.error('\n[FATAL] Error during E2E Audit Suite execution:', err);
-    await page.screenshot({ path: path.join(EVIDENCE_DIR, 'fatal_audit_error.png') });
+    try {
+      await page.screenshot({ path: path.join(EVIDENCE_DIR, 'fatal_audit_error.png') });
+    } catch {}
   } finally {
     await browser.close();
     fs.writeFileSync(
       path.join(EVIDENCE_DIR, 'audit_suite_results.json'),
       JSON.stringify(auditReport, null, 2)
     );
+    if (hasFatalError || auditReport.summary.failed > 0) {
+      console.error(`\n[EXIT] Exiting with status 1 due to failures (fatal: ${hasFatalError}, failed: ${auditReport.summary.failed})`);
+      process.exit(1);
+    }
   }
 })();

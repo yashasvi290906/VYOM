@@ -3,10 +3,13 @@ package com.vyom.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vyom.dto.request.CreateTransferRequest;
 import com.vyom.dto.response.TransferResponse;
+import com.vyom.entity.enums.Role;
 import com.vyom.entity.enums.TransferStatus;
 import com.vyom.repository.UserRepository;
 import com.vyom.security.JwtTokenService;
+import com.vyom.security.UserPrincipal;
 import com.vyom.service.TransferService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +17,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -46,6 +51,15 @@ public class TransferControllerTest {
     @MockBean
     private UserRepository userRepository;
 
+    private final UUID mockUserId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+    @BeforeEach
+    void setUpSecurity() {
+        UserPrincipal principal = new UserPrincipal(mockUserId, "test@vyom.internal", "Test User", "", Role.USER);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
     @Test
     @DisplayName("POST /api/v1/transfers should return 200 OK on successful transfer")
     void shouldReturn200OnSuccessfulTransfer() throws Exception {
@@ -55,7 +69,7 @@ public class TransferControllerTest {
         TransferResponse response = new TransferResponse(
                 transferId, source, dest, new BigDecimal("100.0000"), "INR", "Rent", TransferStatus.COMPLETED, Instant.now());
 
-        when(transferService.transfer(eq("key-123"), any(CreateTransferRequest.class))).thenReturn(response);
+        when(transferService.transfer(eq(mockUserId), eq("key-123"), any(CreateTransferRequest.class))).thenReturn(response);
 
         CreateTransferRequest request = new CreateTransferRequest(source, dest, new BigDecimal("100.0000"), "INR", "Rent");
 
@@ -82,4 +96,3 @@ public class TransferControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("INVALID_TRANSFER"));
     }
 }
-

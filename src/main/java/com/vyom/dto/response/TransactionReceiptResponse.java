@@ -24,6 +24,7 @@ public record TransactionReceiptResponse(
         String description,
         MaskedPartyInfo sender,
         MaskedPartyInfo recipient,
+        MaskedPartyInfo operationalActor,
         String relatedTransactionReference,
         DisputeStatus activeDisputeStatus,
         String activeDisputeReference,

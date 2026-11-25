@@ -39,16 +39,24 @@ WHERE w.account_type = 'SYSTEM_SETTLEMENT' AND (w.balance - COALESCE(sl.net, 0))
 
 -- Check 4: Over-Refunds (parent transaction refunded_amount matches child refund totals)
 SELECT 'Check 4: Parent vs Child Refund Totals' AS check_name, count(*) AS discrepancy_count
-FROM transactions p 
-LEFT JOIN transactions c ON c.related_transaction_id = p.id AND c.transaction_type = 'REFUND' AND c.status = 'SUCCESS'
-WHERE p.refunded_amount > 0 OR c.id IS NOT NULL
-GROUP BY p.id, p.refunded_amount HAVING (p.refunded_amount - COALESCE(SUM(c.amount), 0)) != 0;
+FROM (
+  SELECT p.id
+  FROM transactions p 
+  LEFT JOIN transactions c ON c.related_transaction_id = p.id AND c.transaction_type IN ('REFUND', 'REVERSAL') AND c.status = 'SUCCESS'
+  WHERE p.refunded_amount > 0 OR c.id IS NOT NULL
+  GROUP BY p.id, p.refunded_amount 
+  HAVING (p.refunded_amount - COALESCE(SUM(c.amount), 0)) != 0
+) sub;
 
 -- Check 5: Duplicate Reversals (at most 1 reversal per parent transaction)
 SELECT 'Check 5: Duplicate Successful Reversals' AS check_name, count(*) AS duplicate_count
-FROM transactions 
-WHERE transaction_type = 'REVERSAL' AND status = 'SUCCESS'
-GROUP BY related_transaction_id HAVING COUNT(*) > 1;
+FROM (
+  SELECT related_transaction_id
+  FROM transactions 
+  WHERE transaction_type = 'REVERSAL' AND status = 'SUCCESS'
+  GROUP BY related_transaction_id 
+  HAVING COUNT(*) > 1
+) sub;
 
 -- Check 6: Orphaned Ledger Entries
 SELECT 'Check 6: Orphaned Ledger Entries' AS check_name, count(*) AS orphan_count
@@ -66,11 +74,14 @@ FROM (
 
 -- Check 8: Transaction Journal Completeness (exactly 2 ledger entries per txn)
 SELECT 'Check 8: Transaction Journal Completeness' AS check_name, count(*) AS incomplete_count
-FROM transactions t 
-LEFT JOIN ledger_entries le ON le.transaction_id = t.id
-WHERE t.status = 'SUCCESS' 
-GROUP BY t.id 
-HAVING COUNT(le.id) != 2;
+FROM (
+  SELECT t.id
+  FROM transactions t 
+  LEFT JOIN ledger_entries le ON le.transaction_id = t.id
+  WHERE t.status = 'SUCCESS' 
+  GROUP BY t.id 
+  HAVING COUNT(le.id) != 2
+) sub;
 
 -- Check 9: Currency Association Integrity (entry currency matches wallet currency)
 SELECT 'Check 9: Currency Association Integrity' AS check_name, count(*) AS mismatch_count

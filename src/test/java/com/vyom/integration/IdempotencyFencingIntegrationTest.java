@@ -173,7 +173,7 @@ public class IdempotencyFencingIntegrationTest extends BaseIntegrationTest {
         String key = "expired-reclaim-" + UUID.randomUUID();
 
         CreateTransferRequest req = new CreateTransferRequest(source.getId(), dest.getId(), new BigDecimal("100.0000"), "INR", "Expired transfer");
-        String fingerprint = idempotencyService.computeTransferFingerprint(req);
+        String fingerprint = idempotencyService.computeTransferFingerprint(DEFAULT_TEST_USER_ID, req);
 
         // Insert abandoned record older than 120s with an initial owner token
         UUID oldOwnerToken = UUID.randomUUID();
@@ -222,7 +222,7 @@ public class IdempotencyFencingIntegrationTest extends BaseIntegrationTest {
                 startLatch.await();
                 try {
                     IdempotencyReservationResult<TransferResponse> result =
-                            idempotencyService.reserveKey(key, OperationType.TRANSFER, fingerprint, TransferResponse.class);
+                            idempotencyService.reserveKey(DEFAULT_TEST_USER_ID, key, OperationType.TRANSFER, fingerprint, TransferResponse.class);
                     if (!result.isCompleted() && result.ownerToken() != null) {
                         successReservations.incrementAndGet();
                     }
@@ -253,11 +253,11 @@ public class IdempotencyFencingIntegrationTest extends BaseIntegrationTest {
         String key = "fence-commit-" + UUID.randomUUID();
 
         CreateTransferRequest req = new CreateTransferRequest(source.getId(), dest.getId(), new BigDecimal("100.0000"), "INR", "Fenced transfer");
-        String fingerprint = idempotencyService.computeTransferFingerprint(req);
+        String fingerprint = idempotencyService.computeTransferFingerprint(DEFAULT_TEST_USER_ID, req);
 
         // Step 1: Request A reserves the key
         IdempotencyReservationResult<TransferResponse> reservationA =
-                idempotencyService.reserveKey(key, OperationType.TRANSFER, fingerprint, TransferResponse.class);
+                idempotencyService.reserveKey(DEFAULT_TEST_USER_ID, key, OperationType.TRANSFER, fingerprint, TransferResponse.class);
         assertThat(reservationA.isCompleted()).isFalse();
         UUID ownerTokenA = reservationA.ownerToken();
         assertThat(ownerTokenA).isNotNull();
@@ -276,7 +276,7 @@ public class IdempotencyFencingIntegrationTest extends BaseIntegrationTest {
         assertThat(sourceAfterB.getBalance()).isEqualByComparingTo(new BigDecimal("900.0000"));
 
         // Step 4: Request A wakes up and attempts to execute and commit using its stale ownerTokenA
-        assertThatThrownBy(() -> transferExecutionService.execute(key, ownerTokenA, req))
+        assertThatThrownBy(() -> transferExecutionService.execute(DEFAULT_TEST_USER_ID, key, ownerTokenA, req))
                 .isInstanceOf(IdempotencyConflictException.class)
                 .hasMessageContaining("Reservation ownership lost");
 

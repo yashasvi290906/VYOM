@@ -8,9 +8,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,11 +23,25 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "wallets")
-public class Wallet {
+public class Wallet implements Persistable<UUID> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Transient
+    private boolean isNew = true;
+
+    @Override
+    public boolean isNew() {
+        return isNew || id == null;
+    }
+
+    @PostLoad
+    @PostPersist
+    protected void markNotNew() {
+        this.isNew = false;
+    }
 
     @Column(name = "user_id")
     private UUID userId;
@@ -123,6 +141,10 @@ public class Wallet {
 
     public boolean isSystemAccount() {
         return this.accountType == AccountType.SYSTEM_SETTLEMENT;
+    }
+
+    public boolean isMerchantPayableAccount() {
+        return this.accountType == AccountType.MERCHANT_PAYABLE;
     }
 
     public String getOwnerName() {

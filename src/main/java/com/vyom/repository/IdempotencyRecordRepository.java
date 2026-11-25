@@ -2,6 +2,7 @@ package com.vyom.repository;
 
 import com.vyom.entity.IdempotencyRecord;
 import com.vyom.entity.enums.IdempotencyStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -105,6 +106,11 @@ public interface IdempotencyRecordRepository extends JpaRepository<IdempotencyRe
             "WHERE r.status = com.vyom.entity.enums.IdempotencyStatus.PROCESSING " +
             "  AND r.updatedAt < :staleThreshold")
     List<IdempotencyRecord> findAbandonedProcessingRecords(@Param("staleThreshold") Instant staleThreshold);
+
+    @Query("SELECT r FROM IdempotencyRecord r " +
+            "WHERE r.status = com.vyom.entity.enums.IdempotencyStatus.PROCESSING " +
+            "  AND r.updatedAt < :staleThreshold")
+    List<IdempotencyRecord> findAbandonedProcessingRecords(@Param("staleThreshold") Instant staleThreshold, Pageable pageable);
 
     // Fallback unscoped methods for compatibility
     @Modifying(flushAutomatically = true)

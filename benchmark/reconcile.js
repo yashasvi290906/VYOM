@@ -1,15 +1,22 @@
 const { execSync } = require('child_process');
 
 const PSQL_PATH = 'D:\\Postgres\\bin\\psql.exe';
-const DB_NAME = process.env.BENCHMARK_DB_NAME || 'payledger_benchmark';
+const args = process.argv.slice(2);
+const dbArgIdx = args.indexOf('--db');
+const DB_NAME = (dbArgIdx !== -1 && args[dbArgIdx + 1])
+  ? args[dbArgIdx + 1]
+  : (process.env.BENCHMARK_DB_NAME || 'payledger_benchmark');
 
 function runQuery(sql) {
-  const cmd = `"${PSQL_PATH}" -U postgres -d ${DB_NAME} -t -A -c "${sql.replace(/"/g, '\\"')}"`;
   try {
-    const output = execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    const output = execSync(`"${PSQL_PATH}" -U postgres -d ${DB_NAME} -t -A`, {
+      input: sql,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
     return output.trim();
   } catch (err) {
-    throw new Error(`Failed to execute reconciliation query: ${err.message}\nSQL: ${sql}`);
+    throw new Error(`RECONCILIATION QUERY EXECUTION ERROR on database '${DB_NAME}': ${err.message}\nSQL: ${sql}`);
   }
 }
 
@@ -17,6 +24,46 @@ function reconcile() {
   console.log(`\n======================================================`);
   console.log(`[RECONCILIATION] Running 9 Financial Checks on ${DB_NAME}`);
   console.log(`======================================================`);
+
+  // Fail-Closed Guard 1: Verify database connectivity and retrieve metadata
+  let dbInfo;
+  try {
+    dbInfo = runQuery('SELECT current_database(), current_user, version();');
+  } catch (err) {
+    console.error(`FATAL: Unable to connect to target database '${DB_NAME}': ${err.message}`);
+    process.exit(1);
+  }
+  const [dbName, dbUser, dbVer] = dbInfo.split('|');
+  console.log(`Target Database: ${dbName} (User: ${dbUser})`);
+
+  // Fail-Closed Guard 2: Verify database is populated with financial entities
+  const countsRaw = runQuery(`
+    SELECT 
+      (SELECT count(*) FROM wallets),
+      (SELECT count(*) FROM transactions),
+      (SELECT count(*) FROM ledger_entries),
+      (SELECT count(*) FROM fundings),
+      (SELECT count(*) FROM refunds),
+      (SELECT count(*) FROM disputes),
+      (SELECT count(*) FROM idempotency_records);
+  `);
+
+  const [wCount, txCount, leCount, fundCount, refCount, dispCount, idempCount] = countsRaw.split('|').map(v => parseInt(v.trim(), 10));
+
+  console.log(`Financial Dataset Inventory:`);
+  console.log(`  Wallets:            ${wCount}`);
+  console.log(`  Transactions:       ${txCount}`);
+  console.log(`  Ledger Entries:     ${leCount}`);
+  console.log(`  Fundings:           ${fundCount}`);
+  console.log(`  Refunds:            ${refCount}`);
+  console.log(`  Disputes:           ${dispCount}`);
+  console.log(`  Idempotency Records:${idempCount}`);
+
+  if (isNaN(wCount) || isNaN(leCount) || wCount === 0 || leCount === 0) {
+    console.error(`\n[FAIL-CLOSED] Target database '${DB_NAME}' contains insufficient records (Wallets: ${wCount}, Ledger: ${leCount}).`);
+    console.error(`Reconciliation cannot assert financial integrity on an empty or unpopulated dataset.`);
+    process.exit(1);
+  }
 
   const results = [];
 
@@ -69,7 +116,7 @@ function reconcile() {
   // 4. Over-Refunds: parent transaction refunded_amount matches child refund totals
   const q4 = `
     SELECT p.id || ' | disc=' || (p.refunded_amount - COALESCE(SUM(c.amount), 0))
-    FROM transactions p LEFT JOIN transactions c ON c.related_transaction_id = p.id AND c.transaction_type = 'REFUND' AND c.status = 'SUCCESS'
+    FROM transactions p LEFT JOIN transactions c ON c.related_transaction_id = p.id AND c.transaction_type IN ('REFUND', 'REVERSAL') AND c.status = 'SUCCESS'
     WHERE p.refunded_amount > 0 OR c.id IS NOT NULL
     GROUP BY p.id, p.refunded_amount HAVING (p.refunded_amount - COALESCE(SUM(c.amount), 0)) != 0;
   `;
@@ -90,7 +137,11 @@ function reconcile() {
     SELECT COUNT(*) FROM ledger_entries WHERE wallet_id NOT IN (SELECT id FROM wallets);
   `;
   const res6 = runQuery(q6);
-  const orphanCount = parseInt(res6, 10) || 0;
+  const orphanCount = parseInt(res6, 10);
+  if (isNaN(orphanCount)) {
+    console.error(`[FAIL-CLOSED] Query 6 returned non-integer result: "${res6}"`);
+    process.exit(1);
+  }
   results.push({ check: '6. Orphaned Ledger Entries', passed: orphanCount === 0, details: `Orphans: ${orphanCount}` });
 
   // 7. Idempotency Uniqueness
@@ -136,6 +187,11 @@ function reconcile() {
 module.exports = { reconcile, runQuery };
 
 if (require.main === module) {
-  const { allPassed } = reconcile();
-  process.exit(allPassed ? 0 : 1);
+  try {
+    const { allPassed } = reconcile();
+    process.exit(allPassed ? 0 : 1);
+  } catch (err) {
+    console.error(`FATAL RECONCILIATION FAILURE:`, err.message);
+    process.exit(1);
+  }
 }

@@ -359,4 +359,126 @@ public class AuthorizationSecurityTest extends BaseIntegrationTest {
         );
         assertThat(fundRes.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
+
+    @Test
+    @DisplayName("10. F33: Demoting an administrator revokes privileges immediately on existing unexpired token")
+    void demotingAdmin_revokesPrivilegesImmediately() {
+        Transaction txn = executeAliceToBobTransfer(new BigDecimal("100.0000"));
+
+        // Admin token works before demotion
+        // Demote admin in database to regular USER
+        admin.setRole(Role.USER);
+        userRepository.saveAndFlush(admin);
+
+        // Attempt administrative reversal with the existing admin token (which still has ADMIN in token claims)
+        ResponseEntity<ErrorResponse> revRes = restTemplate.exchange(
+                "/api/v1/transactions/" + txn.getId() + "/reversal",
+                HttpMethod.POST,
+                new HttpEntity<>(createHeaders(adminToken, UUID.randomUUID().toString())),
+                ErrorResponse.class
+        );
+
+        // Authoritative database check in JwtAuthenticationFilter must reject with 403 Forbidden
+        assertThat(revRes.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("11. F33: Deleted user token is immediately rejected as unauthenticated")
+    void deletedUserToken_rejectedImmediately() {
+        // Create a user with no wallets
+        User tempUser = new User("temp.deleted@vyom.internal", passwordEncoder.encode("Password123!"), "Temp User", Role.USER);
+        tempUser = userRepository.saveAndFlush(tempUser);
+        String tempToken = jwtTokenService.generateToken(tempUser.getId(), tempUser.getEmail(), tempUser.getFullName(), Role.USER);
+
+        // Delete user from DB
+        userRepository.delete(tempUser);
+        userRepository.flush();
+
+        // Attempt to access endpoints using the unexpired token of the deleted user
+        ResponseEntity<ErrorResponse> res = restTemplate.exchange(
+                "/api/v1/wallets",
+                HttpMethod.GET,
+                new HttpEntity<>(createHeaders(tempToken, null)),
+                ErrorResponse.class
+        );
+
+        // Filter cannot find user in DB -> unauthenticated -> 401 Unauthorized
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("12. F35: Transfer from unowned source wallet rejected by pre-lock ownership check")
+    void transferFromUnownedSource_rejectedPreLock() {
+        // Alice attempts to transfer funds out of Bob's wallet to Alice's wallet
+        CreateTransferRequest req = new CreateTransferRequest(
+                bobWallet.getId(), aliceWallet.getId(), new BigDecimal("50.0000"), "INR", "Malicious theft attempt");
+
+        ResponseEntity<ErrorResponse> res = restTemplate.exchange(
+                "/api/v1/transfers",
+                HttpMethod.POST,
+                new HttpEntity<>(req, createHeaders(aliceToken, UUID.randomUUID().toString())),
+                ErrorResponse.class
+        );
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(res.getBody()).isNotNull();
+        assertThat(res.getBody().message()).contains("You do not own the source wallet");
+    }
+
+    @Test
+    @DisplayName("13. User A accessing User B's dispute details returns 403 Forbidden")
+    void userCannotAccessOtherUserDisputeDetails() {
+        Transaction txn = executeAliceToBobTransfer(new BigDecimal("100.0000"));
+
+        // Alice (initiator) creates a dispute
+        CreateDisputeRequest disReq = new CreateDisputeRequest("INCORRECT_AMOUNT", "Charged incorrect amount");
+        ResponseEntity<DisputeResponse> createdRes = restTemplate.exchange(
+                "/api/v1/transactions/" + txn.getId() + "/disputes",
+                HttpMethod.POST,
+                new HttpEntity<>(disReq, createHeaders(aliceToken, null)),
+                DisputeResponse.class
+        );
+        assertThat(createdRes.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        UUID disputeId = createdRes.getBody().id();
+
+        // Charlie (unrelated third party) attempts to fetch Alice's dispute details
+        User charlie = new User("charlie.disp@vyom.internal", passwordEncoder.encode("Password123!"), "Charlie Dispute", Role.USER);
+        charlie = userRepository.saveAndFlush(charlie);
+        String charlieToken = jwtTokenService.generateToken(charlie.getId(), charlie.getEmail(), charlie.getFullName(), Role.USER);
+
+        ResponseEntity<ErrorResponse> getDisputeRes = restTemplate.exchange(
+                "/api/v1/disputes/" + disputeId,
+                HttpMethod.GET,
+                new HttpEntity<>(createHeaders(charlieToken, null)),
+                ErrorResponse.class
+        );
+        assertThat(getDisputeRes.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(getDisputeRes.getBody()).isNotNull();
+        assertThat(getDisputeRes.getBody().errorCode()).isEqualTo("ACCESS_DENIED");
+    }
+
+    @Test
+    @DisplayName("14. User A cannot view User B's idempotency status (returns 404 Not Found via scoped isolation)")
+    void userCannotAccessOtherUserIdempotencyStatus() {
+        String aliceKey = "alice-isolated-key-" + UUID.randomUUID();
+        CreateTransferRequest req = new CreateTransferRequest(
+                aliceWallet.getId(), bobWallet.getId(), new BigDecimal("10.0000"), "INR", "Idemp transfer");
+
+        ResponseEntity<TransferResponse> txRes = restTemplate.exchange(
+                "/api/v1/transfers",
+                HttpMethod.POST,
+                new HttpEntity<>(req, createHeaders(aliceToken, aliceKey)),
+                TransferResponse.class
+        );
+        assertThat(txRes.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Bob queries idempotency status with Alice's key -> 404 Not Found (user-scoped isolation)
+        ResponseEntity<String> statusRes = restTemplate.exchange(
+                "/api/v1/idempotency/status/" + aliceKey,
+                HttpMethod.GET,
+                new HttpEntity<>(createHeaders(bobToken, null)),
+                String.class
+        );
+        assertThat(statusRes.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
 }

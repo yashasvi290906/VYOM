@@ -307,4 +307,21 @@ class JwtTokenServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Configured JWT secret must be at least 32 bytes");
     }
+
+    @Test
+    @DisplayName("JWT-SEC: Reject token with non-HS256 algorithm (e.g. none or RS256)")
+    void shouldRejectTokenWithNonHs256Algorithm() {
+        String noneHeader = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"alg\":\"none\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+        String rsHeader = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"alg\":\"RS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+        
+        long exp = Instant.now().plusSeconds(3600).getEpochSecond();
+        String payload = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                ("{\"sub\":\"" + UUID.randomUUID() + "\",\"exp\":" + exp + "}").getBytes(StandardCharsets.UTF_8));
+
+        String tokenNone = noneHeader + "." + payload + ".dummySig";
+        String tokenRs = rsHeader + "." + payload + ".dummySig";
+
+        assertThat(jwtTokenService.validateToken(tokenNone)).isFalse();
+        assertThat(jwtTokenService.validateToken(tokenRs)).isFalse();
+    }
 }

@@ -134,16 +134,18 @@ class Phase43Profiler extends BenchmarkEngine {
     };
 
     const telemetrySamples = [];
-    const sampleInterval = setInterval(async () => {
-      try {
-        if (adminToken) {
-          const t = await this.fetchDetailedActuatorMetrics(adminToken);
-          telemetrySamples.push(t);
-        }
-      } catch {
-        // ignore
+    const sampleInterval = setInterval(() => {
+      if (adminToken) {
+        setImmediate(async () => {
+          try {
+            const t = await this.fetchDetailedActuatorMetrics(adminToken);
+            telemetrySamples.push(t);
+          } catch {
+            // ignore
+          }
+        });
       }
-    }, 2000);
+    }, 5000);
 
     const startTime = performance.now();
     const endTime = startTime + (durationSec * 1000);
@@ -446,9 +448,11 @@ async function seedUsers(engine, count = 30) {
 }
 
 async function getAdminToken(engine) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@vyom.internal';
+  const adminPassword = process.env.ADMIN_PASSWORD || process.env.VYOM_ADMIN_BOOTSTRAP_PASSWORD || 'AdminPass123!';
   const loginRes = await engine.executeRequest('/api/v1/auth/login', {
     method: 'POST',
-    body: { email: 'admin@vyom.internal', password: 'AdminSecret123!' }
+    body: { email: adminEmail, password: adminPassword }
   });
   if (loginRes.ok && loginRes.data && loginRes.data.token) {
     return loginRes.data.token;

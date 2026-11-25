@@ -4,5 +4,7 @@ public enum OperationType {
     TRANSFER,
     FUNDING,
     REFUND,
-    REVERSAL
+    REVERSAL,
+    MERCHANT_PAYMENT,
+    ORDER_CREATION
 }

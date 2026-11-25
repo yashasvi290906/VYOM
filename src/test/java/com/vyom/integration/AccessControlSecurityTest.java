@@ -50,6 +50,9 @@ public class AccessControlSecurityTest extends BaseIntegrationTest {
     @Autowired
     private RefundExecutionService refundExecutionService;
 
+    @Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
     private User alice;
     private User bob;
     private User charlie;
@@ -271,19 +274,29 @@ public class AccessControlSecurityTest extends BaseIntegrationTest {
             Wallet legSrc = createWallet(DEFAULT_TEST_USER_ID, "Leg Src", "INR", new BigDecimal("100.0000"));
             Wallet legDst = createWallet(DEFAULT_TEST_USER_ID, "Leg Dst", "INR", new BigDecimal("100.0000"));
 
-            Transaction legacyTxn = new Transaction(
-                    ReferenceGenerator.generateTransactionReference(),
-                    TransactionType.TRANSFER,
-                    TransactionStatus.SUCCESS,
-                    DEFAULT_TEST_USER_ID,
-                    DEFAULT_TEST_USER_ID,
-                    legSrc.getId(),
-                    legDst.getId(),
-                    new BigDecimal("50.0000"),
-                    "INR",
-                    "Legacy transfer"
-            );
-            legacyTxn = transactionRepository.saveAndFlush(legacyTxn);
+            Transaction legacyTxn = new org.springframework.transaction.support.TransactionTemplate(transactionManager).execute(status -> {
+                Transaction t = transactionRepository.save(new Transaction(
+                        ReferenceGenerator.generateTransactionReference(),
+                        TransactionType.TRANSFER,
+                        TransactionStatus.SUCCESS,
+                        DEFAULT_TEST_USER_ID,
+                        DEFAULT_TEST_USER_ID,
+                        legSrc.getId(),
+                        legDst.getId(),
+                        new BigDecimal("50.0000"),
+                        "INR",
+                        "Legacy transfer"
+                ));
+                LedgerEntry debit = LedgerEntry.forTransaction(
+                        t.getId(), legSrc.getId(), EntryType.DEBIT, new BigDecimal("50.0000"), new BigDecimal("50.0000")
+                );
+                LedgerEntry credit = LedgerEntry.forTransaction(
+                        t.getId(), legDst.getId(), EntryType.CREDIT, new BigDecimal("50.0000"), new BigDecimal("150.0000")
+                );
+                ledgerEntryRepository.save(debit);
+                ledgerEntryRepository.save(credit);
+                return t;
+            });
 
             // Ordinary user (Alice) attempting to view legacy transaction -> 403 Forbidden
             ResponseEntity<ErrorResponse> txRes = restTemplate.exchange(

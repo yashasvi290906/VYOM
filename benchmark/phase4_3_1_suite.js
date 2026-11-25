@@ -132,20 +132,22 @@ class Phase431Auditor extends BenchmarkEngine {
 
     const telemetrySamples = [];
     let isRunning = true;
-    const sampleInterval = setInterval(async () => {
+    const sampleInterval = setInterval(() => {
       if (!isRunning) return;
-      try {
-        if (adminToken) {
-          const t = await this.fetchActuatorMetrics(adminToken);
-          telemetrySamples.push(t);
-        }
-        if (onSample) {
-          onSample();
-        }
-      } catch {
-        // ignore sample error
+      if (adminToken) {
+        setImmediate(async () => {
+          try {
+            const t = await this.fetchActuatorMetrics(adminToken);
+            telemetrySamples.push(t);
+            if (onSample) {
+              onSample();
+            }
+          } catch {
+            // ignore sample error
+          }
+        });
       }
-    }, 1000);
+    }, 4000);
 
     const startTime = performance.now();
     const endTime = startTime + (durationSec * 1000);
@@ -433,14 +435,19 @@ async function seedUsers(engine, count = 30) {
 }
 
 async function getAdminToken(engine) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@vyom.internal';
+  const adminPassword = process.env.ADMIN_PASSWORD || process.env.VYOM_ADMIN_BOOTSTRAP_PASSWORD;
+  if (!adminPassword) {
+    throw new Error('ADMIN_PASSWORD or VYOM_ADMIN_BOOTSTRAP_PASSWORD environment variable must be set for Actuator telemetry.');
+  }
   const loginRes = await engine.executeRequest('/api/v1/auth/login', {
     method: 'POST',
-    body: { email: 'admin@vyom.internal', password: 'AdminSecret123!' }
+    body: { email: adminEmail, password: adminPassword }
   });
   if (loginRes.ok && loginRes.data && loginRes.data.token) {
     return loginRes.data.token;
   }
-  throw new Error('Could not acquire admin token for Actuator telemetry.');
+  throw new Error(`Could not acquire admin token for Actuator telemetry: ${loginRes.status} ${JSON.stringify(loginRes.data)}`);
 }
 
 function queryPostgresLockEvents() {

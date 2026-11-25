@@ -5,6 +5,21 @@
 
 const Api = (() => {
   let authToken = null;
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      authToken = sessionStorage.getItem('vyom_auth_token');
+    }
+  } catch (e) {
+    authToken = null;
+  }
+  let sessionAbortController = typeof AbortController !== 'undefined' ? new AbortController() : null;
+
+  function abortPendingRequests() {
+    if (sessionAbortController) {
+      sessionAbortController.abort();
+      sessionAbortController = new AbortController();
+    }
+  }
 
   // Generate RFC4122 v4 UUID
   function generateUuid() {
@@ -32,7 +47,8 @@ const Api = (() => {
 
     const fetchConfig = {
       method: options.method || 'GET',
-      headers
+      headers,
+      signal: options.signal || (sessionAbortController ? sessionAbortController.signal : undefined)
     };
 
     if (options.body) {
@@ -69,6 +85,18 @@ const Api = (() => {
         data
       };
     } catch (err) {
+      if (err.name === 'AbortError') {
+        return {
+          ok: false,
+          status: 0,
+          aborted: true,
+          error: {
+            status: 0,
+            errorCode: 'REQUEST_ABORTED',
+            message: 'Request was cancelled due to session switch or navigation'
+          }
+        };
+      }
       return {
         ok: false,
         status: 0,
@@ -84,16 +112,32 @@ const Api = (() => {
   return {
     generateUuid,
 
-    // Token management
+    // Token & Session management
     setToken(token) {
       authToken = token;
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          if (token) {
+            sessionStorage.setItem('vyom_auth_token', token);
+          } else {
+            sessionStorage.removeItem('vyom_auth_token');
+          }
+        }
+      } catch (e) {}
     },
     getToken() {
       return authToken;
     },
     clearToken() {
       authToken = null;
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('vyom_auth_token');
+        }
+      } catch (e) {}
+      abortPendingRequests();
     },
+    abortPendingRequests,
     isAuthenticated() {
       return !!authToken;
     },
@@ -208,10 +252,13 @@ const Api = (() => {
     },
 
     async reverseTransaction(transactionId, { reason, idempotencyKey } = {}) {
-      return request(`/api/v1/transactions/${encodeURIComponent(transactionId)}/reversal?reason=${encodeURIComponent(reason || 'Administrative reversal')}`, {
+      return request(`/api/v1/transactions/${encodeURIComponent(transactionId)}/reversal`, {
         method: 'POST',
         headers: {
           'Idempotency-Key': idempotencyKey || generateUuid()
+        },
+        body: {
+          reason: reason || 'Administrative reversal'
         }
       });
     },
@@ -237,6 +284,173 @@ const Api = (() => {
         method: 'PATCH',
         body: { status, resolutionNotes }
       });
+    },
+
+    // Idempotency status recovery (F05)
+    async getIdempotencyStatus(idempotencyKey) {
+      return request(`/api/v1/idempotency/status/${encodeURIComponent(idempotencyKey)}`);
+    },
+
+    // Merchant Ecosystem (Phase 1)
+    async createMerchant(data) {
+      return request('/api/v1/merchants', {
+        method: 'POST',
+        body: data
+      });
+    },
+
+    async getMyMerchants() {
+      return request('/api/v1/merchants/me');
+    },
+
+    async getMerchant(merchantId) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}`);
+    },
+
+    async updateMerchantProfile(merchantId, data) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/profile`, {
+        method: 'PATCH',
+        body: data
+      });
+    },
+
+    async submitMerchantApplication(merchantId) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/submit`, {
+        method: 'POST'
+      });
+    },
+
+    async getMerchantAuditLogs(merchantId, { page = 0, size = 20 } = {}) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/audit-logs?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`);
+    },
+
+    async listMerchantMembers(merchantId) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/members`);
+    },
+
+    async addMerchantMember(merchantId, { email, merchantRole }) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/members`, {
+        method: 'POST',
+        body: { email, merchantRole }
+      });
+    },
+
+    async updateMerchantMemberRole(merchantId, membershipId, { merchantRole }) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/members/${encodeURIComponent(membershipId)}`, {
+        method: 'PATCH',
+        body: { merchantRole }
+      });
+    },
+
+    async revokeMerchantMember(merchantId, membershipId) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/members/${encodeURIComponent(membershipId)}`, {
+        method: 'DELETE'
+      });
+    },
+
+    // Administrative Merchant Review
+    async adminListMerchants({ page = 0, size = 20, onboardingStatus, accountStatus, search } = {}) {
+      const params = new URLSearchParams({ page: String(page), size: String(size) });
+      if (onboardingStatus) params.append('onboardingStatus', onboardingStatus);
+      if (accountStatus) params.append('accountStatus', accountStatus);
+      if (search) params.append('search', search);
+      return request(`/api/v1/admin/merchants?${params.toString()}`);
+    },
+
+    async adminGetMerchant(merchantId) {
+      return request(`/api/v1/admin/merchants/${encodeURIComponent(merchantId)}`);
+    },
+
+    async adminApproveMerchant(merchantId) {
+      return request(`/api/v1/admin/merchants/${encodeURIComponent(merchantId)}/approve`, {
+        method: 'POST'
+      });
+    },
+
+    async adminRejectMerchant(merchantId, { rejectionReason }) {
+      return request(`/api/v1/admin/merchants/${encodeURIComponent(merchantId)}/reject`, {
+        method: 'POST',
+        body: { rejectionReason }
+      });
+    },
+
+    async adminSuspendMerchant(merchantId, { reason }) {
+      return request(`/api/v1/admin/merchants/${encodeURIComponent(merchantId)}/suspend`, {
+        method: 'POST',
+        body: { reason }
+      });
+    },
+
+    async adminReactivateMerchant(merchantId) {
+      return request(`/api/v1/admin/merchants/${encodeURIComponent(merchantId)}/reactivate`, {
+        method: 'POST'
+      });
+    },
+
+    // Phase 2.1: Merchant Orders
+    async createMerchantOrder(merchantId, orderData, idempotencyKey = null) {
+      const key = idempotencyKey || generateUuid();
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/orders`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': key },
+        body: orderData
+      });
+    },
+
+    async listMerchantOrders(merchantId, { status, page = 0, size = 20 } = {}) {
+      const params = new URLSearchParams({ page: String(page), size: String(size) });
+      if (status) params.append('status', status);
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/orders?${params.toString()}`);
+    },
+
+    async getMerchantOrder(merchantId, orderId) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/orders/${encodeURIComponent(orderId)}`);
+    },
+
+    async cancelMerchantOrder(merchantId, orderId, cancelData = {}) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/orders/${encodeURIComponent(orderId)}/cancel`, {
+        method: 'POST',
+        body: cancelData
+      });
+    },
+
+    async listMerchantOrderAttempts(merchantId, orderId) {
+      return request(`/api/v1/merchants/${encodeURIComponent(merchantId)}/orders/${encodeURIComponent(orderId)}/attempts`);
+    },
+
+    // Phase 2.1: Checkout & Consumer Payments
+    async resolveCheckoutOrder(orderRef) {
+      return request(`/api/v1/checkout/orders/${encodeURIComponent(orderRef)}`);
+    },
+
+    async payCheckoutOrder(orderRef, { customerWalletId, paymentMethod }, idempotencyKey = null) {
+      const key = idempotencyKey || generateUuid();
+      return request(`/api/v1/checkout/orders/${encodeURIComponent(orderRef)}/pay`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': key },
+        body: { customerWalletId, paymentMethod }
+      });
+    },
+
+    async getCheckoutSession(sessionToken) {
+      return request(`/api/v1/checkout/sessions/${encodeURIComponent(sessionToken)}`);
+    },
+
+    async payCheckoutSession(sessionToken, { customerWalletId, paymentMethod }, idempotencyKey = null) {
+      const key = idempotencyKey || generateUuid();
+      return request(`/api/v1/checkout/sessions/${encodeURIComponent(sessionToken)}/pay`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': key },
+        body: { customerWalletId, paymentMethod }
+      });
+    },
+
+    async getCheckoutReceipt(referenceNumber) {
+      return request(`/api/v1/checkout/receipts/${encodeURIComponent(referenceNumber)}`);
+    },
+
+    async getMyPayments({ page = 0, size = 20 } = {}) {
+      return request(`/api/v1/checkout/my-payments?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`);
     }
   };
 })();

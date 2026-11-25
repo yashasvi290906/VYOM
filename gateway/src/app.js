@@ -3,6 +3,7 @@ const path = require('path');
 const config = require('./config');
 const requestIdMiddleware = require('./middleware/requestId');
 const requestLoggerMiddleware = require('./middleware/requestLogger');
+const securityHeadersMiddleware = require('./middleware/securityHeaders');
 const { defaultLimiter } = require('./middleware/rateLimiter');
 const errorHandlerMiddleware = require('./middleware/errorHandler');
 const apiRoutes = require('./routes/api');
@@ -12,8 +13,11 @@ const app = express();
 // Disable x-powered-by header
 app.disable('x-powered-by');
 
+// Security Headers (CSP, X-Frame-Options, etc.) - F38
+app.use(securityHeadersMiddleware);
+
 // Explicit reverse-proxy trust policy: never blindly trust X-Forwarded-For
-if (config.trustProxy) {
+if (config.trustProxy !== false) {
   app.set('trust proxy', config.trustProxy);
 }
 

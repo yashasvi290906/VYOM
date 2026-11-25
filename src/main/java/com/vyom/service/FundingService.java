@@ -7,6 +7,7 @@ import com.vyom.entity.enums.OperationType;
 import com.vyom.exception.InvalidTransferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -20,12 +21,15 @@ public class FundingService {
     private final FundingExecutionService fundingExecutionService;
 
     public FundingService(IdempotencyService idempotencyService,
-                          FundingExecutionService fundingExecutionService) {
+                           FundingExecutionService fundingExecutionService) {
         this.idempotencyService = idempotencyService;
         this.fundingExecutionService = fundingExecutionService;
     }
 
     public FundingResponse fundWallet(UUID userId, String idempotencyKey, UUID walletId, FundWalletRequest request) {
+        if (userId == null) {
+            throw new AccessDeniedException("Full authentication is required to fund a wallet");
+        }
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
             throw new InvalidTransferException("Idempotency-Key header is required");
         }
@@ -49,30 +53,4 @@ public class FundingService {
             throw e;
         }
     }
-
-    public FundingResponse fundWallet(String idempotencyKey, UUID walletId, FundWalletRequest request) {
-        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
-            throw new InvalidTransferException("Idempotency-Key header is required");
-        }
-
-        String sanitizedKey = idempotencyKey.trim();
-        String fingerprint = idempotencyService.computeFundingFingerprint(walletId, request);
-
-        IdempotencyReservationResult<FundingResponse> reservation = idempotencyService.reserveKey(
-                sanitizedKey, OperationType.FUNDING, fingerprint, FundingResponse.class);
-        if (reservation.isCompleted()) {
-            log.info("Returning cached response for funding idempotency key '{}'", sanitizedKey);
-            return reservation.cachedResponse();
-        }
-
-        UUID ownerToken = reservation.ownerToken();
-        try {
-            return fundingExecutionService.execute(sanitizedKey, ownerToken, walletId, request);
-        } catch (Exception e) {
-            log.error("Funding execution failed for idempotency key '{}': {}", sanitizedKey, e.getMessage());
-            idempotencyService.markFailed(sanitizedKey, ownerToken);
-            throw e;
-        }
-    }
 }
-

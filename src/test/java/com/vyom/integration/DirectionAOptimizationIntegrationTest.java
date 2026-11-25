@@ -306,9 +306,9 @@ public class DirectionAOptimizationIntegrationTest extends BaseIntegrationTest {
         Transfer transfer = transferRepository.findById(body.transferId()).orElseThrow();
         assertThat(transfer.getTransactionId()).isNotNull();
 
-        // Verify Transaction reference format (TXN-YYYYMMDD-XXXXXXXX)
+        // Verify Transaction reference format (TXN-YYYYMMDD-XXXXXXXX or 16-char Base34 F16)
         Transaction transaction = transactionRepository.findById(transfer.getTransactionId()).orElseThrow();
-        assertThat(transaction.getReferenceNumber()).matches("^TXN-\\d{8}-[0-9A-Z]{8}$");
+        assertThat(transaction.getReferenceNumber()).matches("^TXN-\\d{8}-[0-9A-Z]{8,16}$");
         assertThat(transaction.getStatus()).isEqualTo(TransactionStatus.SUCCESS);
 
         // Verify exactly two balanced ledger entries

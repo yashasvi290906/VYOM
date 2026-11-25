@@ -62,6 +62,7 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected PasswordEncoder passwordEncoder;
 
+    protected static volatile String currentDefaultAuthToken;
     protected String defaultAuthToken;
     protected String defaultAdminAuthToken;
     private static volatile boolean interceptorConfigured = false;
@@ -69,9 +70,9 @@ public abstract class BaseIntegrationTest {
     @BeforeEach
     void setupAndCleanDatabase() {
         // Clean customer transactional data while keeping system settlement accounts
-        jdbcTemplate.execute("TRUNCATE TABLE ledger_entries, idempotency_records, refunds, disputes, fundings, transfers, transactions CASCADE;");
+        jdbcTemplate.execute("TRUNCATE TABLE ledger_entries, idempotency_records, refunds, disputes, fundings, transfers, transactions, outbox_events, payment_attempts, checkout_sessions, payment_orders, merchant_payables, merchant_audit_logs, merchant_members, merchants CASCADE;");
         jdbcTemplate.execute("DELETE FROM wallets WHERE account_type = 'CUSTOMER';");
-        jdbcTemplate.execute("UPDATE wallets SET balance = 0.0000 WHERE account_type = 'SYSTEM_SETTLEMENT';");
+        jdbcTemplate.execute("UPDATE wallets SET balance = 0.0000 WHERE account_type IN ('SYSTEM_SETTLEMENT', 'MERCHANT_PAYABLE');");
         jdbcTemplate.execute("DELETE FROM users WHERE id NOT IN ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000088');");
 
         // Ensure default test user exists with exact deterministic UUID
@@ -96,7 +97,8 @@ public abstract class BaseIntegrationTest {
         walletService.getOrCreateSystemSettlementWallet("EUR");
         walletService.getOrCreateSystemSettlementWallet("GBP");
 
-        defaultAuthToken = jwtTokenService.generateToken(DEFAULT_TEST_USER_ID, DEFAULT_TEST_USER_EMAIL, "Legacy Test User", com.vyom.entity.enums.Role.USER);
+        currentDefaultAuthToken = jwtTokenService.generateToken(DEFAULT_TEST_USER_ID, DEFAULT_TEST_USER_EMAIL, "Legacy Test User", com.vyom.entity.enums.Role.USER);
+        defaultAuthToken = currentDefaultAuthToken;
         defaultAdminAuthToken = jwtTokenService.generateToken(DEFAULT_ADMIN_USER_ID, DEFAULT_ADMIN_USER_EMAIL, "System Admin", com.vyom.entity.enums.Role.ADMIN);
 
         configureTestRestTemplateInterceptors();
@@ -116,7 +118,7 @@ public abstract class BaseIntegrationTest {
                     return execution.execute(request, body);
                 }
                 if (!headers.containsKey(HttpHeaders.AUTHORIZATION)) {
-                    headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + defaultAuthToken);
+                    headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + currentDefaultAuthToken);
                 }
                 return execution.execute(request, body);
             });

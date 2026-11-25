@@ -22,11 +22,15 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
     List<Wallet> findByUserId(UUID userId);
 
+    List<Wallet> findByUserIdAndCurrency(UUID userId, String currency);
+
     Optional<Wallet> findByIdAndUserId(UUID id, UUID userId);
 
     boolean existsByIdAndUserId(UUID id, UUID userId);
 
     Optional<Wallet> findByCurrencyAndAccountType(String currency, AccountType accountType);
+
+    Optional<Wallet> findByAccountTypeAndCurrency(AccountType accountType, String currency);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT w FROM Wallet w WHERE w.currency = :currency AND w.accountType = com.vyom.entity.enums.AccountType.SYSTEM_SETTLEMENT")
@@ -34,6 +38,12 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
     @Query(value = "SELECT currency FROM wallets WHERE id = :walletId", nativeQuery = true)
     Optional<String> findCurrencyByWalletId(@Param("walletId") UUID walletId);
+
+    @Query(value = "SELECT user_id FROM wallets WHERE id = :walletId", nativeQuery = true)
+    Optional<UUID> findUserIdByWalletId(@Param("walletId") UUID walletId);
+
+    @Query(value = "SELECT account_type FROM wallets WHERE id = :walletId", nativeQuery = true)
+    Optional<String> findAccountTypeByWalletId(@Param("walletId") UUID walletId);
 
     @Query(value = "SELECT id FROM wallets WHERE currency = :currency AND account_type = 'SYSTEM_SETTLEMENT'", nativeQuery = true)
     Optional<UUID> findSystemSettlementWalletIdByCurrency(@Param("currency") String currency);

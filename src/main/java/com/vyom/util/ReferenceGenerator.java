@@ -12,11 +12,23 @@ public final class ReferenceGenerator {
     private ReferenceGenerator() {}
 
     public static String generateTransactionReference() {
-        return "TXN-" + LocalDate.now().format(DATE_FORMATTER) + "-" + randomString(8);
+        return "TXN-" + LocalDate.now().format(DATE_FORMATTER) + "-" + randomString(16);
     }
 
     public static String generateDisputeReference() {
-        return "DISP-" + LocalDate.now().format(DATE_FORMATTER) + "-" + randomString(8);
+        return "DISP-" + LocalDate.now().format(DATE_FORMATTER) + "-" + randomString(16);
+    }
+
+    public static String generateOrderReference() {
+        return "ORD-" + LocalDate.now().format(DATE_FORMATTER) + "-" + randomString(16);
+    }
+
+    public static String generateAttemptReference() {
+        return "ATT-" + LocalDate.now().format(DATE_FORMATTER) + "-" + randomString(16);
+    }
+
+    public static String generateSessionToken() {
+        return "sess_" + LocalDate.now().format(DATE_FORMATTER) + "_" + randomString(24).toLowerCase();
     }
 
     private static String randomString(int length) {
