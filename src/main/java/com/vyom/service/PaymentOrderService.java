@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -223,8 +224,18 @@ public class PaymentOrderService {
         order = orderRepository.save(order);
 
         // Stage outbox cancellation notification
-        String eventPayload = String.format("{\"orderReference\":\"%s\",\"status\":\"CANCELLED\",\"reason\":\"%s\"}",
-                order.getOrderReference(), reason != null ? reason.replace("\"", "\\\"") : "Cancelled by merchant");
+        Map<String, Object> payloadMap = new LinkedHashMap<>();
+        payloadMap.put("orderReference", order.getOrderReference());
+        payloadMap.put("status", "CANCELLED");
+        payloadMap.put("reason", reason != null ? reason : "Cancelled by merchant");
+
+        String eventPayload;
+        try {
+            eventPayload = objectMapper.writeValueAsString(payloadMap);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize order cancellation outbox payload", e);
+        }
+
         outboxEventRepository.save(new OutboxEvent(merchantId, "order.cancelled", "ORDER", order.getId(), eventPayload));
 
         log.info("Payment order cancelled: orderId={}, ref={}, merchant={}, reason={}",

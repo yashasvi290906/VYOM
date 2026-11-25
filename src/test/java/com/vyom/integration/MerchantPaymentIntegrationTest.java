@@ -43,6 +43,11 @@ import com.vyom.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -86,6 +91,9 @@ public class MerchantPaymentIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private OutboxEventRepository outboxEventRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private User aliceOwner;
     private User bobCustomer;
@@ -299,7 +307,7 @@ public class MerchantPaymentIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("Cancel Order: Order can be cancelled; paying a cancelled order is rejected")
-    void testCancelOrder_AndRejectPayment() {
+    void testCancelOrder_AndRejectPayment() throws Exception {
         // 1. Create order
         CreatePaymentOrderRequest request = new CreatePaymentOrderRequest(
                 "INV-CANCEL-1",
@@ -330,6 +338,19 @@ public class MerchantPaymentIntegrationTest extends BaseIntegrationTest {
         assertThat(cancelRes.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(cancelRes.getBody().status()).isEqualTo(OrderStatus.CANCELLED);
 
+        // Verify outbox cancellation event
+        List<OutboxEvent> cancelEvents = outboxEventRepository.findByMerchantId(merchant.getId(), org.springframework.data.domain.PageRequest.of(0, 10)).getContent();
+        OutboxEvent initialCancelEvent = cancelEvents.stream()
+                .filter(e -> "order.cancelled".equals(e.getEventType()) && createdOrder.id().equals(e.getAggregateId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(initialCancelEvent.getStatus()).isEqualTo(com.vyom.entity.enums.OutboxEventStatus.PENDING);
+        JsonNode cancelPayload = objectMapper.readTree(initialCancelEvent.getPayload());
+        assertThat(cancelPayload.size()).isEqualTo(3);
+        assertThat(cancelPayload.get("orderReference").asText()).isEqualTo(createdOrder.orderReference());
+        assertThat(cancelPayload.get("status").asText()).isEqualTo("CANCELLED");
+        assertThat(cancelPayload.get("reason").asText()).isEqualTo("Out of stock");
+
         // 3. Attempt payment on cancelled order -> 400 Bad Request
         ExecuteCheckoutPaymentRequest payReq = new ExecuteCheckoutPaymentRequest(bobWallet.getId(), PaymentMethod.CUSTOMER_WALLET);
         ResponseEntity<String> payRes = restTemplate.exchange(
@@ -340,6 +361,89 @@ public class MerchantPaymentIntegrationTest extends BaseIntegrationTest {
         );
 
         assertThat(payRes.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @ParameterizedTest
+    @MethodSource("cancellationReasonProvider")
+    @DisplayName("Cancel Order: Outbox event JSON serialization preserves exact characters and escapes properly")
+    void testCancelOrder_OutboxJsonSerialization_ExactReasonPreserved(String inputReason, String expectedReason) throws Exception {
+        // 1. Create order
+        String merchantOrderId = "INV-ESC-" + UUID.randomUUID().toString().substring(0, 8);
+        CreatePaymentOrderRequest request = new CreatePaymentOrderRequest(
+                merchantOrderId,
+                null,
+                new BigDecimal("200.0000"),
+                "INR",
+                "Escaping cancellation test",
+                30,
+                null
+        );
+        ResponseEntity<PaymentOrderResponse> createRes = restTemplate.exchange(
+                "/api/v1/merchants/" + merchant.getId() + "/orders",
+                HttpMethod.POST,
+                new HttpEntity<>(request, createHeaders(aliceToken, "idemp-esc-create-" + merchantOrderId)),
+                PaymentOrderResponse.class
+        );
+        assertThat(createRes.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        PaymentOrderResponse createdOrder = createRes.getBody();
+        assertThat(createdOrder).isNotNull();
+
+        // 2. Cancel order with the specified reason
+        CancelPaymentOrderRequest cancelReq = new CancelPaymentOrderRequest(inputReason);
+        ResponseEntity<PaymentOrderResponse> cancelRes = restTemplate.exchange(
+                "/api/v1/merchants/" + merchant.getId() + "/orders/" + createdOrder.id() + "/cancel",
+                HttpMethod.POST,
+                new HttpEntity<>(cancelReq, createHeaders(aliceToken, null)),
+                PaymentOrderResponse.class
+        );
+        assertThat(cancelRes.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(cancelRes.getBody().status()).isEqualTo(OrderStatus.CANCELLED);
+
+        // 3. Verify OutboxEvent via Repository
+        List<OutboxEvent> events = outboxEventRepository.findByMerchantId(merchant.getId(), org.springframework.data.domain.PageRequest.of(0, 50)).getContent();
+        OutboxEvent event = events.stream()
+                .filter(e -> "order.cancelled".equals(e.getEventType()) && createdOrder.id().equals(e.getAggregateId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Expected order.cancelled outbox event for order " + createdOrder.id()));
+
+        // Required assertions
+        assertThat(event.getEventType()).isEqualTo("order.cancelled");
+        assertThat(event.getAggregateType()).isEqualTo("ORDER");
+        assertThat(event.getAggregateId()).isEqualTo(createdOrder.id());
+        assertThat(event.getMerchantId()).isEqualTo(merchant.getId());
+        assertThat(event.getStatus()).isEqualTo(com.vyom.entity.enums.OutboxEventStatus.PENDING);
+
+        // 4. Parse payload using Jackson
+        JsonNode rootNode = objectMapper.readTree(event.getPayload());
+        assertThat(rootNode.size()).isEqualTo(3);
+        assertThat(rootNode.hasNonNull("orderReference")).isTrue();
+        assertThat(rootNode.hasNonNull("status")).isTrue();
+        assertThat(rootNode.hasNonNull("reason")).isTrue();
+
+        assertThat(rootNode.get("orderReference").asText()).isEqualTo(createdOrder.orderReference());
+        assertThat(rootNode.get("status").asText()).isEqualTo("CANCELLED");
+        assertThat(rootNode.get("reason").asText()).isEqualTo(expectedReason);
+
+        // 5. Verify PostgreSQL JSONB column persistence directly from database
+        String dbPayload = jdbcTemplate.queryForObject(
+                "SELECT payload::text FROM outbox_events WHERE id = ?", String.class, event.getId());
+        assertThat(dbPayload).isNotNull();
+        JsonNode dbRootNode = objectMapper.readTree(dbPayload);
+        assertThat(dbRootNode.get("reason").asText()).isEqualTo(expectedReason);
+        assertThat(dbRootNode.get("status").asText()).isEqualTo("CANCELLED");
+        assertThat(dbRootNode.get("orderReference").asText()).isEqualTo(createdOrder.orderReference());
+    }
+
+    static java.util.stream.Stream<Arguments> cancellationReasonProvider() {
+        return java.util.stream.Stream.of(
+                Arguments.of("Out of stock", "Out of stock"),
+                Arguments.of("Customer said \"cancel\"", "Customer said \"cancel\""),
+                Arguments.of("C:\\new-folder", "C:\\new-folder"),
+                Arguments.of("Line 1\nLine 2", "Line 1\nLine 2"),
+                Arguments.of("Column 1\tColumn 2", "Column 1\tColumn 2"),
+                Arguments.of("Carriage\rReturn and \b \f control chars", "Carriage\rReturn and \b \f control chars"),
+                Arguments.of(null, "Cancelled by merchant")
+        );
     }
 
     @Test
