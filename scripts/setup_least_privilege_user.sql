@@ -65,27 +65,6 @@ $$;
 
 ALTER ROLE vyom_flyway WITH PASSWORD :'FLYWAY_PASSWORD';
 
-DO $$
-BEGIN
-  EXECUTE format('GRANT CONNECT ON DATABASE %I TO vyom_flyway', current_database());
-END
-$$;
-
-GRANT USAGE, CREATE ON SCHEMA public TO vyom_flyway;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO vyom_flyway;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO vyom_flyway;
-GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public TO vyom_flyway;
-
-ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO vyom_flyway;
-ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO vyom_flyway;
-ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public GRANT ALL PRIVILEGES ON ROUTINES TO vyom_flyway;
-
--- Security Policy: Strictly revoke blanket default privileges on future migration objects from vyom_app.
--- Future tables created by migrations must receive explicit, least-privilege grants in their respective migration scripts.
-ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public REVOKE ALL ON TABLES FROM vyom_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public REVOKE ALL ON SEQUENCES FROM vyom_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public REVOKE ALL ON ROUTINES FROM vyom_app;
-
 -- ==============================================================================
 -- PART 2: Runtime Application Role (vyom_app)
 -- ==============================================================================
@@ -115,6 +94,34 @@ END
 $$;
 
 ALTER ROLE vyom_app WITH PASSWORD :'APP_PASSWORD';
+
+-- ==============================================================================
+-- PART 3: Migration Role Privileges & Default Privileges
+-- ==============================================================================
+DO $$
+BEGIN
+  EXECUTE format('GRANT CONNECT ON DATABASE %I TO vyom_flyway', current_database());
+END
+$$;
+
+GRANT USAGE, CREATE ON SCHEMA public TO vyom_flyway;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO vyom_flyway;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO vyom_flyway;
+GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public TO vyom_flyway;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO vyom_flyway;
+ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO vyom_flyway;
+ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public GRANT ALL PRIVILEGES ON ROUTINES TO vyom_flyway;
+
+-- Security Policy: Strictly revoke blanket default privileges on future migration objects from vyom_app.
+-- Future tables created by migrations must receive explicit, least-privilege grants in their respective migration scripts.
+ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public REVOKE ALL ON TABLES FROM vyom_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public REVOKE ALL ON SEQUENCES FROM vyom_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE vyom_flyway IN SCHEMA public REVOKE ALL ON ROUTINES FROM vyom_app;
+
+-- ==============================================================================
+-- PART 4: Runtime Application Role Hardening & Least-Privilege Grants
+-- ==============================================================================
 
 -- Revoke any inherited administrative privileges
 DO $$
