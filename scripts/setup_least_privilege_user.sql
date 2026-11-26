@@ -223,6 +223,20 @@ BEGIN
     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE outbox_events TO vyom_app;
   END IF;
 
+  -- Phase 2.2 Merchant Webhook Delivery Engine
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'merchant_webhook_endpoints') THEN
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE merchant_webhook_endpoints TO vyom_app;
+  END IF;
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'webhook_deliveries') THEN
+    GRANT SELECT, INSERT, UPDATE ON TABLE webhook_deliveries TO vyom_app;
+  END IF;
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'webhook_delivery_attempts') THEN
+    GRANT SELECT, INSERT ON TABLE webhook_delivery_attempts TO vyom_app;
+  END IF;
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'webhook_attempt_outcomes') THEN
+    GRANT SELECT, INSERT ON TABLE webhook_attempt_outcomes TO vyom_app;
+  END IF;
+
   -- Migration metadata: SELECT ONLY (read-only, runtime cannot alter migration history)
   IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'flyway_schema_history') THEN
     GRANT SELECT ON TABLE flyway_schema_history TO vyom_app;
