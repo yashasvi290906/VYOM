@@ -330,12 +330,424 @@ Accessible at `/actuator/health` under `webhookScheduler`:
 
 | Property | Default | Environment Variable | Description |
 |---|---|---|---|
-| `vyom.webhook.encryption.master-key` | (Required in prod) | `WEBHOOK_ENCRYPTION_KEY` | Hex or Base64 256-bit AES master encryption key |
+| `vyom.webhook.encryption.master-key` | (Required in prod) | `WEBHOOK_ENCRYPTION_KEY` | Base64-encoded 256-bit (32-byte) AES master encryption key |
 | `vyom.webhook.encryption.active-key-version` | `1` | `WEBHOOK_MASTER_KEY_VERSION` | Active version of master encryption key |
 | `vyom.webhook.scheduler.enabled` | `true` | `WEBHOOK_SCHEDULER_ENABLED` | Enables background outbox and delivery orchestration |
 | `vyom.webhook.scheduler.dispatcher-interval-ms` | `5000` | `WEBHOOK_DISPATCHER_INTERVAL_MS` | Outbox polling frequency |
-| `vyom.webhook.scheduler.delivery-interval-ms` | `2000` | `WEBHOOK_DELIVERY_INTERVAL_MS` | Due delivery processing frequency |
+| `vyom.webhook.scheduler.delivery-interval-ms` | `5000` | `WEBHOOK_DELIVERY_INTERVAL_MS` | Due delivery processing frequency |
 | `vyom.webhook.scheduler.dispatch-batch-size` | `20` | `WEBHOOK_DISPATCH_BATCH_SIZE` | Outbox events claimed per iteration |
 | `vyom.webhook.scheduler.delivery-batch-size` | `20` | `WEBHOOK_DELIVERY_BATCH_SIZE` | Due deliveries claimed per iteration |
+| `vyom.webhook.scheduler.initial-delay-ms` | `2000` | `WEBHOOK_SCHEDULER_INITIAL_DELAY_MS` | Scheduler bootstrap delay before first execution tick |
 | `vyom.webhook.delivery.default-max-attempts` | `5` | `WEBHOOK_MAX_ATTEMPTS` | Maximum retry attempts before DEAD_LETTER |
 | `vyom.webhook.delivery.lease-timeout-seconds` | `60` | `WEBHOOK_LEASE_TIMEOUT_SECONDS` | In-progress worker lease duration |
+
+---
+
+## 8. Operational Troubleshooting & Dead-Letter Triage Runbook
+
+### 8.1 Dead-Letter Diagnosis & Triage
+
+A webhook delivery transitions to `DEAD_LETTER` when the delivery engine determines that further retries are impossible or exhausted. Deliveries reach `DEAD_LETTER` in three scenarios:
+1. **Permanent Non-Retryable Client Error:** The destination server returned an HTTP 4xx response code (e.g. `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `410 Gone`, or `422 Unprocessable Entity`), excluding transient client statuses `408 Request Timeout` and `429 Too Many Requests`.
+2. **Retry Attempt Exhaustion:** Transient errors (HTTP 5xx, `408`, `429`, or network I/O timeouts) persisted across all scheduled attempts and reached `max_attempts` (default: 5).
+3. **Permanent Transport or Security Rejection:** The destination URL violated SSRF security policies (`SSRFProtectionException`), or the endpoint was missing or archived prior to attempt execution.
+
+#### Checking Merchant Endpoint Status via Management API
+
+Operators and merchants can verify endpoint operational status and configuration using the authenticated REST API:
+
+```http
+GET /api/v1/merchants/{merchantId}/webhooks/{endpointId}
+Authorization: Bearer <jwt_token>
+```
+
+**Example Response:**
+```json
+{
+  "id": "c1f7b762-d964-4e92-9599-2a912bb3e761",
+  "merchantId": "a0000000-0000-0000-0000-000000000001",
+  "url": "https://merchant.example.com/webhooks/orders",
+  "description": "Production Webhook Receiver",
+  "secretMasked": "whsec_...a1b2",
+  "secretVersion": 1,
+  "masterKeyVersion": 1,
+  "isActive": true,
+  "createdAt": "2026-11-26T10:00:00Z",
+  "updatedAt": "2026-11-26T10:00:00Z",
+  "archivedAt": null
+}
+```
+
+If an endpoint is experiencing ongoing outages, operators or merchant administrators can pause deliveries using `POST /api/v1/merchants/{merchantId}/webhooks/{endpointId}/disable` and resume them once resolved using `POST /api/v1/merchants/{merchantId}/webhooks/{endpointId}/enable`.
+
+> [!NOTE]
+> **Operational Boundary:** Calling `/disable` pauses eligible `PENDING` and `RETRY_WAIT` deliveries, and `/enable` resumes them back to `RETRY_WAIT`. Disabling or re-enabling an endpoint does **not** revive or re-attempt deliveries already in the `DEAD_LETTER` terminal state. To re-attempt a dead-lettered delivery, an explicit redelivery record must be created.
+
+#### Database Audit Correlation for Dead-Letter Deliveries
+
+Because delivery execution runs asynchronously in the background, authoritative delivery investigations correlate the core relational tables: `webhook_deliveries`, `webhook_delivery_attempts` (immutable reservations), `webhook_attempt_outcomes` (immutable outcomes), and `outbox_events` (business domain events).
+
+To inspect dead-lettered events and their complete attempt histories, execute the following SQL query using the `vyom_app` runtime role or a database operator role:
+
+```sql
+SELECT
+    d.id AS delivery_id,
+    e.event_type,
+    e.aggregate_id,
+    d.endpoint_id,
+    d.status AS delivery_status,
+    d.attempt_count,
+    d.max_attempts,
+    a.attempt_number,
+    a.endpoint_url,
+    a.attempted_at,
+    o.response_status,
+    o.latency_ms,
+    o.error_message,
+    o.completed_at
+FROM webhook_deliveries d
+JOIN outbox_events e ON e.id = d.outbox_event_id AND e.merchant_id = d.merchant_id
+JOIN webhook_delivery_attempts a ON a.delivery_id = d.id
+LEFT JOIN webhook_attempt_outcomes o ON o.attempt_id = a.id
+WHERE d.merchant_id = 'a0000000-0000-0000-0000-000000000001'
+  AND d.status = 'DEAD_LETTER'
+ORDER BY d.created_at DESC, a.attempt_number ASC;
+```
+
+Joining `outbox_events` on `(id, merchant_id)` enforces tenant isolation and exposes `event_type` (e.g. `order.paid`, `payment.failed`) and `aggregate_id` (e.g. order UUID), allowing operators to immediately determine which business operation failed.
+
+#### Manual Redelivery Replay & Lineage Exclusivity Runbook
+
+When a merchant resolves their server or firewall outage and requests re-delivery of dead-lettered events, operators must **not** execute an `UPDATE` on existing `DEAD_LETTER` rows. Direct status mutation destroys the delivery attempt sequence and violates audit immutability.
+
+Instead, execute an audit-preserving redelivery insertion using the database schema's `redelivery_of` foreign key within an explicit, serialized transaction.
+
+##### Step 1: Pre-Replay Verification (Complete Lineage History Check)
+
+Before scheduling a replay, inspect the complete multi-generation delivery lineage for that event and endpoint to confirm the chain's state and identify the latest generation:
+
+```sql
+SELECT
+    d.id AS delivery_id,
+    d.redelivery_of,
+    d.status,
+    d.attempt_count,
+    d.max_attempts,
+    d.next_attempt_at,
+    d.created_at
+FROM webhook_deliveries d
+JOIN webhook_deliveries target
+  ON target.id = '<dead_letter_delivery_id>'
+ AND d.outbox_event_id = target.outbox_event_id
+ AND d.endpoint_id = target.endpoint_id
+ORDER BY d.created_at ASC;
+```
+
+This query returns the complete chronological lineage for the event-endpoint pair ($A \to B \to C \dots$). Because the database schema models multi-generation lineages and permits historical branches ($A \to B \to D$ and $A \to C$), operators should confirm that all prior generations are in terminal failure and deliberately select the target dead-letter leaf generation (a row where no child references its `id`) as `<dead_letter_delivery_id>`. If multiple historical dead-letter leaves exist, select the leaf representing the desired recovery path (typically the most recent chronological leaf).
+
+##### Step 2: Concurrency-Safe, Lineage-Exclusive Redelivery Transaction
+
+To guarantee safety against race conditions when multiple operators or automated remediation tools attempt to replay different generations of the same lineage concurrently, wrap the operation in a transaction and acquire an exclusive row-level lock on the canonical root delivery record:
+
+```sql
+BEGIN;
+
+-- Required: use READ COMMITTED so the INSERT receives a fresh
+-- statement snapshot after any competing transaction releases
+-- the canonical root lock.
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- 1. Acquire exclusive lock on the canonical root row of the delivery lineage:
+-- (Serializes concurrent replays even if operators target different generations of the same lineage)
+SELECT root.id
+FROM webhook_deliveries target
+JOIN webhook_deliveries root
+  ON root.outbox_event_id = target.outbox_event_id
+ AND root.endpoint_id = target.endpoint_id
+ AND root.redelivery_of IS NULL
+WHERE target.id = '<dead_letter_delivery_id>'
+FOR UPDATE OF root;
+
+-- 2. Idempotently insert a redelivery record with comprehensive lineage guards:
+INSERT INTO webhook_deliveries (
+    outbox_event_id,
+    endpoint_id,
+    merchant_id,
+    redelivery_of,
+    status,
+    attempt_count,
+    max_attempts,
+    next_attempt_at,
+    canonical_payload
+)
+SELECT
+    d.outbox_event_id,
+    d.endpoint_id,
+    d.merchant_id,
+    d.id AS redelivery_of,
+    'PENDING' AS status,
+    0 AS attempt_count,
+    d.max_attempts,
+    clock_timestamp() AS next_attempt_at,
+    d.canonical_payload
+FROM webhook_deliveries d
+WHERE d.id = '<dead_letter_delivery_id>'
+  AND d.status = 'DEAD_LETTER'
+  -- Guard 1: Lineage Exclusivity (No delivery for this event/endpoint is active or delivered)
+  AND NOT EXISTS (
+      SELECT 1
+      FROM webhook_deliveries r
+      WHERE r.outbox_event_id = d.outbox_event_id
+        AND r.endpoint_id = d.endpoint_id
+        AND r.status IN ('PENDING', 'PROCESSING', 'RETRY_WAIT', 'PAUSED', 'DELIVERED')
+  )
+  -- Guard 2: Leaf Generation Guard (Target delivery must be a terminal leaf with no children)
+  AND NOT EXISTS (
+      SELECT 1
+      FROM webhook_deliveries child
+      WHERE child.redelivery_of = d.id
+  );
+
+COMMIT;
+```
+
+**Transaction Isolation Requirement:** This procedure assumes PostgreSQL's
+`READ COMMITTED` isolation level. Do not execute it under `REPEATABLE READ`
+or `SERIALIZABLE` without a separately validated concurrency procedure.
+The root lock serializes replay operations that follow this runbook;
+it does not protect against arbitrary database writers that bypass it.
+
+##### Concurrency & Lifecycle Invariant Analysis:
+
+1. **Why Single-Hop Checks Fail in Multi-Generation Chains:**
+   In a chain $A\text{ (original)} \to B\text{ (redelivery of }A\text{)} \to C\text{ (redelivery of }B\text{)}$, if $B$ failed to `DEAD_LETTER` and $C$ was created and succeeded (`DELIVERED`) or is active (`PENDING`), a single-hop check `WHERE r.redelivery_of = d.id` on $A$ checks only $A$'s direct child ($B$). Because $B$ is in `DEAD_LETTER`, a single-hop check incorrectly evaluates to `TRUE`, permitting an obsolete ancestor ($A$) to be replayed while a descendant ($C$) is already active or delivered.
+
+2. **How Lineage-Wide Guard 1 Neutralizes Multi-Generation Race Conditions:**
+   Guard 1 scopes `r.outbox_event_id = d.outbox_event_id AND r.endpoint_id = d.endpoint_id`. Because every generation in a delivery chain shares the exact same `(outbox_event_id, endpoint_id)` tuple, Guard 1 inspects the entire lineage (ancestors, descendants, and siblings) and blocks replay if ANY record is in `('PENDING', 'PROCESSING', 'RETRY_WAIT', 'PAUSED', 'DELIVERED')`.
+
+3. **Why Guard 2 Enforces Leaf-Only Selection (Preventing Replay of Intermediate Ancestors):**
+   Guard 2 (`WHERE child.redelivery_of = d.id`) requires that operators target only a **terminal dead-letter leaf** in the lineage. If $A$ and $B$ both failed, an operator cannot replay ancestor $A$ because child $B$ already exists referencing $A$'s `id`. The operator must replay leaf $B$, which attaches new redelivery $C$ to $B$.
+   - **Invariant Distinction:**
+     - *Lineage-Wide Delivery Exclusivity (Strictly Enforced Invariant):* Guard 1 together with the canonical root row lock strictly guarantees that across the entire lineage sharing `(outbox_event_id, endpoint_id)`, at most ONE delivery can be active or successful at any point in time. Even if multiple historical dead-letter branches exist (e.g. $A \to B \to D$ and $A \to C$, all `DEAD_LETTER`), replaying leaf $D$ into $E$ (`PENDING`) strictly blocks replaying leaf $C$ until $E$ terminates.
+     - *Tree Topology vs. Linear Chains:* Because Flyway migration `V12` defines `idx_deliveries_redelivery_of` as a non-unique foreign key index, the relational schema models a directed acyclic tree (arborescence) rather than enforcing single-list linearity at the schema level. Guard 2 prevents internal node branching from past ancestors, maintaining an unbranched chain in standard operation. If historical operations or manual intervention previously created multiple branches, Guard 1 prevents concurrent replay across branches, and Guard 2 ensures that only the terminal leaves of those branches can be extended.
+
+4. **How Root Locking Resolves Cross-Generation Concurrency:**
+   If Operator 1 targets ancestor $A$ while Operator 2 targets descendant $B$, locking $A$ and $B$ individually would not block each other because they are separate database rows. By joining and locking `root` (`WHERE root.outbox_event_id = target.outbox_event_id AND root.endpoint_id = target.endpoint_id AND root.redelivery_of IS NULL FOR UPDATE OF root`), both operators serialize on the single, unique canonical root row guaranteed by `uq_deliveries_initial`. Whoever acquires the root lock executes first; the second operator unblocks, sees the newly committed redelivery in its fresh statement snapshot, and inserts `0 rows` (`INSERT 0 0`).
+
+5. **Complete Delivery Lifecycle Status Analysis:**
+   The `NOT EXISTS` filter guards against every active or successful lifecycle state:
+   - **`PENDING` (Blocks Replay):** Active delivery queued for worker pickup. Replay would cause immediate duplicate dispatches.
+   - **`PROCESSING` (Blocks Replay):** In-flight delivery actively claimed under worker lease. Replay would race with the current execution attempt.
+   - **`RETRY_WAIT` (Blocks Replay):** Automated retry scheduled with exponential backoff. Replay would interfere with the scheduled retry schedule.
+   - **`PAUSED` (Blocks Replay):** Suspended delivery due to a disabled endpoint. Under `WebhookDeliveryRepository.resumeDeliveriesForEndpoint`, all `PAUSED` deliveries automatically resume to `RETRY_WAIT` when the endpoint is re-enabled via `POST .../enable`. Allowing a manual replay while `PAUSED` would cause duplicate deliveries as soon as the endpoint is enabled.
+   - **`DELIVERED` (Blocks Replay):** Terminal success state (HTTP 2xx received and acknowledged). Replaying an already-delivered webhook violates at-least-once delivery semantics and creates duplicate business transactions.
+   - **`DEAD_LETTER` (Permits Replay):** Terminal failure state (max retries exhausted or permanent 4xx/SSRF rejection). The delivery engine has permanently abandoned processing. This is the **only** status where a subsequent manual replay is permitted.
+
+6. **Preserving Multi-Stage Replay Lineage:**
+   The database schema intentionally defines `idx_deliveries_redelivery_of` as a non-unique B-tree index (`CREATE INDEX idx_deliveries_redelivery_of ON webhook_deliveries (redelivery_of)`). If a manual redelivery itself encounters another outage and transitions to `DEAD_LETTER`, both Guard 1 and Guard 2 will evaluate to `TRUE` for the new leaf dead-letter, allowing an operator to safely trigger another subsequent replay without schema or unique index violations.
+
+7. **Least-Privilege Database Role Permissions:**
+   Both `SELECT ... FOR UPDATE OF root` and `INSERT INTO webhook_deliveries SELECT ...` execute successfully under the restricted `vyom_app` runtime application role. Migrations `V10`, `V12`, and `V13` grant `SELECT` on `outbox_events`, `SELECT, INSERT, UPDATE` on `webhook_deliveries`, and `SELECT, INSERT` on attempt audit tables. No elevated DDL (`vyom_flyway`) or superuser privileges are required.
+
+#### Documented Error Classifications
+
+In `webhook_attempt_outcomes.error_message`, errors are classified as follows:
+- `HTTP <status> <reason>`: Upstream returned an error response (e.g. `HTTP 404 Not Found`, `HTTP 500 Internal Server Error`).
+- `Interrupted: previous worker crashed or lease expired before outcome recorded`: Crash-recovery watchdog detected an abandoned attempt where the worker terminated or the 60-second claim lease expired before the outcome was saved.
+- `Prohibited non-public IP destination: <ip>`: Destination resolved to a private or restricted address space.
+- `DNS resolution failed for host: <host>`: Hostname failed DNS lookup or returned no valid records.
+- `ConnectTimeoutException`: TCP connection could not be established within 3 seconds.
+- `SocketTimeoutException`: Destination accepted the connection but failed to transmit response headers within 10 seconds.
+- `SSLHandshakeException`: TLS negotiation failed due to an untrusted certificate, expired certificate, or hostname mismatch.
+
+---
+
+### 8.2 SSRF and Network Failure Diagnostics
+
+The VYOM delivery engine incorporates strict network transport hardening (`WebhookHttpClientFactory`) and DNS validation (`SSRFShieldService`). When destination connections fail, diagnose the root cause according to the error type:
+
+#### 1. SSRF Rejections (`SSRFProtectionException`)
+- **Root Cause:** The endpoint URL resolves to a non-public, reserved, or special-purpose IP address (e.g., RFC 1918 private subnets `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, loopback `127.0.0.0/8`, link-local/cloud metadata `169.254.169.254`, carrier-grade NAT `100.64.0.0/10`, or non-global IPv6 `fd00::/8`).
+- **Safe Troubleshooting Procedure:**
+  1. Verify the configured endpoint URL using `GET /api/v1/merchants/{merchantId}/webhooks/{endpointId}`.
+  2. Perform a DNS resolution check from an external public resolver (`dig +short merchant.example.com` or `nslookup merchant.example.com`).
+  3. Ensure the merchant's DNS zone does not point to internal infrastructure, localhost, or cloud provider instance metadata services.
+  4. If the URL was misconfigured, update it via `PATCH /api/v1/merchants/{merchantId}/webhooks/{endpointId}`:
+     ```http
+     PATCH /api/v1/merchants/{merchantId}/webhooks/{endpointId}
+     Authorization: Bearer <jwt_token>
+     Content-Type: application/json
+
+     {
+       "url": "https://valid-merchant-domain.com/webhooks/orders"
+     }
+     ```
+     The endpoint controller re-validates the destination URL through `SSRFShieldService` before persisting. Submitting another private, loopback, or invalid destination is immediately rejected with `400 Bad Request`.
+- **Security Boundary:** SSRF protection is a non-negotiable security invariant. Never disable SSRF validation or add production exceptions for private IPs. For local automated integration testing, run tests with the dedicated `test` profile (`application-test.yml`), which configures local test harness fixtures.
+
+#### 2. DNS Failures (`DNS_FAILURE`)
+- **Root Cause:** The host cannot be resolved (`UnknownHostException`), or authoritative nameservers return NXDOMAIN/SERVFAIL.
+- **Safe Troubleshooting Procedure:**
+  1. Inspect the exact hostname recorded in `webhook_delivery_attempts.endpoint_url`.
+  2. Check whether the merchant's domain registration or DNS records have expired.
+  3. Confirm that the application host's system resolver (`/etc/resolv.conf` or Windows DNS settings) can reach upstream DNS servers.
+
+#### 3. Timeouts (`TIMEOUT`)
+- **Connect Timeout (3s):** Destination firewall is silently dropping packets, routing is misconfigured, or port 443 is blocked. Verify connectivity using `Test-NetConnection -ComputerName <host> -Port 443` or `nc -zv <host> 443`.
+- **Response Timeout (10s):** Destination accepted the TCP connection but took longer than 10 seconds to generate a response. Instruct the merchant to return `200 OK` or `204 No Content` immediately upon validating the `Vyom-Signature` header, and process payloads asynchronously in their own background worker.
+
+#### 4. TLS Handshake Errors (`TLS_ERROR`)
+- **Root Cause:** The merchant server uses an untrusted self-signed certificate, an incomplete intermediate certificate chain, an expired certificate, or a certificate Subject Alternative Name (SAN) that does not match the URL hostname.
+- **Safe Troubleshooting Procedure:**
+  1. Verify the remote TLS certificate chain using OpenSSL:
+     ```bash
+     openssl s_client -connect merchant.example.com:443 -servername merchant.example.com
+     ```
+  2. Ensure the remote server provides the complete intermediate certificate bundle.
+  3. Confirm the certificate is signed by a publicly trusted Certificate Authority (CA).
+
+---
+
+### 8.3 Actuator Health & Metrics Diagnostics
+
+#### Actuator Health Indicator
+
+The background delivery scheduler and outbox dispatcher report operational health via Spring Boot Actuator at `/actuator/health` under the `webhookScheduler` indicator (`WebhookSchedulerHealthIndicator`).
+
+**Healthy State:**
+```json
+{
+  "status": "UP",
+  "details": {
+    "webhookScheduler": {
+      "status": "OPERATIONAL",
+      "total_dispatched_events": 15420,
+      "total_processed_deliveries": 15420,
+      "consecutive_failures": 0,
+      "is_currently_dispatching": false,
+      "is_currently_delivering": false,
+      "last_dispatch_at": "2026-11-26T17:10:00Z",
+      "last_delivery_at": "2026-11-26T17:10:02Z"
+    }
+  }
+}
+```
+
+**Health Degradation Thresholds:**
+- If the background scheduler encounters $\ge 5$ consecutive unhandled polling or execution exceptions (e.g. database connectivity failure or thread exhaustion), the indicator transitions to **`DOWN`** and logs `last_error`.
+- Upon any subsequent successful polling tick, `consecutive_failures` resets to `0` and health restores to `UP`.
+- If the scheduler is disabled via `WEBHOOK_SCHEDULER_ENABLED=false`, health reports `UP` with detail `"status": "DISABLED_BY_CONFIGURATION"`.
+
+#### Micrometer Observability Metrics
+
+The application publishes the following metric names via Micrometer (`WebhookMetrics`), tagged with bounded cardinality values:
+
+| Metric Name | Type | Tags | Description |
+|---|---|---|---|
+| `vyom.webhook.outbox.dispatched` | Counter | None | Total outbox events dispatched to endpoints |
+| `vyom.webhook.deliveries.created` | Counter | None | Total delivery records created |
+| `vyom.webhook.deliveries.attempted` | Counter | `status_group` (`2xx`, `3xx`, `4xx`, `5xx`, `transport_error`, `other`) | Total delivery attempts executed |
+| `vyom.webhook.deliveries.succeeded` | Counter | None | Total successful deliveries (HTTP 2xx) |
+| `vyom.webhook.deliveries.failed` | Counter | `retryable` (`true`, `false`) | Total failed delivery attempts |
+| `vyom.webhook.deliveries.dead_letter` | Counter | `reason` (`non_retryable`, `max_attempts_exhausted`, `endpoint_archived_or_missing`) | Deliveries transitioned to DEAD_LETTER |
+| `vyom.webhook.ssrf.rejections` | Counter | None | Outbound requests blocked by SSRF Shield |
+| `vyom.webhook.crash_recovery.interrupted` | Counter | None | Stale leased attempts recovered after worker crash |
+| `vyom.webhook.fencing.collisions` | Counter | None | State updates rejected due to superseded claim lease |
+| `vyom.webhook.scheduler.execution` | Timer | `task` (`outbox_dispatcher`, `delivery_worker`), `status` (`success`, `failure`) | Execution duration of scheduler polling ticks |
+
+> [!NOTE]
+> **Audit Distinction:** Micrometer metrics represent ephemeral, in-memory counters designed for real-time Prometheus monitoring, rate alerting, and Grafana dashboards. They reset when the application restarts. Authoritative transactional auditing, billing disputes, and delivery guarantees must always be verified against the persistent relational tables (`webhook_deliveries`, `webhook_delivery_attempts`, `webhook_attempt_outcomes`).
+
+---
+
+### 8.4 Master Encryption Key Rotation
+
+#### Architectural Key Hierarchy
+
+Merchant signing secrets are encrypted at rest using AES-256-GCM authenticated encryption. Each endpoint record in `merchant_webhook_endpoints` stores:
+- `secret_ciphertext`, `secret_iv`, `secret_tag`: AES-256-GCM cryptographic artifacts.
+- `master_key_version`: The integer version of the platform master encryption key used to encrypt that specific secret.
+- Additional Authenticated Data (AAD) binding: `"merchant:" + merchantId + "|endpoint:" + endpointId + "|enc_version:" + masterKeyVersion`.
+
+The `WebhookCryptoService` supports multi-version key rings via the configuration property `vyom.webhook.encryption.keys`:
+- **Decryption:** Dynamically resolves the specific key version recorded in the database row (`master_key_version`).
+- **Encryption:** Uses the globally active version specified by `vyom.webhook.encryption.active-key-version`.
+
+> [!IMPORTANT]
+> **Operational Distinction: Master Key Rotation vs. Signing Secret Rotation**
+> - **Platform Master Key Rotation (`master_key_version`):** Changes the AES-256-GCM envelope key protecting secrets at rest in PostgreSQL. This is an internal infrastructure operation that is **100% transparent to merchants**. Existing merchant receiver servers continue verifying signatures with their existing secret without interruption.
+> - **Merchant Signing Secret Rotation (`secret_version`):** Invoked via `POST /api/v1/merchants/{id}/webhooks/{endpointId}/rotate-secret`. This generates a **brand-new HMAC signing secret** (`whsec_...`) and reveals it once. **The merchant must immediately update their receiver server credentials.**
+> - **Operational Safeguard:** Never execute `POST /rotate-secret` as a tool for platform master key migration. Doing so immediately invalidates the merchant's active receiver credentials and breaks webhook signature verification until the merchant reconfigures their server.
+
+#### Multi-Version Master Key Rotation Procedure
+
+To rotate the AES-256-GCM master encryption key without operational disruption:
+
+##### Step 1: Generate a New 256-bit Master Key
+Generate a cryptographically secure 32-byte Base64 key:
+```bash
+openssl rand -base64 32
+```
+
+##### Step 2: Configure the Multi-Key Ring in Application Configuration
+Update the application configuration to supply **both** the historical key(s) and the new key version. Configure `active-key-version` to the new version (e.g., version `2`):
+
+```yaml
+vyom:
+  webhook:
+    encryption:
+      active-key-version: 2
+      keys:
+        1: "${WEBHOOK_MASTER_KEY_V1}" # Retained for decrypting historical endpoint secrets
+        2: "${WEBHOOK_MASTER_KEY_V2}" # Active key for new endpoints and rotated secrets
+```
+
+Alternatively, configure using environment variables:
+
+On Windows (PowerShell):
+```powershell
+$env:WEBHOOK_MASTER_KEY_VERSION="2"
+$env:VYOM_WEBHOOK_ENCRYPTION_KEYS_1="<base64_master_key_v1>"
+$env:VYOM_WEBHOOK_ENCRYPTION_KEYS_2="<base64_master_key_v2>"
+```
+
+On Linux / macOS:
+```bash
+export WEBHOOK_MASTER_KEY_VERSION="2"
+export VYOM_WEBHOOK_ENCRYPTION_KEYS_1="<base64_master_key_v1>"
+export VYOM_WEBHOOK_ENCRYPTION_KEYS_2="<base64_master_key_v2>"
+```
+
+> [!WARNING]
+> **Default Configuration Trap:** In `application.yml`, the default configuration binds `vyom.webhook.encryption.keys.1` to `${WEBHOOK_ENCRYPTION_KEY:}`. If an operator sets `WEBHOOK_MASTER_KEY_VERSION="2"` and replaces `WEBHOOK_ENCRYPTION_KEY` with the new key without configuring key `2`, Spring maps the new key to version `1` while expecting version `2`.
+>
+> During startup, `WebhookCryptoService.validateActiveKeyConfigured()` will fail and throw:
+> ```text
+> java.lang.IllegalStateException: Active master key version 2 is not configured. Configured versions: [1]
+> ```
+> To avoid startup crashes, always configure both key versions explicitly via `vyom.webhook.encryption.keys` when rotating.
+
+##### Step 3: Deploy the Updated Configuration
+Deploy the application with the multi-key configuration.
+- **Existing Endpoints:** The delivery worker continues decrypting historical secrets using Key Version 1 from the key ring.
+- **New Endpoints:** Any newly registered endpoints are encrypted under Key Version 2.
+- **Merchant Secret Rotations:** If a merchant voluntarily rotates their signing secret via `POST /rotate-secret`, the new secret is encrypted under Key Version 2.
+
+##### Step 4: Verify Database Key Version Distribution
+Monitor the migration status of encrypted endpoints across versions:
+
+```sql
+SELECT master_key_version, COUNT(*) AS endpoint_count
+FROM merchant_webhook_endpoints
+WHERE archived_at IS NULL
+GROUP BY master_key_version
+ORDER BY master_key_version ASC;
+```
+
+##### Step 5: Historical Key Retirement Precautions
+> [!CAUTION]
+> **Data Loss Risk:** Existing endpoint rows in the database are **not** automatically re-encrypted at application startup. They remain encrypted under their historical `master_key_version`.
+>
+> Never remove Key Version 1 from `vyom.webhook.encryption.keys` while active endpoints still reference `master_key_version = 1`. If Key Version 1 is deleted, any delivery attempt for those endpoints will fail immediately with `WebhookCryptoException: Master encryption key version 1 is not configured` and fast-fail to `DEAD_LETTER`.
+>
+> Key Version 1 may be safely decommissioned only when the query in Step 4 returns zero rows for version 1.
