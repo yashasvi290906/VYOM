@@ -29,7 +29,8 @@ The platform explores production-oriented financial engineering concepts, includ
 - Persistent idempotency with ownership fencing.
 - Concurrency control and deterministic wallet lock ordering.
 - Database-enforced append-only ledger protection.
-- Least-privilege database access.
+- Transactional outbox pattern and reliable merchant webhook delivery.
+- Least-privilege database access and append-only audit protections.
 - Financial reconciliation and integrity verification.
 
 > [!NOTE]
@@ -49,8 +50,8 @@ The application follows a layered architecture. Browser requests pass through th
 |---|---|
 | Browser Client | User interface and HTTP/JSON requests |
 | Express Gateway | Reverse proxying, request IDs, rate limiting, and static frontend hosting |
-| Spring Boot Backend | Authentication, authorization, validation, transaction orchestration, and financial logic |
-| PostgreSQL | Persistent storage, constraints, triggers, and transaction integrity |
+| Spring Boot Backend | Authentication, authorization, validation, transaction orchestration, financial logic, transactional outbox & reliable merchant webhook engine, and AES-256-GCM encryption with SSRF-shielded transport |
+| PostgreSQL | Persistent storage, constraints, deferred triggers, Flyway migrations (V1 through V13), and database-enforced append-only protections for ledger entries and webhook delivery attempt audit logs |
 
 ### Request Flow
 
@@ -153,7 +154,24 @@ Consistent lock ordering reduces circular-wait conditions when two operations ac
 
 ---
 
-## 04. Technology Stack
+## 04. Merchant Webhook Delivery & Reliability Engine
+
+VYOM includes an enterprise-grade merchant webhook notification subsystem built for at-least-once delivery, strong cryptographic authenticity, and strict least-privilege security:
+
+- **Transactional Outbox Fan-Out:** Outbox events (`order.paid`, `order.cancelled`, etc.) are written in the same atomic database transaction as financial balance mutations, eliminating distributed dual-write inconsistency.
+- **Cluster-Safe Dispatch & Execution:** The background dispatcher and delivery workers poll using PostgreSQL `SELECT ... FOR UPDATE SKIP LOCKED` and claim-lease fencing, allowing seamless multi-instance horizontal scaling without central locks or single points of failure.
+- **SSRF Shield & IP-Pinned Transport:** Destination URLs are evaluated against maintained IANA special-purpose registries (rejecting private, loopback, link-local, carrier NAT, cloud metadata, and non-global IPv6 destinations). Outbound HTTP requests connect to pre-validated pinned IPs while preserving SNI ClientHello and certificate hostname verification, neutralizing DNS rebinding attacks. Connection reuse is disabled and response bodies are bounded to 64 KB.
+- **Authenticated Cryptography:** Merchant signing secrets are encrypted at rest using AES-256-GCM with fresh 12-byte IVs, 128-bit authentication tags, and AAD binding merchant ID, endpoint ID, and master key version. Secrets are revealed strictly once upon creation or rotation. Webhooks are signed via HMAC-SHA256 over exact canonical payload bytes and exposed via `Vyom-Signature: t={timestamp},v1={hmac}`.
+- **Retry Policy & Crash Recovery:** Configurable exponential backoff with full jitter, compliant with remote `Retry-After` headers on HTTP 429/503. Client errors (4xx) fast-fail to `DEAD_LETTER`. Interrupted attempts from worker crashes are detected and safely audited on recovery.
+- **Append-Only Attempt Auditing:** Delivery reservations and attempt outcomes are stored in dedicated immutable tables (`webhook_delivery_attempts` and `webhook_attempt_outcomes`) where the runtime application role has `INSERT` and `SELECT` privileges only.
+- **Merchant RBAC & Anti-Enumeration:** Webhook registration, rotation, and pause/resume APIs enforce fine-grained merchant roles (`MERCHANT_OWNER`, `MERCHANT_ADMIN`, `MERCHANT_OPERATOR`, `MERCHANT_VIEWER`). Non-member access returns `404 Not Found` to prevent merchant and endpoint existence probing.
+- **Operational Observability:** Micrometer metrics with bounded cardinality (`vyom.webhook.*`) and a custom Actuator `/actuator/health` indicator with automatic degradation tracking.
+
+For complete API specifications, signature verification implementations (Node.js & Python), and operational configuration, see the [Merchant Webhooks Operational Guide](docs/merchant-webhooks.md).
+
+---
+
+## 05. Technology Stack
 
 | Component | Technology |
 |---|---|
@@ -162,7 +180,7 @@ Consistent lock ordering reduces circular-wait conditions when two operations ac
 | Security | Spring Security 6.4.3 |
 | Database | PostgreSQL 15+ |
 | Tested Database Version | PostgreSQL 18.4 |
-| Database Migrations | Flyway 10+ |
+| Database Migrations | Flyway 10+ (V1 through V13) |
 | API Gateway | Node.js 22+ and Express.js |
 | Frontend | HTML5, CSS3, JavaScript |
 | Build Tool | Apache Maven 3.9.9 |
@@ -176,13 +194,13 @@ Consistent lock ordering reduces circular-wait conditions when two operations ac
 - npm
 - PostgreSQL
 - Git
-- OpenSSL for generating secure JWT signing secrets
+- OpenSSL for generating secure JWT signing secrets and AES master keys
 
 The repository includes a Maven Wrapper, so a separate Maven installation is not required.
 
 ---
 
-## 05. Setup and Running Instructions
+## 06. Setup and Running Instructions
 
 ### Step 1 — Clone the Repository
 
@@ -255,6 +273,19 @@ Configure the generated value as `JWT_SECRET` in both the backend and gateway en
 $env:JWT_SECRET="your_generated_secret"
 ```
 
+**Generate a secure 256-bit AES webhook encryption master key:**
+
+```powershell
+openssl rand -base64 32
+```
+
+Configure the generated value as `WEBHOOK_ENCRYPTION_KEY` in the backend environment:
+
+```powershell
+$env:WEBHOOK_ENCRYPTION_KEY="your_generated_aes_master_key"
+$env:WEBHOOK_MASTER_KEY_VERSION="1"
+```
+
 > [!IMPORTANT]
 > Both services must use the same JWT signing secret. Never commit generated secrets, database passwords, or production credentials to Git.
 
@@ -309,7 +340,7 @@ The frontend communicates with the backend through the Express gateway.
 
 ---
 
-## 06. Administrative Bootstrap
+## 07. Administrative Bootstrap
 
 Administrative account bootstrapping is disabled by default:
 
@@ -345,7 +376,7 @@ $env:VYOM_ADMIN_BOOTSTRAP_ENABLED="false"
 
 ---
 
-## 07. Testing and Verification
+## 08. Testing and Verification
 
 ### Backend Test Suite
 
@@ -355,7 +386,7 @@ Run the complete Maven test suite:
 .\mvnw.cmd test
 ```
 
-The suite includes unit, integration, security, database, financial integrity, concurrency, and idempotency tests.
+The suite includes 530 tests covering unit, integration, security, database, financial integrity, concurrency, idempotency, SSRF transport, and end-to-end merchant webhook delivery.
 
 ### API Gateway Test Suite
 
@@ -421,7 +452,7 @@ node --test benchmark/*.test.js
 
 ---
 
-## 08. Key Architectural Invariants
+## 09. Key Architectural Invariants
 
 1. **Non-Negative Balances:** Service-level validation and database constraints prevent customer wallets from having negative balances. System settlement accounts are handled separately.
 
@@ -439,13 +470,17 @@ node --test benchmark/*.test.js
 
 8. **Deterministic Wallet Lock Ordering:** Dual-wallet operations acquire locks in a consistent UUID order, reducing circular-wait conditions and preventing bidirectional wallet-lock deadlocks.
 
-9. **Database Privilege Separation:** DDL operations are assigned to the `vyom_flyway` migration role, while application runtime operations use the restricted `vyom_app` role.
+9. **Database Privilege Separation:** DDL operations are assigned to the `vyom_flyway` migration role, while application runtime operations use the restricted `vyom_app` role. Strict append-only protections are enforced at the database privilege level for ledger entries, webhook delivery attempts, and outcome audit logs.
 
 10. **Monetary Precision:** Java monetary calculations use `BigDecimal`, JavaScript uses integer-based `BigInt` arithmetic, and PostgreSQL stores monetary values using fixed-precision numeric types.
 
+11. **Durable Transactional Webhook Delivery & Outbox Fan-Out:** Outbox events participate in atomic database transactions alongside financial ledger updates, eliminating distributed dual-write inconsistency. Cluster-safe workers dispatch events using PostgreSQL `SELECT ... FOR UPDATE SKIP LOCKED` and claim-lease fencing.
+
+12. **SSRF Shielding, Transport Hardening & Cryptographic Authenticity:** Webhook delivery enforces an IANA special-purpose destination policy, DNS IP-pinning to neutralize rebinding attacks, disabled HTTP connection reuse, bounded response consumption (64 KB), AES-256-GCM secret encryption with AAD binding, and HMAC-SHA256 canonical payload signing (`Vyom-Signature`).
+
 ---
 
-## 09. Security Limitations and Operational Boundaries
+## 10. Security Limitations and Operational Boundaries
 
 1. **Simulated Financial Platform:** VYOM is an engineering simulation. It does not process real money or integrate with actual banking infrastructure.
 

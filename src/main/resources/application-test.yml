@@ -57,6 +57,14 @@ vyom:
       enabled: true
       interval-ms: 60000
       initial-delay-ms: 10000
+  webhook:
+    encryption:
+      active-key-version: 1
+      master-key: "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="
+      keys:
+        1: "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="
+    scheduler:
+      enabled: false
 
 logging:
   level:
