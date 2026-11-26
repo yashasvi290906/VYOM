@@ -196,6 +196,36 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, "DUPLICATE_MERCHANT_ORDER_ID", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(WebhookEndpointNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleWebhookEndpointNotFound(WebhookEndpointNotFoundException ex, HttpServletRequest request) {
+        log.warn("Webhook endpoint not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, "WEBHOOK_ENDPOINT_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateWebhookEndpointException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateWebhookEndpoint(DuplicateWebhookEndpointException ex, HttpServletRequest request) {
+        log.warn("Duplicate webhook endpoint: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "DUPLICATE_WEBHOOK_ENDPOINT", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidWebhookEventException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidWebhookEvent(InvalidWebhookEventException ex, HttpServletRequest request) {
+        log.warn("Invalid webhook event: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "INVALID_WEBHOOK_EVENT", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(SSRFProtectionException.class)
+    public ResponseEntity<ErrorResponse> handleSSRFProtection(SSRFProtectionException ex, HttpServletRequest request) {
+        log.warn("SSRF protection violation on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "SSRF_PROTECTION_VIOLATION", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(WebhookCryptoException.class)
+    public ResponseEntity<ErrorResponse> handleWebhookCrypto(WebhookCryptoException ex, HttpServletRequest request) {
+        log.error("Webhook cryptographic error on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "WEBHOOK_CRYPTO_ERROR", "A cryptographic failure occurred processing the webhook secret", request);
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
         log.warn("Illegal state conflict on {}: {}", request.getRequestURI(), ex.getMessage());
@@ -206,6 +236,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         log.warn("Invalid argument on {}: {}", request.getRequestURI(), ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        log.warn("Method argument type mismatch on {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER", "Parameter '" + ex.getName() + "' is invalid", request);
     }
 
     @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
