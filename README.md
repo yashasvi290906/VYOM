@@ -24,14 +24,14 @@ VYOM is an ACID-compliant simulated digital payments ledger, wallet engine, and 
 
 The platform explores production-oriented financial engineering concepts, including:
 
-- Double-entry bookkeeping and financial consistency.
-- Atomic transaction processing and rollback safety.
-- Persistent idempotency with ownership fencing.
-- Concurrency control and deterministic wallet lock ordering.
-- Database-enforced append-only ledger protection.
-- Transactional outbox pattern and reliable merchant webhook delivery.
-- Least-privilege database access and append-only audit protections.
-- Financial reconciliation and integrity verification.
+- Double-entry bookkeeping and financial consistency
+- Atomic transaction processing and rollback safety
+- Persistent idempotency with ownership fencing
+- Concurrency control and deterministic wallet lock ordering
+- Database-enforced append-only ledger protection
+- Transactional outbox pattern and reliable merchant webhook delivery
+- Least-privilege database access and append-only audit protections
+- Financial reconciliation and integrity verification
 
 > [!NOTE]
 > **Simulation Notice:** VYOM is an engineering simulation. It does not connect to real UPI switches, banking networks, external payment gateways, or real-money payment infrastructure.
