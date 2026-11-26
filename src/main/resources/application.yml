@@ -73,6 +73,19 @@ vyom:
       enabled: ${IDEMPOTENCY_JANITOR_ENABLED:true}
       interval-ms: ${IDEMPOTENCY_JANITOR_INTERVAL_MS:60000}
       initial-delay-ms: ${IDEMPOTENCY_JANITOR_INITIAL_DELAY_MS:10000}
+  webhook:
+    encryption:
+      active-key-version: ${WEBHOOK_MASTER_KEY_VERSION:1}
+      master-key: ${WEBHOOK_ENCRYPTION_KEY:}
+      keys:
+        1: ${WEBHOOK_ENCRYPTION_KEY:}
+    scheduler:
+      enabled: ${WEBHOOK_SCHEDULER_ENABLED:true}
+      dispatcher-interval-ms: ${WEBHOOK_DISPATCHER_INTERVAL_MS:5000}
+      delivery-interval-ms: ${WEBHOOK_DELIVERY_INTERVAL_MS:5000}
+      dispatch-batch-size: ${WEBHOOK_DISPATCH_BATCH_SIZE:20}
+      delivery-batch-size: ${WEBHOOK_DELIVERY_BATCH_SIZE:20}
+      initial-delay-ms: ${WEBHOOK_SCHEDULER_INITIAL_DELAY_MS:2000}
 
 logging:
   level:
