@@ -191,6 +191,18 @@ public final class TestDatabaseRoleProvisioner {
             "  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'outbox_events') THEN\n" +
             "    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE outbox_events TO " + TEST_APP_USER + ";\n" +
             "  END IF;\n" +
+            "  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'merchant_webhook_endpoints') THEN\n" +
+            "    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE merchant_webhook_endpoints TO " + TEST_APP_USER + ";\n" +
+            "  END IF;\n" +
+            "  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'webhook_deliveries') THEN\n" +
+            "    GRANT SELECT, INSERT, UPDATE ON TABLE webhook_deliveries TO " + TEST_APP_USER + ";\n" +
+            "  END IF;\n" +
+            "  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'webhook_delivery_attempts') THEN\n" +
+            "    GRANT SELECT, INSERT ON TABLE webhook_delivery_attempts TO " + TEST_APP_USER + ";\n" +
+            "  END IF;\n" +
+            "  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'webhook_attempt_outcomes') THEN\n" +
+            "    GRANT SELECT, INSERT ON TABLE webhook_attempt_outcomes TO " + TEST_APP_USER + ";\n" +
+            "  END IF;\n" +
             "END\n" +
             "$$;"
         );
