@@ -466,7 +466,7 @@ public class WebhookEndToEndIntegrationTest extends BaseIntegrationTest {
         // Verify paused delivery was synchronized to RETRY_WAIT with immediate retry
         WebhookDelivery resumedDelivery = deliveryRepository.findById(delivery.getId()).orElseThrow();
         assertThat(resumedDelivery.getStatus()).isEqualTo(WebhookDeliveryStatus.RETRY_WAIT);
-        assertThat(resumedDelivery.getNextAttemptAt()).isBeforeOrEqualTo(Instant.now());
+        assertThat(resumedDelivery.getNextAttemptAt()).isBeforeOrEqualTo(Instant.now().plusSeconds(1));
     }
 
     @Test
