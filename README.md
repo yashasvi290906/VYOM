@@ -1,87 +1,159 @@
 # VYOM (व्योम) — Digital Payments and Transaction Processing Platform
 
-**Virtual Yatra of Money**  
+<div align="center">
+
+**Virtual Yatra of Money**
+
 *Every transaction. One trusted space.*
 
-VYOM is an ACID-compliant simulated digital payments ledger, wallet engine, and API gateway built with **Java 21**, **Spring Boot 3.4.3**, **PostgreSQL 18**, **Flyway**, **Node.js/Express**, and a native **HTML5/CSS3/JavaScript frontend**.
+A simulated digital payments ledger, wallet engine, and API gateway built to demonstrate financial transaction integrity, concurrency safety, and reliable backend engineering.
 
-The platform demonstrates production-oriented financial engineering concepts, including **concurrency safety**, **persistent idempotency with ownership fencing**, **deadlock prevention**, **double-entry bookkeeping**, and **database-enforced append-only ledger protection**.
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.3-6DB33F?logo=springboot)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql)
+![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs)
+![License](https://img.shields.io/badge/Project-Engineering%20Simulation-blue)
+
+</div>
+
+---
+
+## What is VYOM?
+
+VYOM is an ACID-compliant simulated digital payments ledger, wallet engine, and API gateway built with **Java 21, Spring Boot 3.4.3, PostgreSQL, Flyway, Node.js/Express, and a native HTML5/CSS3/JavaScript frontend**.
+
+The platform explores production-oriented financial engineering concepts, including:
+
+- Double-entry bookkeeping and financial consistency.
+- Atomic transaction processing and rollback safety.
+- Persistent idempotency with ownership fencing.
+- Concurrency control and deterministic wallet lock ordering.
+- Database-enforced append-only ledger protection.
+- Least-privilege database access.
+- Financial reconciliation and integrity verification.
 
 > [!NOTE]
-> **Simulation Notice:** VYOM is a simulated payment-processing platform designed to demonstrate financial system architecture, transaction integrity, and high-concurrency processing. It does not connect to real UPI switches, banking networks, external payment gateways, or real money.
+> **Simulation Notice:** VYOM is an engineering simulation. It does not connect to real UPI switches, banking networks, external payment gateways, or real-money payment infrastructure.
 
 ---
 
-## 1. System Architecture
+## 01. System Architecture
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                    Browser Client                           │
-│         HTML5 / Responsive CSS3 / JavaScript                 │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ HTTP / JSON :3000
-┌──────────────────────────────▼──────────────────────────────┐
-│                 Node.js / Express Gateway                   │
-│                                                             │
-│  • Request and correlation ID generation                    │
-│  • Reverse proxying and header pass-through                 │
-│  • User-aware sliding-window rate limiting                  │
-│  • Controlled upstream error translation (503 / 504)       │
-│  • Static frontend hosting                                  │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ HTTP / JSON :8080
-┌──────────────────────────────▼──────────────────────────────┐
-│             Java 21 / Spring Boot 3.4.3 Backend             │
-│                                                             │
-│  • Spring Security and stateless JWT authentication         │
-│  • REST APIs and Bean Validation                            │
-│  • Wallet ownership verification and IDOR protection       │
-│  • Transaction management (@Transactional)                  │
-│  • Pessimistic row locking (SELECT ... FOR UPDATE)          │
-│  • User-scoped idempotency with SHA-256 and fencing         │
-│  • Double-entry ledger processing                           │
-│  • System settlement liquidity management                   │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ JDBC :5432
-┌──────────────────────────────▼──────────────────────────────┐
-│                    PostgreSQL Database                      │
-│                                                             │
-│  • Database role separation (vyom_flyway / vyom_app)        │
-│  • Flyway migrations (V1 through V11)                       │
-│  • System settlement wallets                                │
-│  • Deferred transaction balance invariant triggers         │
-│  • Append-only ledger protection                            │
-│  • Database constraints and unique indexes                  │
-└─────────────────────────────────────────────────────────────┘
-```
+The application follows a layered architecture. Browser requests pass through the Express gateway before reaching the Spring Boot backend, which coordinates financial operations with PostgreSQL.
+
+<p align="center">
+  <img src="./architecture.png" alt="VYOM system architecture" width="100%">
+</p>
+
+| Layer | Responsibility |
+|---|---|
+| Browser Client | User interface and HTTP/JSON requests |
+| Express Gateway | Reverse proxying, request IDs, rate limiting, and static frontend hosting |
+| Spring Boot Backend | Authentication, authorization, validation, transaction orchestration, and financial logic |
+| PostgreSQL | Persistent storage, constraints, triggers, and transaction integrity |
+
+### Request Flow
+
+1. The browser sends an HTTP request to the Express gateway on port `3000`.
+2. The gateway applies request handling, correlation IDs, and configured rate limits.
+3. The backend receives the request on port `8080`.
+4. Spring Security and application services validate the request and enforce ownership.
+5. Financial operations execute within database transactions.
+6. PostgreSQL persists the resulting state and enforces database-level invariants.
 
 ---
 
-## 2. Key Architectural Invariants
+## 02. Financial Transaction Design
 
-1. **Non-Negative Balances:** Service-level validation and database constraints prevent customer wallets from having negative balances. System settlement accounts are handled separately.
+### Double-Entry Bookkeeping
 
-2. **Double-Entry Conservation:** Finalized transactions maintain balanced debit and credit ledger entries. Deferred database triggers validate transaction balance invariants at commit.
+Every finalized financial transaction must preserve the accounting invariant:
 
-3. **Atomic Financial Operations:** Wallet balance updates, transaction records, and corresponding ledger entries participate in atomic database transactions. Failed operations roll back rather than leaving partial financial state.
+**Total Debits = Total Credits**
 
-4. **Authentication and IDOR Protection:** Customer passwords are hashed using BCrypt. Stateless JWT bearer tokens use HS256 authentication. Ownership checks protect wallet, transaction, dispute, refund, and idempotency-related operations.
+A transfer is not represented as an isolated balance update. It is represented through corresponding ledger entries, preserving the financial movement in a structured and auditable form.
 
-5. **Database-Enforced Append-Only Ledger:** PostgreSQL trigger `trg_protect_ledger_entries` prevents unauthorized updates and deletions of existing ledger entries.
+<p align="center">
+  <img src="./double-entry.png" alt="VYOM double-entry bookkeeping flow" width="100%">
+</p>
 
-6. **User-Scoped Persistent Idempotency:** Mutation requests use customer-scoped `(user_id, idempotency_key)` records. Identical retries can return cached responses without duplicate execution, while altered payloads using an existing key are rejected.
+This design helps ensure that financial state can be independently checked rather than relying only on wallet balances.
 
-7. **Crash-Resilient Idempotency Recovery:** Abandoned `PROCESSING` records can be reclaimed through atomic ownership-token and lease-version updates. Stale workers are prevented from committing after losing ownership.
+### Atomic Transaction Processing
 
-8. **Deterministic Wallet Lock Ordering:** Dual-wallet operations acquire locks in a consistent UUID order, reducing circular-wait conditions and preventing bidirectional wallet-lock deadlocks.
+Wallet updates, transaction records, and ledger entries must succeed or fail together.
 
-9. **Database Privilege Separation:** DDL operations are assigned to the `vyom_flyway` migration role, while application runtime operations use the restricted `vyom_app` role.
+<p align="center">
+  <img src="./atomic-transaction.png" alt="VYOM atomic transaction lifecycle" width="100%">
+</p>
 
-10. **Monetary Precision:** Java monetary calculations use `BigDecimal`, JavaScript uses integer-based `BigInt` arithmetic, and PostgreSQL stores monetary values using fixed-precision numeric types.
+The backend uses Spring transaction management and PostgreSQL transaction guarantees to prevent partially committed financial operations.
+
+If an operation fails before commit, the database transaction rolls back instead of leaving an incomplete financial state.
+
+### Core Financial Invariants
+
+| Invariant | Enforcement |
+|---|---|
+| Non-negative customer balances | Service validation and database constraints |
+| Balanced ledger transactions | Deferred database balance validation |
+| Atomic financial operations | Spring transactions and PostgreSQL |
+| Ledger immutability | Database trigger protection |
+| Monetary precision | `BigDecimal`, integer-based `BigInt`, and fixed-precision numeric storage |
+| Duplicate request prevention | Persistent, user-scoped idempotency |
+| Consistent wallet locking | Deterministic UUID lock ordering |
 
 ---
 
-## 3. Technology Stack and Prerequisites
+## 03. Reliability and Concurrency
+
+### Persistent Idempotency
+
+A financial API must handle retries safely. A client may retry a request because of a timeout or lost response, even when the original operation has already reached the backend.
+
+VYOM uses persistent, user-scoped idempotency records to prevent duplicate execution.
+
+<p align="center">
+  <img src="./idempotency.png" alt="VYOM persistent idempotency lifecycle" width="100%">
+</p>
+
+Key design properties:
+
+- Idempotency keys are scoped to the requesting user.
+- Repeated requests with the same key and payload can return the stored response.
+- Reusing a key with a different payload is rejected.
+- Processing records support recovery through ownership tokens and lease versions.
+- Stale workers cannot commit after losing ownership of a processing record.
+
+### Concurrency Control
+
+Concurrent financial operations can attempt to modify the same wallet simultaneously. Without coordination, this can lead to inconsistent updates or deadlocks.
+
+<p align="center">
+  <img src="./concurrency.png" alt="VYOM wallet concurrency control" width="100%">
+</p>
+
+VYOM uses:
+
+- Pessimistic database row locking.
+- `SELECT ... FOR UPDATE` for critical wallet operations.
+- Deterministic UUID-based wallet lock ordering.
+- Transaction boundaries around financial state changes.
+
+Consistent lock ordering reduces circular-wait conditions when two operations access the same pair of wallets in opposite directions.
+
+### Security and Access Control
+
+- BCrypt password hashing.
+- Stateless JWT bearer authentication using HS256.
+- Ownership verification and IDOR protection.
+- Role-based authorization.
+- Separate migration and application database roles.
+- Database-enforced protection against unauthorized ledger updates and deletions.
+
+---
+
+## 04. Technology Stack
 
 | Component | Technology |
 |---|---|
@@ -91,14 +163,13 @@ The platform demonstrates production-oriented financial engineering concepts, in
 | Database | PostgreSQL 15+ |
 | Tested Database Version | PostgreSQL 18.4 |
 | Database Migrations | Flyway 10+ |
-| Frontend Gateway | Node.js 22+ |
-| Gateway Framework | Express.js |
+| API Gateway | Node.js 22+ and Express.js |
 | Frontend | HTML5, CSS3, JavaScript |
 | Build Tool | Apache Maven 3.9.9 |
 | Backend Testing | JUnit 5, Mockito, Spring Boot Test |
 | Gateway Testing | Native Node.js `node:test` |
 
-**Prerequisites**
+### Prerequisites
 
 - JDK 21 or later
 - Node.js 22 or later
@@ -111,16 +182,16 @@ The repository includes a Maven Wrapper, so a separate Maven installation is not
 
 ---
 
-## 4. Setup and Running Instructions
+## 05. Setup and Running Instructions
 
-### Step 1: Clone the Repository
+### Step 1 — Clone the Repository
 
 ```bash
 git clone https://github.com/yashasvi290906/VYOM.git
 cd VYOM
 ```
 
-### Step 2: Create PostgreSQL Databases
+### Step 2 — Create PostgreSQL Databases
 
 Ensure PostgreSQL is running on port `5432`.
 
@@ -131,7 +202,7 @@ CREATE DATABASE payledger;
 CREATE DATABASE payledger_test;
 ```
 
-### Step 3: Provision Least-Privilege Database Roles
+### Step 3 — Provision Least-Privilege Database Roles
 
 Execute the database provisioning script to configure:
 
@@ -149,7 +220,7 @@ psql -U postgres -d payledger `
 
 Replace the example passwords with securely generated values.
 
-### Step 4: Configure Environment Variables
+### Step 4 — Configure Environment Variables
 
 Copy `.env.example` to `.env` and replace all placeholder values.
 
@@ -187,7 +258,7 @@ $env:JWT_SECRET="your_generated_secret"
 > [!IMPORTANT]
 > Both services must use the same JWT signing secret. Never commit generated secrets, database passwords, or production credentials to Git.
 
-### Step 5: Build and Start the Spring Boot Backend
+### Step 5 — Build and Start the Spring Boot Backend
 
 Ensure JDK 21 or later is available through `JAVA_HOME` or your system `PATH`.
 
@@ -209,7 +280,7 @@ Backend health endpoint:
 http://127.0.0.1:8080/actuator/health
 ```
 
-### Step 6: Start the Node.js API Gateway
+### Step 6 — Start the Node.js API Gateway
 
 Open a separate terminal and configure the gateway:
 
@@ -226,7 +297,7 @@ npm ci --prefix gateway
 npm start --prefix gateway
 ```
 
-### Step 7: Access the Web Application
+### Step 7 — Access the Web Application
 
 Open:
 
@@ -238,7 +309,7 @@ The frontend communicates with the backend through the Express gateway.
 
 ---
 
-## 5. Administrative Bootstrap Procedure
+## 06. Administrative Bootstrap
 
 Administrative account bootstrapping is disabled by default:
 
@@ -248,7 +319,7 @@ VYOM_ADMIN_BOOTSTRAP_ENABLED=false
 
 To provision an initial administrator account:
 
-1. Configure the bootstrap environment variables using secure credentials.
+**1. Configure the bootstrap environment variables using secure credentials.**
 
 ```powershell
 $env:VYOM_ADMIN_BOOTSTRAP_ENABLED="true"
@@ -257,11 +328,13 @@ $env:VYOM_ADMIN_BOOTSTRAP_PASSWORD="your_secure_admin_password"
 $env:VYOM_ADMIN_BOOTSTRAP_FULL_NAME="System Administrator"
 ```
 
-2. Start the backend. During initial startup, `AdminBootstrapService` provisions the administrator account with the `ADMIN` role.
+**2. Start the backend.**
 
-3. Stop the backend after successful provisioning.
+During initial startup, `AdminBootstrapService` provisions the administrator account with the `ADMIN` role.
 
-4. Remove the bootstrap credentials from the environment and restore:
+**3. Stop the backend after successful provisioning.**
+
+**4. Remove the bootstrap credentials from the environment and restore:**
 
 ```powershell
 $env:VYOM_ADMIN_BOOTSTRAP_ENABLED="false"
@@ -272,7 +345,7 @@ $env:VYOM_ADMIN_BOOTSTRAP_ENABLED="false"
 
 ---
 
-## 6. Testing and Verification
+## 07. Testing and Verification
 
 ### Backend Test Suite
 
@@ -300,27 +373,79 @@ npm test --prefix gateway
 
 Coverage includes:
 
-- Reverse proxying and upstream error handling
-- Request and correlation ID generation
-- Security headers
-- Sliding-window rate limiting
-- Rate-limit memory bounding and cache churn resilience
-- JWT algorithm and expiration validation
-- Proxy trust policy
+- Reverse proxying and upstream error handling.
+- Request and correlation ID generation.
+- Security headers.
+- Sliding-window rate limiting.
+- Rate-limit memory bounding and cache churn resilience.
+- JWT algorithm and expiration validation.
+- Proxy trust policy.
 
 ### Financial Reconciliation
 
-Run the reconciliation utility:
+VYOM includes a reconciliation utility that checks financial consistency across supported ledger, wallet, settlement, and idempotency invariants.
 
-```powershell
+Run it from the repository root:
+
+```bash
 node benchmark/reconcile.js
 ```
 
-This utility performs financial consistency checks across supported ledger, wallet, settlement, and idempotency invariants.
+The utility uses `psql` through the system `PATH` by default. A custom executable can be supplied through `PSQL_PATH`.
+
+Connection configuration supports:
+
+| Variable | Purpose |
+|---|---|
+| `BENCHMARK_DB_NAME` | Reconciliation database name |
+| `BENCHMARK_DB_USER` | Database username |
+| `BENCHMARK_DB_HOST` | Database host |
+| `BENCHMARK_DB_PORT` | Database port |
+| `PSQL_PATH` | Optional custom `psql` executable |
+
+Where applicable, standard PostgreSQL variables `PGUSER`, `PGHOST`, and `PGPORT` are used as fallbacks.
+
+The CLI invokes PostgreSQL using argument-based process execution rather than shell-interpolated commands. Database passwords should be supplied through supported PostgreSQL environment or password-file mechanisms, not command-line arguments.
+
+The reconciliation process enables `ON_ERROR_STOP` so SQL execution errors are not silently ignored.
+
+Run the reconciliation CLI regression tests:
+
+```bash
+node --test benchmark/*.test.js
+```
+
+<p align="center">
+  <img src="./reconciliation.png" alt="VYOM financial reconciliation workflow" width="100%">
+</p>
 
 ---
 
-## 7. Security Limitations and Operational Boundaries
+## 08. Key Architectural Invariants
+
+1. **Non-Negative Balances:** Service-level validation and database constraints prevent customer wallets from having negative balances. System settlement accounts are handled separately.
+
+2. **Double-Entry Conservation:** Finalized transactions maintain balanced debit and credit ledger entries. Deferred database triggers validate transaction balance invariants at commit.
+
+3. **Atomic Financial Operations:** Wallet balance updates, transaction records, and corresponding ledger entries participate in atomic database transactions. Failed operations roll back rather than leaving partial financial state.
+
+4. **Authentication and IDOR Protection:** Customer passwords are hashed using BCrypt. Stateless JWT bearer tokens use HS256 authentication. Ownership checks protect wallet, transaction, dispute, refund, and idempotency-related operations.
+
+5. **Database-Enforced Append-Only Ledger:** PostgreSQL trigger `trg_protect_ledger_entries` prevents unauthorized updates and deletions of existing ledger entries.
+
+6. **User-Scoped Persistent Idempotency:** Mutation requests use customer-scoped `(user_id, idempotency_key)` records. Identical retries can return cached responses without duplicate execution, while altered payloads using an existing key are rejected.
+
+7. **Crash-Resilient Idempotency Recovery:** Abandoned `PROCESSING` records can be reclaimed through atomic ownership-token and lease-version updates. Stale workers are prevented from committing after losing ownership.
+
+8. **Deterministic Wallet Lock Ordering:** Dual-wallet operations acquire locks in a consistent UUID order, reducing circular-wait conditions and preventing bidirectional wallet-lock deadlocks.
+
+9. **Database Privilege Separation:** DDL operations are assigned to the `vyom_flyway` migration role, while application runtime operations use the restricted `vyom_app` role.
+
+10. **Monetary Precision:** Java monetary calculations use `BigDecimal`, JavaScript uses integer-based `BigInt` arithmetic, and PostgreSQL stores monetary values using fixed-precision numeric types.
+
+---
+
+## 09. Security Limitations and Operational Boundaries
 
 1. **Simulated Financial Platform:** VYOM is an engineering simulation. It does not process real money or integrate with actual banking infrastructure.
 
@@ -336,10 +461,16 @@ This utility performs financial consistency checks across supported ledger, wall
 
 ---
 
-## 8. Repository
+## Repository
 
-**GitHub:** https://github.com/yashasvi290906/VYOM
+**GitHub:** [yashasvi290906/VYOM](https://github.com/yashasvi290906/VYOM)
 
 VYOM is an evolving engineering project focused on transaction correctness, financial data integrity, application security, and reliable backend architecture.
 
-**Every transaction. One trusted space.**
+<div align="center">
+
+**VYOM — Virtual Yatra of Money**
+
+*Every transaction. One trusted space.*
+
+</div>
