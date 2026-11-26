@@ -455,7 +455,7 @@ node --test benchmark/*.test.js
 
 4. **Reverse Proxy Trust:** Configure `TRUST_PROXY` according to the actual deployment topology. Trust only known proxy addresses or networks to prevent client IP spoofing.
 
-5. **Administrative Bootstrap:** Keep bootstrap disabled after initial administrator provisioning.
+5. **Administrative Bootstrap:** Keep bootstrap disabled after initial administrator provisioning
 
 6. **Production Deployment:** Use TLS, protected environment variables or a secrets manager, restricted database networking, and appropriate operational monitoring.
 
